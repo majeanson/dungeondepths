@@ -140,6 +140,14 @@ export function CombatScreen() {
   const logSlideY   = useRef(new Animated.Value(12)).current
   const logFadeAnim = useRef(new Animated.Value(0)).current
 
+  // Kill-shot flash — brief red wash when monster dies
+  const killFlashAnim = useRef(new Animated.Value(0)).current
+  // Crit flash — brief gold pop on crit hit
+  const critFlashAnim = useRef(new Animated.Value(0)).current
+  // Victory/defeat entrance — scale punch + fade
+  const outcomeScaleAnim = useRef(new Animated.Value(0.82)).current
+  const outcomeFadeAnim  = useRef(new Animated.Value(0)).current
+
   // Animate log entry on new log line
   useEffect(() => {
     if (log.length === 0) return
@@ -197,10 +205,26 @@ export function CombatScreen() {
     prevLevel.current = level
   }, [level])
 
-  // Haptics on outcome
+  // Haptics + kill-shot flash + victory entrance on outcome
   useEffect(() => {
-    if (outcome === 'victory')  haptics.notificationSuccess()
-    if (outcome === 'defeat')   haptics.notificationError()
+    if (outcome === 'victory') {
+      haptics.notificationSuccess()
+      // Kill-shot: red wash → fade out, then punch victory card in
+      Animated.sequence([
+        Animated.timing(killFlashAnim,  { toValue: 0.72, duration: 80,  useNativeDriver: true }),
+        Animated.timing(killFlashAnim,  { toValue: 0,    duration: 260, useNativeDriver: true }),
+      ]).start()
+    }
+    if (outcome === 'defeat') haptics.notificationError()
+    // Victory/defeat card entrance whenever combat ends
+    if (outcome && outcome !== 'ongoing') {
+      outcomeScaleAnim.setValue(0.82)
+      outcomeFadeAnim.setValue(0)
+      Animated.parallel([
+        Animated.spring(outcomeScaleAnim, { toValue: 1, tension: 90, friction: 7, useNativeDriver: true }),
+        Animated.timing(outcomeFadeAnim,  { toValue: 1, duration: 220, useNativeDriver: true }),
+      ]).start()
+    }
   }, [outcome])
 
   // Animate on each combat round + trigger floating damage
@@ -221,6 +245,13 @@ export function CombatScreen() {
         Animated.timing(monsterDmgAnim,  { toValue: 1, duration: 900, useNativeDriver: true }),
         Animated.spring(monsterCritAnim, { toValue: 1, tension: 120, friction: 5, useNativeDriver: true }),
       ]).start()
+      if (isCrit) {
+        critFlashAnim.setValue(0)
+        Animated.sequence([
+          Animated.timing(critFlashAnim, { toValue: 0.45, duration: 60,  useNativeDriver: true }),
+          Animated.timing(critFlashAnim, { toValue: 0,    duration: 180, useNativeDriver: true }),
+        ]).start()
+      }
     }
     if (playerDmg > 0) {
       triggerShake()
@@ -253,6 +284,13 @@ export function CombatScreen() {
   const isOver = outcome !== 'ongoing' && outcome !== null
   const won    = outcome === 'victory'
   const fled   = outcome === 'fled'
+
+  function handleFlee() {
+    fleeAction()
+    const next = useCombatStore.getState().outcome
+    if (next === 'fled') haptics.notificationSuccess()
+    else                 haptics.impactHeavy()
+  }
 
   const monsterNameColor = ENCOUNTER_NAME_COLOR[encounterType ?? EncounterType.Normal] ?? COLORS.textSecondary
   const monsterSigil     = ENCOUNTER_SIGIL[encounterType ?? EncounterType.Normal] ?? '◉'
@@ -599,7 +637,7 @@ export function CombatScreen() {
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.secondaryBtn, styles.fleeBtn, cantFlee && styles.disabledBtn]}
-              onPress={fleeAction}
+              onPress={handleFlee}
               disabled={cantFlee}
             >
               <Text style={styles.secondaryText}>↩ FLEE</Text>
@@ -608,7 +646,10 @@ export function CombatScreen() {
           </View>
         </View>
       ) : (
-        <View style={styles.outcomeSection}>
+        <Animated.View style={[styles.outcomeSection, {
+          opacity: outcomeFadeAnim,
+          transform: [{ scale: outcomeScaleAnim }],
+        }]}>
           <Text style={[styles.outcomeText, won && styles.victoryText, !won && !fled && styles.defeatText]}>
             {won ? '⚔  VICTORY' : fled ? '↩  FLED' : '☠  DEFEATED'}
           </Text>
@@ -617,8 +658,19 @@ export function CombatScreen() {
               {won && pendingLoot.length > 0 ? `COLLECT LOOT  (${pendingLoot.length})` : 'CONTINUE'}
             </Text>
           </TouchableOpacity>
-        </View>
+        </Animated.View>
       )}
+
+      {/* ── Kill-shot flash — red wash on monster death ─────────────────── */}
+      <Animated.View
+        style={[styles.fullscreenFlash, { backgroundColor: COLORS.red, opacity: killFlashAnim }]}
+        pointerEvents="none"
+      />
+      {/* ── Crit flash — gold pop on crit hit ───────────────────────────── */}
+      <Animated.View
+        style={[styles.fullscreenFlash, { backgroundColor: COLORS.gold, opacity: critFlashAnim }]}
+        pointerEvents="none"
+      />
     </Animated.View>
   )
 }
@@ -930,6 +982,11 @@ const styles = StyleSheet.create({
     color: COLORS.textGhost,
     fontSize: 8,
     letterSpacing: 0.5,
+  },
+  // ── Full-screen flash overlay (kill-shot / crit) ─────────────────────────
+  fullscreenFlash: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 99,
   },
   // ── Outcome ───────────────────────────────────────────────────────────────
   outcomeSection: {

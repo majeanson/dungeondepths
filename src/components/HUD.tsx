@@ -2,8 +2,8 @@
  * Bottom HUD — gothic stone-panel with HP/MP orbs, XP/ST mini-bars,
  * player portrait, and floor/class info row.
  */
-import React from 'react'
-import { View, Text, StyleSheet } from 'react-native'
+import React, { useEffect, useRef } from 'react'
+import { View, Text, StyleSheet, Animated } from 'react-native'
 import { getHpColor, COLORS } from '../theme'
 import { tierName, difficultyLabel, difficultyColor } from '../utils/tierName'
 import { PlayerPortrait } from './PlayerPortrait'
@@ -28,18 +28,32 @@ interface HUDProps {
 }
 
 // ── Blood orb — circular fill from bottom ────────────────────────────────────
-function GlobeOrb({ value, max, color, label }: {
-  value: number; max: number; color: string; label: string
+function GlobeOrb({ value, max, color, label, lowHp }: {
+  value: number; max: number; color: string; label: string; lowHp?: boolean
 }) {
   const pct = Math.min(1, Math.max(0, max > 0 ? value / max : 0))
+  const pulseAnim = useRef(new Animated.Value(1)).current
+
+  useEffect(() => {
+    if (!lowHp) { pulseAnim.setValue(1); return }
+    const anim = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, { toValue: 0.35, duration: 420, useNativeDriver: true }),
+        Animated.timing(pulseAnim, { toValue: 1,    duration: 420, useNativeDriver: true }),
+      ])
+    )
+    anim.start()
+    return () => anim.stop()
+  }, [lowHp])
+
   return (
-    <View style={globeStyles.outer}>
+    <Animated.View style={[globeStyles.outer, lowHp && { borderColor: COLORS.red, opacity: pulseAnim }]}>
       <View style={[globeStyles.fill, { height: `${pct * 100}%`, backgroundColor: color }]} />
       <View style={globeStyles.content} pointerEvents="none">
         <Text style={globeStyles.value}>{value}</Text>
         <Text style={[globeStyles.label, { color }]}>{label}</Text>
       </View>
-    </View>
+    </Animated.View>
   )
 }
 
@@ -171,7 +185,7 @@ export function HUD({
           />
 
           {/* HP orb */}
-          <GlobeOrb value={hp} max={maxHp} color={hpColor} label="HP" />
+          <GlobeOrb value={hp} max={maxHp} color={hpColor} label="HP" lowHp={hpPct < 0.25} />
 
           {/* Center: thin bars for XP + ST (or just XP when showing ST orb) */}
           <View style={styles.centerBars}>

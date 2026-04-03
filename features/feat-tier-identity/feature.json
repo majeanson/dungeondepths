@@ -16,7 +16,7 @@
     "spawnReason": "deferred scope: tier theming and monster pool segmentation were explicitly cut from the initial implementation"
   },
   "analysis": "Monster pool had no progression-tier gating — every tier saw identical enemy types from floor 1. Adding minTier to MonsterDef lets Crypt and Hell tiers surface exclusive harder enemy archetypes while keeping the Normal-tier pool intact for new players. Without this, escalating difficulty tiers felt cosmetic.",
-  "implementation": "Added optional minTier?: number to MonsterDef and NamedVariant interfaces in src/data/monsters.ts. Added 6 exclusive monsters: Crypt Fiend/Hollow Knight/Grave Warden (minTier 2) and Hell Knight/Doom Guard/Soul Reaper (minTier 3). Updated getMonstersForFloor and getNamedVariantsForFloor to filter by (m.minTier ?? 1) <= tier. Updated spawnMonster signature to accept diffTier = 1 and pass it to both pool functions. gridStore.ts reads useGameStore.getState().tier and passes it into spawnMonster.",
+  "implementation": "Added optional minTier?: number to MonsterDef and NamedVariant interfaces in src/data/monsters.ts. Added 6 exclusive monsters: Crypt Fiend/Hollow Knight/Grave Warden (minTier 2) and Hell Knight/Doom Guard/Soul Reaper (minTier 3). Updated getMonstersForFloor and getNamedVariantsForFloor to filter by (m.minTier ?? 1) <= tier. Updated spawnMonster signature to accept diffTier = 1 and pass it to both pool functions. gridStore.ts reads useGameStore.getState().tier and passes it into spawnMonster.\n\nDifficulty naming system (2026-04-03): src/utils/tierName.ts exports difficultyLabel(tier) and difficultyColor(tier). HUD badge shows 'NIGHTMARE · T2·F3' in blue or 'HELL · T3·F1' in red with matching background. TierClearOverlay shows colored diffBanner with correct HP/DMG stats (NM=250%/180%, Hell=310%/200%). GridScreen watermark shows difficulty name. CodexScreen TIER_ROWS corrected with real values + added difficulty column. GraveyardScreen death records include difficulty label. ClassSelectScreen waypoint chips tinted blue for T2, red for T3 waypoints.",
   "decisions": [
     {
       "decision": "minTier is optional on MonsterDef, defaults to 1 so all existing monsters are unaffected",
@@ -32,6 +32,21 @@
       "decision": "Named variants also gate on minTier so Charnel Fiend (Crypt) and Infernal Knight (Hell) appear only in their tiers",
       "rationale": "Consistency — if a monster base is tier-gated, its named variant should be too.",
       "date": "2026-04-02"
+    },
+    {
+      "decision": "Difficulty naming: tier 1=NORMAL (no label shown), tier 2=NIGHTMARE (blue #3a5aaa), tier 3+=HELL (red #c02a2a) — exposed via difficultyLabel() and difficultyColor() in tierName.ts",
+      "rationale": "Players had no explicit signal that they entered a named difficulty. The HUD badge, TierClearOverlay, grid watermark, graveyard records, Codex table, and waypoint chips all needed a single source of truth for difficulty color.",
+      "date": "2026-04-03"
+    },
+    {
+      "decision": "TIER_BG[2] corrected from green (#0d100d) to blue (#0d0d10) to match Nightmare's established blue theme",
+      "rationale": "The background tint conflicted with the difficulty color system — Nightmare is blue everywhere else, the subtle grid background was the only green element.",
+      "date": "2026-04-03"
+    },
+    {
+      "decision": "Codex TIER_ROWS now uses hardcoded actual applyTierScaling values (T2=2.5×/1.80×, T3+=3.1×/2.00×) instead of the old linear formula",
+      "rationale": "The old auto-generated formula (1+(t-1)×0.40 HP) showed players numbers that didn't match actual gameplay — a critical trust issue.",
+      "date": "2026-04-03"
     }
   ],
   "successCriteria": "Floor 1 in Tier 1 shows only Normal-tier monsters. Crypt Fiend appears in Tier 2 but not Tier 1. Hell Knight appears only in Tier 3+. getMonstersForFloor(1, 1) returns no minTier-2 monsters. All 244 engine tests pass.",
@@ -60,7 +75,7 @@
     }
   ],
   "externalDependencies": [],
-  "lastVerifiedDate": "2026-04-02",
+  "lastVerifiedDate": "2026-04-03",
   "implementationNotes": [
     "minTier filtering uses (m.minTier ?? 1) so the field is fully backwards-compatible",
     "spawnMonster diffTier default=1 keeps all call-sites outside gridStore forward-compatible"
@@ -90,5 +105,17 @@
       "to": "frozen",
       "date": "2026-04-02"
     }
-  ]
+  ],
+  "revisions": [
+    {
+      "date": "2026-04-03",
+      "author": "claude+marc",
+      "fields_changed": [
+        "decisions",
+        "implementation"
+      ],
+      "reason": "BMAD S7: add difficulty naming system (difficultyLabel/difficultyColor), HUD/Codex/Graveyard/Waypoint difficulty labels, TIER_BG T2 correction, Codex TIER_ROWS data fix"
+    }
+  ],
+  "annotations": []
 }

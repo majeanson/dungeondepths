@@ -236,5 +236,11 @@
     "children": [
       "feat-2026-062"
     ]
-  }
+  },
+  "implementationNotes": [
+    "The in-game linear tier formula (1+(tier-1)×0.5 HP, 1+(tier-1)×0.35 dmg) in combatStore is intentionally separate from applyTierScaling in monsters.ts — the former is an infinite-progression system, the latter is the sim-validated Normal/Nightmare/Hell named-difficulty system wired into the game via combatStore startCombat via gs.tier.",
+    "firstTimeTierClear is in-memory only (not persisted) — if the app is killed during the overlay it won't re-appear, which is acceptable since the graveyard sacrifice overlay also has this limitation.",
+    "The tier seed mixing (seed ^ (tier * 99991)) in gridStore.initFloor ensures that the same floor in different tiers generates completely different room layouts without adding a separate RNG dimension.",
+    "TIER_BG for T2 is blue-tinted (#0d0d10) not green, matching Nightmare's blue theme — originally shipped as green (#0d100d) which conflicted with the difficulty color system."
+  ]
 }

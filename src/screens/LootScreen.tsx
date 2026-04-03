@@ -12,6 +12,25 @@ import { EncounterType } from '../engine/encounter'
 import { itemEquipSlot } from '../utils/itemDisplay'
 import { COLORS } from '../theme'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useHaptics } from '../hooks/useHaptics'
+
+// ── Staggered entrance wrapper for each loot row ──────────────────────────────
+function AnimatedLootRow({ index, children }: { index: number; children: React.ReactNode }) {
+  const slideAnim = useRef(new Animated.Value(-28)).current
+  const fadeAnim  = useRef(new Animated.Value(0)).current
+  useEffect(() => {
+    const delay = index * 55
+    Animated.parallel([
+      Animated.timing(slideAnim, { toValue: 0, duration: 300, delay, useNativeDriver: true }),
+      Animated.timing(fadeAnim,  { toValue: 1, duration: 240, delay, useNativeDriver: true }),
+    ]).start()
+  }, [])
+  return (
+    <Animated.View style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}>
+      {children}
+    </Animated.View>
+  )
+}
 
 const ENCOUNTER_TITLES: Partial<Record<EncounterType, string>> = {
   [EncounterType.Elite]:   'ELITE DROP',
@@ -40,9 +59,24 @@ export function LootScreen() {
   const titleLabel = (encounterType && ENCOUNTER_TITLES[encounterType]) ?? 'ITEMS DROPPED'
   const titleColor = (encounterType && ENCOUNTER_TITLE_COLORS[encounterType]) ?? COLORS.textSecondary
 
-  const fadeIn = useFadeTransition(250)
+  const fadeIn  = useFadeTransition(250)
+  const haptics = useHaptics()
   const [pickedUp,   setPickedUp]   = useState<Set<string>>(new Set())
   const [sheetItem,  setSheetItem]  = useState<Item | null>(null)
+
+  const isBoss    = encounterType === EncounterType.Boss
+  const isAncient = encounterType === EncounterType.Ancient
+
+  // Boss/Ancient: header scale punch on mount
+  const headerScaleAnim = useRef(new Animated.Value(isBoss || isAncient ? 0.80 : 1)).current
+  const headerFadeAnim  = useRef(new Animated.Value(isBoss || isAncient ? 0   : 1)).current
+  useEffect(() => {
+    if (!isBoss && !isAncient) return
+    Animated.parallel([
+      Animated.spring(headerScaleAnim, { toValue: 1, tension: 80, friction: 6, useNativeDriver: true }),
+      Animated.timing(headerFadeAnim,  { toValue: 1, duration: 300, useNativeDriver: true }),
+    ]).start()
+  }, [])
 
   const hasUnique = pendingLoot.some(i => i.quality === 'unique')
   const uniquePulse = useRef(new Animated.Value(0.4)).current
@@ -85,6 +119,7 @@ export function LootScreen() {
         ],
       )
     } else {
+      haptics.impactLight()
       recordItemFound(item.quality)
       setPickedUp(prev => new Set(prev).add(item.uid))
     }
@@ -128,13 +163,21 @@ export function LootScreen() {
       })()
     : null
 
-  const isBigDrop = encounterType === EncounterType.Boss
-    || encounterType === EncounterType.Ancient
-    || encounterType === EncounterType.Rare
+  const isBigDrop = isBoss || isAncient || encounterType === EncounterType.Rare
 
   return (
     <Animated.View style={[styles.container, { opacity: fadeIn, paddingTop: insets.top + 10 }]}>
-      <View style={[styles.titleBlock, { borderBottomColor: titleColor + '55' }]}>
+      {/* Boss/Ancient: screen-edge red vignette */}
+      {(isBoss || isAncient) && (
+        <Animated.View
+          style={[styles.bossVignette, { opacity: headerFadeAnim, borderColor: titleColor }]}
+          pointerEvents="none"
+        />
+      )}
+
+      <Animated.View style={[styles.titleBlock, { borderBottomColor: titleColor + '55' },
+        (isBoss || isAncient) && { opacity: headerFadeAnim, transform: [{ scale: headerScaleAnim }] },
+      ]}>
         <Text style={[
           styles.title,
           { color: titleColor },
@@ -160,7 +203,7 @@ export function LootScreen() {
             ◈  RARE SIGNAL  ·  STUDIED KNOWLEDGE
           </Animated.Text>
         )}
-      </View>
+      </Animated.View>
 
       {pendingLoot.length === 0 ? (
         <View style={styles.empty}>
@@ -168,12 +211,12 @@ export function LootScreen() {
         </View>
       ) : (
         <ScrollView style={styles.itemList} bounces={false}>
-          {pendingLoot.map(item => {
+          {pendingLoot.map((item, itemIdx) => {
             const picked = pickedUp.has(item.uid)
             const isUnique = item.quality === 'unique'
             return (
+              <AnimatedLootRow key={item.uid} index={itemIdx}>
               <TouchableOpacity
-                key={item.uid}
                 style={[
                   styles.dropRow,
                   picked && styles.pickedRow,
@@ -209,6 +252,7 @@ export function LootScreen() {
                   </View>
                 )}
               </TouchableOpacity>
+              </AnimatedLootRow>
             )
           })}
         </ScrollView>
@@ -253,6 +297,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.bg,
+  },
+  bossVignette: {
+    ...StyleSheet.absoluteFillObject,
+    borderWidth: 3,
+    borderRadius: 0,
+    zIndex: 1,
   },
   titleBlock: {
     borderBottomWidth: 1,

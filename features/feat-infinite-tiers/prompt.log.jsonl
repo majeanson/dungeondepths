@@ -22,3 +22,4 @@
 {"date":"2026-04-01T02:47:54.681Z","field":"userGuide","source":"mcp","value_preview":"**Tiers** are the infinite difficulty ladder of this game. When you clear floor 10, you ascend to the next tier — the HU"}
 {"date":"2026-04-01T02:47:54.681Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"Tier monster multipliers (combatStore)\",\"snippet\":\"// hpMult = 1 + (tier-1)*0.5,  damageMult = 1 + (tier-1)*0"}
 {"date":"2026-04-01T02:47:54.681Z","field":"lastVerifiedDate","source":"mcp","value_preview":"2026-03-31"}
+{"date":"2026-04-03T16:48:33.982Z","field":"implementationNotes","source":"mcp","value_preview":"[\"The in-game linear tier formula (1+(tier-1)×0.5 HP, 1+(tier-1)×0.35 dmg) in combatStore is intentionally separate from"}

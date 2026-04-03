@@ -38,7 +38,7 @@ export function TierClearOverlay({ tier, isFirstTime, onDismiss }: Props) {
       ]}>
         <Text style={styles.eyebrow}>{isFirstTime ? '✦ FIRST CLEAR ✦' : 'TIER COMPLETE'}</Text>
 
-        {diffLabel != null && (
+        {diffLabel != null && diffColor != null && (
           <View style={[styles.diffBanner, { backgroundColor: diffColor + '22', borderColor: diffColor + '66' }]}>
             <Text style={[styles.diffBannerText, { color: diffColor }]}>{diffLabel}</Text>
           </View>

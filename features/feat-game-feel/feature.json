@@ -29,17 +29,37 @@
       "date": "2026-04-01"
     },
     {
-      "decision": "BMAD S3: monster affix names resolved from MONSTER_AFFIXES map in combat-start log at enraged type",
-      "rationale": "Raw affix IDs like fireEnchanted were logged previously. Human-readable names from MONSTER_AFFIXES make the log immediately legible.",
-      "date": "2026-04-01"
-    },
-    {
       "decision": "BMAD S3: flee button label changed to stays/blocked to clarify that fleeing keeps the player on the current floor",
       "rationale": "Players assumed flee meant game over or retreat to town. The label stays makes clear the cost is staying on the floor, not losing progress.",
       "date": "2026-04-01"
+    },
+    {
+      "decision": "Kill-shot flash (red) and crit flash (gold) implemented as separate full-screen Animated.View overlays rather than animating the individual bar",
+      "rationale": "Screen-level flashes read better on small mobile screens than localized bar flashes; two separate overlays keep the animations decoupled and independently tunable.",
+      "date": "2026-04-03"
+    },
+    {
+      "decision": "Victory/defeat card uses spring entrance (scale 0.82→1) rather than a slide or fade alone",
+      "rationale": "Spring gives a physical 'landed' feel that matches the weight of the combat outcome. Pure fades felt flat; slides felt like a menu transition.",
+      "date": "2026-04-03"
+    },
+    {
+      "decision": "Loot items stagger-slide in per-item (55ms delay per index) rather than all at once",
+      "rationale": "Simultaneous entrance makes drops feel like a list dump. Staggering creates a slot-machine reveal rhythm that makes even two-item drops feel curated.",
+      "date": "2026-04-03"
+    },
+    {
+      "decision": "Descend button color matches selected class color rather than always red",
+      "rationale": "Red had no semantic relationship to the action — it was borrowed from the game's danger/blood palette. Class color creates identity and reinforces the class selection moment.",
+      "date": "2026-04-03"
+    },
+    {
+      "decision": "Low-HP pulse on HUD orb pulses the entire orb opacity (0.35–1.0) rather than just the border",
+      "rationale": "Pulsing the whole orb is dramatically more visible at small (46px) sizes than a 2px border change. The border color also shifts to red for additional signal.",
+      "date": "2026-04-03"
     }
   ],
-  "successCriteria": "Combat hit triggers haptic. Player HP bar visibly shakes on damage received. Monster HP bar flashes red when damaged. Level-up overlay appears and dismisses after 1.8s. Combat log lines have distinct colors by event type. Grid tile taps have haptic response.",
+  "successCriteria": "Combat hit triggers haptic. Player HP bar visibly shakes on damage received. Monster HP bar flashes red when damaged. Kill-shot triggers a red screen flash before VICTORY appears. Crit hits trigger a brief gold screen flash. Victory/defeat card punches in with spring scale animation. Level-up overlay appears and dismisses after 1.8s. Combat log lines have distinct colors by event type. Loot items slide in staggered on LootScreen mount. Boss/Ancient loot screen shows a colored vignette border and scale-punch header. HP orb pulses red when HP < 25%. Descend button uses class color. Pickup haptic on item grab.",
   "tags": [
     "haptics",
     "animations",
@@ -52,7 +72,7 @@
     "Shake animation is horizontal only — vertical shake not implemented",
     "LevelUpOverlay only triggers mid-combat — level-up during town/menu transitions won't show it (rare edge case)"
   ],
-  "componentFile": "src/hooks/useHaptics.ts, src/hooks/useCombatAnimations.ts, src/screens/CombatScreen.tsx, src/components/LevelUpOverlay.tsx, src/screens/GridScreen.tsx",
+  "componentFile": "src/hooks/useHaptics.ts, src/hooks/useCombatAnimations.ts, src/screens/CombatScreen.tsx, src/components/LevelUpOverlay.tsx, src/screens/GridScreen.tsx, src/components/HUD.tsx, src/screens/LootScreen.tsx, src/screens/ClassSelectScreen.tsx",
   "userGuide": "Game feel is transparent to the player — you just feel it. Hits shake the screen. Crits hit harder. Level-ups are celebrated. If haptics feel too intense, toggle them off in Settings.",
   "lineage": {
     "parent": "feat-2026-034",
@@ -60,7 +80,7 @@
       "feat-2026-071"
     ]
   },
-  "lastVerifiedDate": "2026-04-01",
+  "lastVerifiedDate": "2026-04-03",
   "revisions": [
     {
       "date": "2026-03-29",
@@ -80,6 +100,15 @@
         "decisions"
       ],
       "reason": "BMAD session 3 — tier tints, loot log quality prefixes, affix names, flee label"
+    },
+    {
+      "date": "2026-04-03",
+      "author": "claude+marc",
+      "fields_changed": [
+        "decisions",
+        "successCriteria"
+      ],
+      "reason": "BMAD S7: kill-shot flash, crit flash, victory spring entrance, flee haptics, low-HP orb pulse, loot stagger slide-in, boss loot vignette+scale punch, pickup haptic, descend button class-colored"
     }
   ],
   "annotations": [
@@ -145,5 +174,12 @@
       "to": "frozen",
       "date": "2026-04-01"
     }
+  ],
+  "implementationNotes": [
+    "All screen-flash overlays (kill-shot red, crit gold) use StyleSheet.absoluteFillObject + pointerEvents=none + useNativeDriver:true — they sit at the top of the component tree but never intercept touches.",
+    "GlobeOrb is a pure function component that now owns its own pulse animation via useEffect([lowHp]) — the animation starts/stops based on the prop, so no animation state leaks when HP recovers above 25%.",
+    "AnimatedLootRow uses a single-fire Animated.parallel on mount (not a loop), so no cleanup return is needed — the animation self-terminates and frees memory.",
+    "handleFlee reads useCombatStore.getState().outcome synchronously after calling fleeAction() because Zustand state updates are synchronous — no setTimeout or promise needed to detect flee success/failure.",
+    "The boss loot vignette is a borderWidth overlay (not a shadow) so it works consistently on both iOS and Android without platform-specific shadow props."
   ]
 }

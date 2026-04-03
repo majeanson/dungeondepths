@@ -368,9 +368,15 @@ export function ClassSelectScreen() {
             )}
           </View>
 
-          <TouchableOpacity style={styles.descendBtn} onPress={handleDescend}>
-            <Text style={styles.descendText}>▼  DESCEND</Text>
-            <Text style={styles.descendSub}>
+          <TouchableOpacity
+            style={[styles.descendBtn, {
+              backgroundColor: selectedDef.color + '22',
+              borderColor:     selectedDef.color,
+            }]}
+            onPress={handleDescend}
+          >
+            <Text style={[styles.descendText, { color: selectedDef.color }]}>▼  DESCEND</Text>
+            <Text style={[styles.descendSub,  { color: selectedDef.color + '88' }]}>
               {startFloor > 1
                 ? `from ${waypointLabel(startFloor)} as ${selectedDef.name.toUpperCase()}`
                 : `as ${selectedDef.name.toUpperCase()}`}

@@ -12,3 +12,6 @@
 {"date":"2026-04-02T22:53:50.545Z","field":"lastVerifiedDate","source":"mcp","value_preview":"2026-04-02"}
 {"date":"2026-04-02T22:53:50.545Z","field":"implementationNotes","source":"mcp","value_preview":"[\"minTier filtering uses (m.minTier ?? 1) so the field is fully backwards-compatible\",\"spawnMonster diffTier default=1 k"}
 {"date":"2026-04-02T22:53:50.545Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"MonsterDef minTier field\",\"snippet\":\"export interface MonsterDef {\\n  id: string\\n  name: string\\n  baseHp: n"}
+{"date":"2026-04-03T16:49:18.199Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"minTier is optional on MonsterDef, defaults to 1 so all existing monsters are unaffected\",\"rationale\":\"Bac"}
+{"date":"2026-04-03T16:49:18.199Z","field":"implementation","source":"mcp","value_preview":"Added optional minTier?: number to MonsterDef and NamedVariant interfaces in src/data/monsters.ts. Added 6 exclusive mon"}
+{"date":"2026-04-03T16:49:18.199Z","field":"lastVerifiedDate","source":"mcp","value_preview":"2026-04-03"}

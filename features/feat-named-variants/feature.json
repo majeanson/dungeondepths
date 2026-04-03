@@ -1,5 +1,5 @@
 {
-  "featureKey": "feat-2026-078",
+  "featureKey": "feat-2026-080",
   "title": "Named variant enemies — fixed-affix elite identities",
   "status": "frozen",
   "problem": "Elite and rare monsters are generated with random affixes from a pool, which means every 'zombie' elite is statistically anonymous — the same creature class but with randomized modifiers that players can't anticipate. After enough runs, all elites blur together. Named variants provide memorable, fixed-affix identities that experienced players can recognise and prepare for.",
