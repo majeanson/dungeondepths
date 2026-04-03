@@ -68,7 +68,7 @@ export interface CombatAction {
   hardChill?: boolean                // ice_blast: 50% hit penalty (vs default 20%)
   lightningSpellMult?: number        // spark / chain_lightning: spellPower × mult
   spellVarianceFlat?: number         // spark: roll(0, N) bonus added to lightning spell damage
-  manaShieldActive?: boolean         // mana_shield: 65% incoming damage absorbed as mana
+  manaShieldActive?: boolean         // mana_shield: 72% incoming damage absorbed as mana for 3 rounds
 }
 
 export interface RoundResult {
@@ -565,7 +565,7 @@ export function roundToText(r: RoundResult): string {
     if (r.skillId === 'iron_skin')    parts.push('Iron Skin! +30 defense for 2 rounds')
     if (r.skillId === 'meditate')     parts.push('Meditate — +30 mana/turn for 3 turns (monster still attacks)')
     if (r.skillId === 'smoke_bomb')   parts.push('Smoke Bomb! Enemy -55% hit for 2 rounds')
-    if (r.skillId === 'mana_shield')  parts.push('Mana Shield! 65% damage absorbed by mana for 2 rounds')
+    if (r.skillId === 'mana_shield')  parts.push('Mana Shield! 72% damage absorbed by mana for 3 rounds')
   }
 
   if (r.monsterBlocked)   parts.push('◫ Blocked! (enemy deflected the blow)')

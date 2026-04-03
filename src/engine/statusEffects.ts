@@ -65,8 +65,8 @@ export function applySkillCounters(skillId: SkillId, c: StatusCounters): StatusC
   switch (skillId) {
     case 'battle_cry':  return { ...next, battleCryRoundsLeft:   2 }
     case 'iron_skin':   return { ...next, ironSkinRoundsLeft:    2, ironSkinCooldown:  3 }
-    case 'smoke_bomb':  return { ...next, smokeScreenRoundsLeft: 2, smokeBombCooldown: 3 }
-    case 'mana_shield': return { ...next, manaShieldRoundsLeft:  2 }
+    case 'smoke_bomb':  return { ...next, smokeScreenRoundsLeft: 2, smokeBombCooldown: 2 }
+    case 'mana_shield': return { ...next, manaShieldRoundsLeft:  3 }
     case 'meditate':    return { ...next, meditateRoundsLeft:    2 }
     default:            return next
   }
