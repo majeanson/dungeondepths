@@ -1,0 +1,24 @@
+{"date":"2026-03-29T00:05:24.923Z","field":"title","source":"mcp","value_preview":"D2Game — iOS Grid RPG"}
+{"date":"2026-03-29T00:05:24.923Z","field":"status","source":"mcp","value_preview":"draft"}
+{"date":"2026-03-29T00:05:24.923Z","field":"problem","source":"mcp","value_preview":"Build a mobile game combining Pokemon-style 50×50 grid exploration, Diablo 2 loot philosophy (even normal items can be e"}
+{"date":"2026-03-29T00:05:24.923Z","field":"analysis","source":"mcp","value_preview":"Core loop: move on grid → trigger encounter → fast combat gate (<5s) → loot resolves → inventory puzzle → find exit → ne"}
+{"date":"2026-03-29T00:05:24.923Z","field":"implementation","source":"mcp","value_preview":"Expo (React Native) + TypeScript. Engine layer (src/engine/) is pure TS — zero React, 100% bun-testable. Rendering: @sho"}
+{"date":"2026-03-29T00:05:24.923Z","field":"decisions","source":"mcp","value_preview":"[\"Seeded PRNG for all randomness — reproducible runs, testable, future daily-challenge seeds\",\"Engine-first: all game lo"}
+{"date":"2026-03-29T00:05:24.923Z","field":"successCriteria","source":"mcp","value_preview":"Phase 0 (engine): bun test green on all 6 engine modules, sim scripts produce believable loot/encounter distributions. P"}
+{"date":"2026-03-29T00:05:24.923Z","field":"tags","source":"mcp","value_preview":"[\"game\",\"ios\",\"expo\",\"react-native\",\"roguelite\",\"loot-system\",\"grid-exploration\"]"}
+{"date":"2026-03-29T00:05:24.923Z","field":"knownLimitations","source":"mcp","value_preview":"[\"Requires Mac + Apple Developer account for TestFlight distribution — dev build deferred until Mac access\",\"Pixel art a"}
+{"date":"2026-03-29T00:05:24.923Z","field":"recommendations","source":"mcp","value_preview":"[\"React Native + Expo: fastest path given existing RN experience from Recall project\",\"@shopify/react-native-skia for gr"}
+{"date":"2026-03-29T00:05:24.923Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"Seeded RNG usage\",\"code\":\"import { makeRng, roll, pick } from './engine/rng'\\nconst rng = makeRng(seed)\\ncons"}
+{"date":"2026-03-29T00:06:05.915Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"Seeded PRNG (mulberry32) for all randomness\",\"rationale\":\"Every run must be reproducible from a seed. This"}
+{"date":"2026-03-29T00:06:05.915Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"Seeded RNG — deterministic item generation\",\"snippet\":\"import { makeRng, roll, pick } from './engine/rng'\\nco"}
+{"date":"2026-03-29T00:06:26.028Z","field":"domain","source":"mcp","value_preview":"game/mobile"}
+{"date":"2026-03-29T00:06:26.028Z","field":"userGuide","source":"mcp","value_preview":"## How to Play\n1. Use the D-pad (or swipe) to move your character on the 50×50 dungeon grid\n2. Fog of war lifts as you e"}
+{"date":"2026-03-29T00:06:26.028Z","field":"componentFile","source":"mcp","value_preview":"src/engine/rng.ts, src/engine/grid.ts, src/engine/encounter.ts, src/engine/loot.ts, src/engine/affixes.ts, src/engine/mo"}
+{"date":"2026-03-29T00:06:26.028Z","field":"npmPackages","source":"mcp","value_preview":"[\"expo\",\"react-native\",\"@shopify/react-native-skia\",\"zustand\",\"react-native-reanimated\",\"expo-sqlite\"]"}
+{"date":"2026-03-29T00:06:26.028Z","field":"publicInterface","source":"mcp","value_preview":"[{\"name\":\"generateItem\",\"type\":\"function(rng: Rng, opts: GenerateOptions) => Item\",\"description\":\"Generate a fully resol"}
+{"date":"2026-03-29T00:06:26.028Z","field":"externalDependencies","source":"mcp","value_preview":"[]"}
+{"date":"2026-03-29T00:06:26.028Z","field":"toolingAnnotations","source":"mcp","value_preview":"{\"phase\":\"0-complete\",\"nextPhase\":\"1-text-ui\",\"testCommand\":\"bun test src/engine\",\"simCommands\":[\"bun run sim:loot\",\"bun"}
+{"date":"2026-04-01T02:53:12.812Z","field":"implementation","source":"mcp","value_preview":"Expo (React Native) + TypeScript. Engine layer (src/engine/) is pure TS — zero React, 100% bun-testable. Rendering: plai"}
+{"date":"2026-04-01T02:53:12.812Z","field":"userGuide","source":"mcp","value_preview":"## How to Play\n1. Pick a class at the start of each run: **Warrior** (easy), **Rogue** (medium), **Sorcerer** (hard)\n2. "}
+{"date":"2026-04-01T02:53:12.812Z","field":"lastVerifiedDate","source":"mcp","value_preview":"2026-03-31"}
+{"date":"2026-04-01T02:53:18.867Z","field":"toolingAnnotations","source":"mcp","value_preview":"[]"}

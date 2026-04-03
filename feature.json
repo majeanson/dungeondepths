@@ -1,0 +1,204 @@
+{
+  "featureKey": "feat-2026-034",
+  "title": "D2Game — iOS Grid RPG",
+  "status": "frozen",
+  "problem": "Build a mobile game combining Pokemon-style 50×50 grid exploration, Diablo 2 loot philosophy (even normal items can be exciting via sockets/runewords), and roguelite floor progression. No existing iOS game nails all three simultaneously in a pick-up-and-play format.",
+  "analysis": "Core loop: move on grid → trigger encounter → fast combat gate (<5s) → loot resolves → inventory puzzle → find exit → next floor. Priority hierarchy: Map & Exploration > Encounters > Loot System > Inventory Management >> Combat. Combat is a transaction, not a feature. The fun is in the hunt, the drop, and the Tetris inventory puzzle. Endgame players hunt rare encounters and rare item combinations, not specific fights.",
+  "implementation": "Expo (React Native) + TypeScript. Engine layer (src/engine/) is pure TS — zero React, 100% bun-testable. Rendering: plain React Native for all UI (combat, inventory, menus, grid). State: Zustand slices (gridStore, combatStore, inventoryStore, gameStore, settingsStore). Persistence: @react-native-async-storage/async-storage via src/services/persistence.ts (saveGame/scheduleSave/loadGame). Seeded PRNG (mulberry32) ensures every run is reproducible by seed. Sim scripts (sim/) allow headless floor/loot/combat simulation without a device. Class system: 3 classes (Warrior/Rogue/Sorcerer) each with unique stats and 4–5 skills, balanced via Monte Carlo sim. Shared stash persists across deaths in gameStore. Town screen provides character overview + stash management.\n\nCurrent UX state (verified 2026-04-01):\n- HUD: stamina bar hidden when ST > 30%; compact badge + bar shown when ST ≤ 30%. Reduces HUD clutter during normal play.\n- GridScreen zoom: persisted to settingsStore.zoomLevel (0|1|2) so preferred zoom survives app restarts.\n- Zoom lock toggle: when active, single-finger swipe adjusts zoom instead of moving the character. Zoom-lock button adjacent to zoom in/out.\n- Ghost Echo ambient hint: shown once in GridScreen (after 2s delay) when graveyard has items and no echo is active. markGhostEchoHintSeen() ensures it never repeats.\n- Combat RNG: fully deterministic — seed ^ (floor * 0x9e3779b9) ^ (roundNumber * 0x6b429177) with unique offsets for attacks, skills, and loot.\n- Ascension: ASCEND button on victory screen (when graveyard non-empty) starts a new run with pre-loaded Ghost Echo and increments careerStats.ascensions.\n- Pact system: 4 voluntary run curses (blood/suffering/frailty/exhaustion), each with a matching reward. Selected pre-run on ClassSelectScreen, persists across runs. All four wired into combat damage, loot generation, XP, monster spawns, and stamina init.\n- Named Variants: 8 elite enemy archetypes with fixed affix combos (e.g. Void Wraith = teleporting+cursed). 20% spawn chance for elite+ tiers from floor 4+. Reuses existing affix infrastructure.\n- Boss phases: double_strike (second attack when enraged) for Warden/Iron Colossus/Shadow Stalker; ignition (unavoidable fire damage on immune rounds) for Inferno Witch/Abyssal One. isDoubleStrikeRound flag in RoundResult prevents false-positive log entries.\n- Study bonuses active: all 4 quality tiers now have mechanical effects — unique auto-identify, rare pulse UI, magic affix count hint, normal socket count hint. Wired in LootScreen and handleVictory.\n- Stamina potions: drop from elites (8%), rares (15%), ancient (25%), bosses (30%). ⚡ ST button in CombatScreen. refillPotions includes one Stamina Flask in starting loadout.",
+  "decisions": [
+    {
+      "decision": "Seeded PRNG (mulberry32) for all randomness",
+      "rationale": "Every run must be reproducible from a seed. This enables deterministic bun tests, bug reproduction via seed+steps, and future daily-challenge mode. Non-seeded Math.random() would make tests flaky.",
+      "alternativesConsidered": [
+        "Math.random() — not seedable, untestable",
+        "xoshiro128 — slightly better distribution but mulberry32 is simpler and sufficient"
+      ],
+      "recommendation": "mulberry32 via makeRng(seed) — zero deps, fast, deterministic. Stack-agnostic: same algorithm works in any JS runtime.",
+      "date": "2026-03-28"
+    },
+    {
+      "decision": "Engine-first development: all game logic written and bun-tested before any UI screen exists",
+      "rationale": "Game systems (loot, combat, grid) are pure data transformations. Keeping them React-free means they can be tested headless, simulated at scale (10k items, 1000 combats), and iterated without a device. UI that depends on untested engine code leads to hard-to-debug emergent bugs.",
+      "alternativesConsidered": [
+        "Build UI first, engine emerges from component state — common in game jams, hard to test",
+        "Unity/Godot — built-in test frameworks but abandons RN expertise"
+      ],
+      "recommendation": "Pure TS engine in src/engine/ with bun test. No React imports in engine files. Stack-agnostic: logic survives a React Native → web pivot unchanged.",
+      "date": "2026-03-28"
+    },
+    {
+      "decision": "Combat as a fast gate (3–6 rounds, numbers-only UI)",
+      "rationale": "Playtesting Diablo 2 and similar games shows the dopamine comes from the drop, not the fight. Combat complexity competes for design budget with loot and inventory. Keeping combat to a transaction screen (<5s) lets players do more runs and see more loot.",
+      "alternativesConsidered": [
+        "Turn-based tactics with positioning — fun but requires 10× more design work",
+        "Real-time action combat — incompatible with a grid-step model"
+      ],
+      "recommendation": "One action per turn (Attack/Potion/Flee), instant resolution, bold damage numbers, no animations beyond a health bar drain.",
+      "date": "2026-03-28"
+    },
+    {
+      "decision": "Normal (white) items are valuable via the socket/runeword system",
+      "rationale": "D2’s most memorable items are runewords built into white bases. If white items are junk, players stop picking them up and loot excitement drops by 50%. Every white drop with sockets must show a tooltip flag: ‘Runeword candidate (N sockets)’.",
+      "alternativesConsidered": [
+        "Only magic+ items are interesting — simpler but loses D2 DNA",
+        "Crafting system — too complex for v1"
+      ],
+      "recommendation": "Normal items: high base stat variance + socket rolls. The tooltip layer makes this visible to players immediately.",
+      "date": "2026-03-28"
+    },
+    {
+      "decision": "10×4 Tetris inventory grid with physical item sizes",
+      "rationale": "Inventory management as a spatial puzzle is one of D2’s most beloved secondary systems. Charms provide passive bonuses but occupy space, creating a real tradeoff that drives decisions mid-run. A flat list inventory eliminates this tension.",
+      "alternativesConsidered": [
+        "Flat list with item count limit — simpler but no spatial tension",
+        "Unlimited stash — removes one of the core decision loops"
+      ],
+      "recommendation": "10×4 grid, items 1×1 to 2×4, drag-and-drop placement, rotate gesture. Stack-agnostic: same grid logic works in web or native.",
+      "date": "2026-03-28"
+    }
+  ],
+  "successCriteria": "Phase 0 (engine): bun test green on all 6 engine modules, sim scripts produce believable loot/encounter distributions. Phase 1 (text UI): fully playable 5-floor run using only text labels and colored boxes — fun validated before any art. Phase 5 (polish): TestFlight build ships with pixel art and sound.",
+  "tags": [
+    "game",
+    "ios",
+    "expo",
+    "react-native",
+    "roguelite",
+    "loot-system",
+    "grid-exploration"
+  ],
+  "knownLimitations": [
+    "Requires Mac + Apple Developer account for TestFlight distribution — dev build deferred until Mac access",
+    "Pixel art assets not yet sourced — Phase 5 depends on CC0 asset packs (Dungeon Tileset II by 0x72)",
+    "No multiplayer or cloud save — single device only in v1"
+  ],
+  "recommendations": [
+    "React Native + Expo: fastest path given existing RN experience from Recall project",
+    "@shopify/react-native-skia for grid canvas (GPU-accelerated, pixel-art-friendly FilterQuality.None)",
+    "Zustand over Redux — minimal boilerplate, slice pattern maps cleanly to game subsystems",
+    "bun test as the test runner — fast, zero config, runs pure TS engine files directly"
+  ],
+  "codeSnippets": [
+    {
+      "label": "Seeded RNG — deterministic item generation",
+      "snippet": "import { makeRng, roll, pick } from './engine/rng'\nconst rng = makeRng(seed)\nconst dmg = roll(rng, 10, 20)  // same seed = same value every time\nconst item = generateItem(rng, { floor: 5, magicFind: 150 })"
+    },
+    {
+      "label": "Roll loot from an encounter",
+      "snippet": "import { rollLoot } from './engine/loot'\n// 'rare' encounter on floor 8, 100% magic find\nconst drops = rollLoot(rng, 'rare', 8, 100)\n// drops: Item[] with quality/affixes/sockets/displayName resolved"
+    },
+    {
+      "label": "Headless sim commands (no device needed)",
+      "snippet": "bun run sim:floors 10 150   # 10 floors, 150% magic find — prints all drops\nbun run sim:combat 15 ancient  # 1000 combats at floor 15 ancient tier\nbun run debug:state            # pretty-print game state snapshot\nbun test src/engine            # 94 tests, <200ms"
+    }
+  ],
+  "lastVerifiedDate": "2026-04-01",
+  "revisions": [
+    {
+      "date": "2026-03-28",
+      "author": "claude",
+      "fields_changed": [
+        "problem",
+        "analysis",
+        "implementation",
+        "decisions",
+        "successCriteria"
+      ],
+      "reason": "Initial full feature definition after Phase 0 engine build — all core systems designed and tested"
+    },
+    {
+      "date": "2026-03-28",
+      "author": "claude",
+      "fields_changed": [
+        "decisions"
+      ],
+      "reason": "Fix decisions and codeSnippets to match feature-schema object structure"
+    },
+    {
+      "date": "2026-03-31",
+      "author": "claude",
+      "fields_changed": [
+        "implementation"
+      ],
+      "reason": "BMAD session 2: update implementation (AsyncStorage not expo-sqlite, current UX state), userGuide (zoom lock, stamina HUD, Ghost Echo hint, ascension, first-clear overlay, correct death mechanic — equipped only)"
+    },
+    {
+      "date": "2026-04-01",
+      "author": "claude",
+      "fields_changed": [
+        "implementation",
+        "lineage"
+      ],
+      "reason": "BMAD session 3: added Pact system (feat-2026-077), Named Variants (feat-2026-078), boss phase mechanics (double_strike + ignition), Study bonuses wired to gameplay, stamina potions, XP log fix. lineage updated with feat-2026-078."
+    }
+  ],
+  "annotations": [],
+  "domain": "game/mobile",
+  "userGuide": "## How to Play\n1. Pick a class at the start of each run: **Warrior** (easy), **Rogue** (medium), **Sorcerer** (hard)\n2. Use the D-pad (or swipe) to move your character on the dungeon grid\n3. Fog of war lifts as you explore — each step reveals the area around you\n4. Stepping on an unvisited tile may trigger an encounter (combat, chest, shrine, or empty)\n5. In combat: tap Attack, use a skill (mana-gated, class-specific), Use Potion to heal, or Flee\n6. After victory, items drop — tap TAKE to add to bag, or leave them\n7. Open BAG (bottom of grid screen) to manage your 20-slot inventory\n8. Tap TOWN to return to the Town screen — deposit items to the shared stash, equip from stash, and review your character stats. **Note: visiting town from the dungeon has a cost — use it when it matters.**\n9. Find the exit staircase (glowing tile) to descend to the next floor\n10. Clear floor 10 to advance to the next difficulty tier — the first clear of each tier shows a special '✦ FIRST CLEAR ✦' overlay\n11. Death sacrifices one equipped item (quality-weighted) from your gear. Your bag is fully wiped. Stashed items are always safe.\n\n## Grid Controls\n- **Swipe / D-pad**: move character\n- **Pinch**: zoom grid (3 levels: small / medium / large). Your zoom preference is saved across sessions.\n- **Zoom lock button** (🔒): when active, single-finger swipe adjusts zoom instead of moving. Useful for precise navigation on small screens.\n\n## Ghost Echo\nFrom the Graveyard screen, tap a sacrificed item to invoke its Ghost Echo — you gain 25% of its stats for 1 floor. A one-time ambient hint appears on the dungeon grid when your graveyard is non-empty.\n\n## Ascension\nOn the victory screen, if your graveyard has entries, press **ASCEND** to start a new run with Ghost Echo pre-loaded from your most recent sacrifice. Your ascension count (✦×N) appears on the main menu.\n\n## Pacts (Optional Challenge Modifiers)\nBefore descending, bind yourself to a Pact — a voluntary curse with a guaranteed reward. Pact persists between runs until you deactivate it.\n- **⚔ BLOOD**: +35% damage taken / +50% magic find\n- **☠ SUFFERING**: All monsters Cursed (defense halved) / +30% XP\n- **◈ FRAILTY**: No potions drop / All drops auto-identified\n- **⚡ EXHAUSTION**: Start each floor at 50% stamina / +25% magic find\n\n## Named Variant Enemies\nFrom floor 4+, elite encounters have a 20% chance to be a Named Variant — a fixed-identity enemy with a specific affix combination. Unlike random elites, variants are consistent across runs. Examples: Void Wraith (teleporting+cursed), Ironbone Warrior (extraStrong+aura), Stone Sentinel (aura+extraStrong). See feat-named-variants for the full table.\n\n## Boss Phases\nBosses gain additional mechanics beyond enrage:\n- **Double Strike** (Warden, Iron Colossus, Shadow Stalker): Two independent attacks per round when enraged. Block chance applies to each.\n- **Ignition** (Inferno Witch, Abyssal One): Unavoidable fire damage on immune rounds, partially reduced by fire resistance.\n- **Abyssal One (floor 30)**: Has all four mechanics simultaneously.\n\n## Testing (Dev)\n```\nbun test src/engine                    # run all engine tests\nbun run src/sim/classBalanceSim.ts     # 15-scenario class balance check\nbun run src/sim/runSim.ts              # simulate full runs headless\nnpx tsc --noEmit                       # TypeScript check (0 errors target)\n```",
+  "componentFile": "src/engine/rng.ts, src/engine/grid.ts, src/engine/encounter.ts, src/engine/loot.ts, src/engine/affixes.ts, src/engine/monsters.ts, src/engine/combat.ts, src/engine/inventory.ts, src/sim/runSim.ts, src/sim/lootSim.ts, src/sim/combatSim.ts, src/sim/debugState.ts, src/data/items.ts, src/data/monsters.ts, src/data/runewords.ts",
+  "npmPackages": [
+    "expo",
+    "react-native",
+    "@shopify/react-native-skia",
+    "zustand",
+    "react-native-reanimated",
+    "expo-sqlite"
+  ],
+  "publicInterface": [
+    {
+      "name": "generateItem",
+      "type": "function(rng: Rng, opts: GenerateOptions) => Item",
+      "description": "Generate a fully resolved item: quality roll, affix pool pick, socket count, runeword check, display name. Pure function, no side effects."
+    },
+    {
+      "name": "rollLoot",
+      "type": "function(rng: Rng, encounterType: string, floor: number, magicFind?: number) => Item[]",
+      "description": "Roll a full loot drop for an encounter type. Returns 0–3 items depending on encounter tier."
+    },
+    {
+      "name": "simulateCombat",
+      "type": "function(rng: Rng, player: PlayerCombatStats, monster: MonsterInstance) => CombatResult",
+      "description": "Auto-resolve a full combat. Returns outcome, round log, HP remaining, XP gained. Used by sim scripts."
+    },
+    {
+      "name": "generateFloor",
+      "type": "function(seed: number, rng: Rng) => { grid, playerStart, exitPos, rooms }",
+      "description": "BSP dungeon generation. Deterministic by seed. Returns 50×50 tile grid with rooms and corridors carved."
+    },
+    {
+      "name": "makeRng",
+      "type": "function(seed: number) => Rng",
+      "description": "Create a seeded PRNG (mulberry32). All game randomness must flow through this."
+    }
+  ],
+  "externalDependencies": [],
+  "statusHistory": [
+    {
+      "from": "draft",
+      "to": "active",
+      "date": "2026-03-28"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-03-29"
+    }
+  ],
+  "lineage": {
+    "children": [
+      "feat-2026-035",
+      "feat-2026-036",
+      "feat-2026-037",
+      "feat-2026-038",
+      "feat-2026-039",
+      "feat-2026-040",
+      "feat-2026-041",
+      "feat-2026-042",
+      "feat-2026-043",
+      "feat-2026-044",
+      "feat-2026-078",
+      "feat-2026-078"
+    ]
+  },
+  "toolingAnnotations": []
+}

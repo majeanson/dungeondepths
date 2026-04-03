@@ -1,0 +1,92 @@
+{
+  "featureKey": "feat-2026-067",
+  "title": "Stash persistence to disk + size cap",
+  "status": "frozen",
+  "problem": "The shared stash lives only in Zustand memory and is wiped on app restart. There is no size limit — the stash can grow unboundedly, which will cause performance issues and makes it feel undesigned. Both issues must be solved together since adding a cap without persistence creates frustrating item loss.",
+  "schemaVersion": 1,
+  "domain": "game/ui",
+  "tags": [
+    "stash",
+    "town",
+    "character-sheet",
+    "inventory",
+    "persistence",
+    "ui"
+  ],
+  "lineage": {
+    "parent": "feat-2026-044",
+    "spawnReason": "bug + deferred mechanic: stash data loss on restart is a bug; stash cap was a known omission from the initial implementation"
+  },
+  "analysis": "sharedStash was already persisted to AsyncStorage via persistence.ts (SaveData.sharedStash). The actual gap was: (1) no size cap — stash could grow unboundedly, causing performance issues and no intentional design. (2) depositToStash() returned void and was never checked by callers — StashScreen.handleDeposit silently ignored overflow. Fix: add MAX_STASH_SIZE = 30 constant, make depositToStash() return boolean (false = full), enforce cap in the implementation, show 'Stash full' toast in StashScreen, update stash tab label to show count/cap.",
+  "implementation": "1. gameStore.ts: added MAX_STASH_SIZE = 30 exported constant. Changed depositToStash interface to return boolean. Implementation returns false early if sharedStash.length >= MAX_STASH_SIZE. 2. StashScreen.tsx: handleDeposit checks return value — shows 'Stash full (30 items max)' toast if false and returns without dropping the item. Tab label updated from '{count}' to '{count}/30'. 3. GridScreen.tsx: stake bonus item delivery now falls back to stash via depositToStash() if bag is full, then to a 'bag & stash full, item lost' warning toast if stash is also full.",
+  "decisions": [
+    {
+      "decision": "MAX_STASH_SIZE = 30 items",
+      "rationale": "Enough for a serious player to hold curated end-game gear across runs without becoming a hoard sim. Small enough to prevent performance issues with large serialized arrays.",
+      "date": "2026-04-02"
+    },
+    {
+      "decision": "depositToStash returns boolean, callers responsible for toast",
+      "rationale": "The store layer should not own toast/UI state. Each caller (StashScreen, GridScreen stake delivery) shows appropriate contextual feedback.",
+      "date": "2026-04-02"
+    }
+  ],
+  "successCriteria": "Depositing to a stash with 30 items shows a 'Stash full' toast and does not add the item. Stash tab shows 'count/30'. Stake bonus item falls through to stash if bag is full, then warns if both are full.",
+  "knownLimitations": [
+    "equipFromStash does a 1-for-1 swap and bypasses the cap check (by design — stash size doesn't change during swaps)",
+    "unequipToStash bypasses the cap (uncommon edge case — equip slot unequip can push stash over 30)"
+  ],
+  "componentFile": "src/store/gameStore.ts, src/screens/StashScreen.tsx",
+  "userGuide": "The stash holds up to 30 items and survives across all runs and deaths. Deposit items from StashScreen. When the stash is full, you'll see a toast and the item stays in your bag.",
+  "implementationNotes": [
+    "MAX_STASH_SIZE exported from gameStore.ts — import it in any screen that needs the constant",
+    "Stash IS persisted already — the gap was only the size cap and caller feedback"
+  ],
+  "npmPackages": [],
+  "externalDependencies": [],
+  "publicInterface": [
+    {
+      "name": "MAX_STASH_SIZE",
+      "type": "number (30)",
+      "description": "Maximum items in sharedStash. Exported from gameStore.ts."
+    },
+    {
+      "name": "depositToStash",
+      "type": "(item: Item) => boolean",
+      "description": "Returns false if stash is at MAX_STASH_SIZE capacity."
+    }
+  ],
+  "codeSnippets": [
+    {
+      "label": "depositToStash with cap enforcement",
+      "snippet": "depositToStash: (item) => {\n  if (get().sharedStash.length >= MAX_STASH_SIZE) return false\n  set(s => ({ sharedStash: [...s.sharedStash, item] }))\n  scheduleSave()\n  return true\n}"
+    }
+  ],
+  "lastVerifiedDate": "2026-04-02",
+  "revisions": [
+    {
+      "date": "2026-04-02",
+      "author": "claude",
+      "fields_changed": [
+        "analysis",
+        "implementation",
+        "decisions",
+        "successCriteria"
+      ],
+      "reason": "Stash cap implemented this session — persistence was already there, cap was the missing piece"
+    }
+  ],
+  "annotations": [],
+  "statusHistory": [
+    {
+      "from": "draft",
+      "to": "active",
+      "date": "2026-04-02"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-04-02"
+    }
+  ]
+}

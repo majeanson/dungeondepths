@@ -1,0 +1,86 @@
+{
+  "featureKey": "feat-2026-060",
+  "title": "Roguelite Persistence — Ghost Echo live + deferred mechanics",
+  "status": "frozen",
+  "problem": "feature.json documents Ghost Echo as \"UI only — not yet live\" but the invokeGhostEcho action is fully implemented and wired in GridScreen. Additionally: careerStats.floorDeaths is never reset between runs, meta-progression bonuses (unlockables) are not yet defined, and the graveyard has no cap.",
+  "schemaVersion": 1,
+  "domain": "progression",
+  "tags": [
+    "persistence",
+    "career-stats",
+    "graveyard",
+    "stash",
+    "stakes"
+  ],
+  "lineage": {
+    "parent": "feat-2026-036",
+    "spawnReason": "stale documentation + deferred mechanics: correct Ghost Echo status, define meta-progression unlockables, add graveyard cap"
+  },
+  "analysis": "CareerStats tracked only 6 fields from session 1. New mechanics (stakes, floor deaths, daily streak, deepest floor, study bonuses) had no persistent tracking. The graveyard had no size cap, risking unbounded memory growth. The stash had no enforced cap, letting players accumulate unlimited items. These gaps meant new features like claimStake() and endRun() couldn't meaningfully record cross-run data.",
+  "implementation": "1. Extended CareerStats interface in gameStore.ts with: deepestFloor, lastRunDate, dailyStreak (streak of consecutive-day runs), floorDeaths (Record<string,number>), studiedBonuses (Record<string,string[]>), stakesCompleted (Record<string,number>). 2. Added MAX_GRAVEYARD=15 cap in endRun() — oldest entries trimmed when exceeded. 3. Added MAX_STASH_SIZE=30 export constant; depositToStash returns boolean and enforces the cap. 4. Updated claimStake() to increment stakesCompleted[stakeId] and call scheduleSave(). 5. Updated endRun() to track deepestFloor (max of current vs absFloor), dailyStreak (consecutive day detection via ISO date strings), and floorDeaths per absolute floor index.",
+  "decisions": [
+    {
+      "decision": "MAX_GRAVEYARD=15, trimming oldest entries when exceeded",
+      "rationale": "Most recent deaths are most relevant for learning. Keeping the latest 15 preserves meaningful context without unbounded growth.",
+      "date": "2026-04-02"
+    },
+    {
+      "decision": "MAX_STASH_SIZE=30 with depositToStash returning boolean",
+      "rationale": "Returning boolean lets callers (GridScreen, StashScreen) show a 'stash full' toast without needing to re-check the count.",
+      "date": "2026-04-02"
+    },
+    {
+      "decision": "dailyStreak uses ISO date string comparison (today vs yesterday) rather than timestamps",
+      "rationale": "Timestamp comparison across timezones is fragile. ISO date strings (YYYY-MM-DD) from new Date().toISOString().slice(0,10) are locale-independent.",
+      "date": "2026-04-02"
+    }
+  ],
+  "successCriteria": "Graveyard never exceeds 15 entries. Stash deposit returns false when at 30 items. stakesCompleted increments per stake claim. deepestFloor updates on each endRun. dailyStreak increments on consecutive-day runs and resets on gap. All 244 tests pass.",
+  "knownLimitations": [
+    "floorDeaths is a Record keyed by absolute floor index — sparse arrays are JSON-serialized as objects, which is fine but slightly wasteful",
+    "dailyStreak only increments on run completion (endRun), not on login — a run started but not finished doesn't break the streak"
+  ],
+  "userGuide": "Career stats now track your longest floor reached, daily streak, deaths per floor, and stakes completed per run type. The graveyard shows your most recent 15 sacrificed items. The stash holds up to 30 items.",
+  "componentFile": "src/store/gameStore.ts",
+  "npmPackages": [],
+  "publicInterface": [
+    {
+      "name": "MAX_STASH_SIZE",
+      "type": "number",
+      "description": "Exported constant (30) — used by StashScreen to display stash capacity."
+    },
+    {
+      "name": "depositToStash",
+      "type": "(item: Item) => boolean",
+      "description": "Returns true if the item was deposited, false if the stash is full."
+    }
+  ],
+  "externalDependencies": [],
+  "lastVerifiedDate": "2026-04-02",
+  "implementationNotes": [
+    "Graveyard trim: slice(newGraveyard.length - MAX_GRAVEYARD) keeps the most recent entries",
+    "stakesCompleted increment: { ...s.stakesCompleted, [stakeId]: (s.stakesCompleted[stakeId] ?? 0) + 1 }"
+  ],
+  "codeSnippets": [
+    {
+      "label": "Graveyard cap in endRun()",
+      "snippet": "const MAX_GRAVEYARD = 15\nset(s => {\n  const newGraveyard = [...s.graveyard, entry]\n  const trimmed = newGraveyard.length > MAX_GRAVEYARD\n    ? newGraveyard.slice(newGraveyard.length - MAX_GRAVEYARD)\n    : newGraveyard\n  return { graveyard: trimmed, lastSacrifice: entry, ... }\n})"
+    },
+    {
+      "label": "depositToStash with cap",
+      "snippet": "depositToStash: (item) => {\n  const state = get()\n  if (state.sharedStash.length >= MAX_STASH_SIZE) return false\n  set(s => ({ sharedStash: [...s.sharedStash, item] }))\n  scheduleSave()\n  return true\n}"
+    }
+  ],
+  "statusHistory": [
+    {
+      "from": "draft",
+      "to": "active",
+      "date": "2026-04-02"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-04-02"
+    }
+  ]
+}

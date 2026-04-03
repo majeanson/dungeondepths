@@ -1,0 +1,17 @@
+{"date":"2026-03-29T14:01:31.217Z","field":"domain","source":"mcp","value_preview":"game/ux"}
+{"date":"2026-03-29T14:01:31.217Z","field":"analysis","source":"mcp","value_preview":"CombatScreen uses static Text/View components with no animation. React Native Animated API is available with no new pack"}
+{"date":"2026-03-29T14:01:31.217Z","field":"implementation","source":"mcp","value_preview":"1. src/hooks/useHaptics.ts — wraps expo-haptics: impactLight, impactMedium, impactHeavy, notificationSuccess, notificati"}
+{"date":"2026-03-29T14:01:31.217Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"Use React Native Animated API not Reanimated\",\"rationale\":\"Reanimated is not in the current Expo SDK confi"}
+{"date":"2026-03-29T14:01:31.217Z","field":"successCriteria","source":"mcp","value_preview":"Combat hit triggers haptic. Player HP bar visibly shakes on damage received. Monster HP bar flashes red when damaged. Le"}
+{"date":"2026-03-29T14:01:31.217Z","field":"tags","source":"mcp","value_preview":"[\"haptics\",\"animations\",\"game-feel\",\"ux\",\"combat\"]"}
+{"date":"2026-03-29T14:01:31.217Z","field":"knownLimitations","source":"mcp","value_preview":"[\"No particle effects (would require a dedicated library like react-native-skia)\",\"Shake animation is horizontal only — "}
+{"date":"2026-03-29T14:01:31.217Z","field":"componentFile","source":"mcp","value_preview":"src/hooks/useHaptics.ts, src/hooks/useCombatAnimations.ts, src/screens/CombatScreen.tsx, src/components/LevelUpOverlay.t"}
+{"date":"2026-03-29T14:01:31.217Z","field":"userGuide","source":"mcp","value_preview":"Game feel is transparent to the player — you just feel it. Hits shake the screen. Crits hit harder. Level-ups are celebr"}
+{"date":"2026-03-29T14:01:31.217Z","field":"lineage","source":"mcp","value_preview":"{\"parent\":\"feat-2026-034\"}"}
+{"date":"2026-03-29T14:03:45.852Z","field":"npmPackages","source":"mcp","value_preview":"[\"expo-haptics\"]"}
+{"date":"2026-03-29T14:03:45.852Z","field":"externalDependencies","source":"mcp","value_preview":"[]"}
+{"date":"2026-03-29T14:03:45.852Z","field":"publicInterface","source":"mcp","value_preview":"[{\"name\":\"useHaptics\",\"type\":\"() => { impactLight, impactMedium, impactHeavy, notificationSuccess, notificationError }\","}
+{"date":"2026-03-29T14:03:45.852Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"useHaptics hook\",\"snippet\":\"import * as Haptics from 'expo-haptics'\\nimport { useSettingsStore } from '../sto"}
+{"date":"2026-03-29T14:04:26.878Z","field":"toolingAnnotations","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-01T17:51:56.650Z","field":"decisions","source":"mcp","value_preview":"[\"Haptics via expo-haptics with silent fallback for devices without support\",\"Log entry types drive color: crit=gold, xp"}
+{"date":"2026-04-01T17:54:21.884Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"Haptics via expo-haptics with silent fallback for devices without support\",\"rationale\":\"expo-haptics is al"}

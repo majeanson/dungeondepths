@@ -1,0 +1,140 @@
+{
+  "featureKey": "feat-2026-041",
+  "title": "Block Chance System",
+  "status": "frozen",
+  "problem": "blockChance is a stat on items but has zero effect in combat. Shields and high-dex builds have no mechanical identity. Block gives offhand/shield items a defensive purpose distinct from raw defense.",
+  "schemaVersion": 1,
+  "analysis": "blockChance stat exists in STAT_DESC with description 'Chance to fully block an incoming attack' but is never read in combat.ts. offhand equipment slot exists. The block mechanic gives the offhand slot a clear mechanical identity — a shield build trades damage output for survival via blocks. This pairs with hit/miss: miss is attacker-side failure, block is defender-side success.",
+  "implementation": "1. combat.ts: after monster attack hits (post-miss check), roll blockChance% — on block: set incomingDamage = 0, result includes isBlocked: true. 2. blockChance source: playerStats.blockChance from equipped items. 3. Passive offhand bonus: if player has offhand equipped and it has no blockChance stat, grant 10% base block (holding anything in off-hand is slightly defensive). 4. Block cap enforced at 75%. 5. roundToText: show 'Blocked!' when isBlocked. 6. Block only vs physical attacks — elemental damage is unblockable (goes around the shield). 7. PlayerCombatStats: add blockChance field. 8. buildPlayerStats: read blockChance from equipped offhand primarily, also from any item with blockChance affix.",
+  "decisions": [
+    {
+      "decision": "Block resolves after the miss check — you can only block attacks that land",
+      "rationale": "Keeps the two systems independent and readable. Miss = attacker failed. Block = defender succeeded. Sequential resolution avoids double-negation confusion in log.",
+      "alternativesConsidered": [
+        "Block rolls before miss check",
+        "Combined evasion+block single roll"
+      ],
+      "date": "2026-03-28"
+    },
+    {
+      "decision": "Passive 10% base block when any offhand is equipped, even without blockChance stat",
+      "rationale": "Makes the offhand slot feel defensively meaningful even for non-block builds. Holding anything in your off-hand is slightly protective.",
+      "alternativesConsidered": [
+        "Block only from explicit blockChance stat",
+        "Offhand grants 0% base, all block from affix"
+      ],
+      "date": "2026-03-28"
+    },
+    {
+      "decision": "Block cap at 75% — elemental damage unblockable",
+      "rationale": "75% physical block cap matches D2. Elemental bypass distinguishes enchanted monster threat profile and ensures resist gear remains relevant even for shield builds.",
+      "alternativesConsidered": [
+        "100% cap",
+        "Block applies to elemental at 50% effectiveness"
+      ],
+      "date": "2026-03-28"
+    }
+  ],
+  "successCriteria": "Player with blockChance stat occasionally shows 'Blocked!' in combat log. Block never exceeds 75% regardless of item stacking. Elemental damage from enchanted monsters is never blocked. Equipping any offhand grants base 10% block. Block correctly reduces damage to 0.",
+  "tags": [
+    "combat",
+    "blocking",
+    "offhand",
+    "shield",
+    "defense",
+    "physical"
+  ],
+  "knownLimitations": [
+    "Monster blocking not implemented — only player blocks",
+    "No visual shield indicator beyond 'Blocked!' in combat log",
+    "Block% not shown as active metric in CombatScreen"
+  ],
+  "recommendations": "EquipmentPanel should highlight offhand slot with a shield icon when blockChance > 0. Add block% to CombatScreen stats display alongside HP.",
+  "lastVerifiedDate": "2026-03-28",
+  "revisions": [
+    {
+      "date": "2026-03-28",
+      "author": "claude",
+      "fields_changed": [
+        "analysis",
+        "implementation",
+        "decisions",
+        "successCriteria"
+      ],
+      "reason": "Initial fill from design session"
+    },
+    {
+      "date": "2026-03-28",
+      "author": "claude",
+      "fields_changed": [
+        "decisions"
+      ],
+      "reason": "Fix decisions schema"
+    }
+  ],
+  "annotations": [],
+  "domain": "combat",
+  "componentFile": "src/engine/combat.ts",
+  "npmPackages": [],
+  "publicInterface": [
+    {
+      "name": "isBlocked",
+      "type": "boolean (CombatRoundResult)",
+      "description": "True when player's block roll succeeds — incoming physical damage set to 0"
+    },
+    {
+      "name": "blockChance",
+      "type": "number (PlayerCombatStats)",
+      "description": "0-75 percentage chance to block physical attacks; sourced from offhand item + affixes"
+    }
+  ],
+  "externalDependencies": [],
+  "codeSnippets": [
+    {
+      "label": "Block resolution",
+      "snippet": "const effectiveBlock = Math.min(75, playerStats.blockChance ?? 0)\nconst isBlocked = !isElemental && rng() * 100 < effectiveBlock"
+    },
+    {
+      "label": "Passive offhand block",
+      "snippet": "// In buildPlayerStats: if offhand is equipped, grant base 10% block\nconst baseBlock = equipped.offhand ? 10 : 0\nconst blockChance = baseBlock + (equipped.offhand?.effectiveStats.blockChance ?? 0)"
+    }
+  ],
+  "userGuide": "Equipping an item in your off-hand slot gives you a base 10% chance to fully block incoming physical attacks. Items with the Block Chance stat increase this further, up to a maximum of 75%. When you block, the combat log shows 'Blocked!' and you take zero damage. Note: elemental damage (fire, cold, lightning) cannot be blocked — only physical hits.",
+  "codexEntry": {
+    "tab": "combat",
+    "title": "Blocking",
+    "summary": "Equipping an off-hand item gives you a base 10% chance to fully block physical attacks. Items with Block Chance raise it further.",
+    "mechanics": [
+      "Block only triggers on physical attacks — elemental damage bypasses shields entirely",
+      "Block resolves AFTER the hit check — you can only block attacks that land",
+      "Base block: 10% when any off-hand is equipped (even without a blockChance stat)",
+      "Block cap: 75% regardless of how much blockChance you stack",
+      "A successful block sets incoming physical damage to 0",
+      "blockChance stat on items stacks additively with the base 10%",
+      "Formula: effective block = min(75, 10 (if offhand equipped) + sum of blockChance from all items)"
+    ],
+    "tips": [
+      "Any off-hand item is worth equipping for the free 10% block — even a weak one.",
+      "Block does nothing against Fire/Cold/Lightning Enchanted monsters' elemental portion — stack resists too.",
+      "The off-hand slot trade-off: dual-wield (damage) vs. shield (survival)."
+    ]
+  },
+  "toolingAnnotations": [],
+  "statusHistory": [
+    {
+      "from": "draft",
+      "to": "active",
+      "date": "2026-03-28"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-03-28"
+    }
+  ],
+  "lineage": {
+    "children": [
+      "feat-2026-064"
+    ]
+  }
+}

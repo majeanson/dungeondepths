@@ -1,0 +1,16 @@
+{"date":"2026-03-29T13:59:58.384Z","field":"domain","source":"mcp","value_preview":"game/combat"}
+{"date":"2026-03-29T13:59:58.384Z","field":"analysis","source":"mcp","value_preview":"EncounterType (engine/encounter.ts) has Normal, Elite, Rare, Ancient, Chest — no Boss. GridScreen generates random encou"}
+{"date":"2026-03-29T13:59:58.384Z","field":"implementation","source":"mcp","value_preview":"1. src/data/bosses.ts — BossDef interface: { id, name, floorRequired, hpMultiplier, dmgMultiplier, xpMultiplier, mechani"}
+{"date":"2026-03-29T13:59:58.384Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"Boss spawns every 5 floors, not randomly\",\"rationale\":\"Predictable milestones let players prepare (use tow"}
+{"date":"2026-03-29T13:59:58.384Z","field":"successCriteria","source":"mcp","value_preview":"Floor 5 always spawns a boss encounter. Boss cannot be fled. Boss enrages at round 5 (1.5× damage). Boss drops 3+ items "}
+{"date":"2026-03-29T13:59:58.384Z","field":"tags","source":"mcp","value_preview":"[\"combat\",\"bosses\",\"encounter\",\"loot\",\"progression\"]"}
+{"date":"2026-03-29T13:59:58.384Z","field":"knownLimitations","source":"mcp","value_preview":"[\"Boss roster is 6 named bosses — floors 35+ repeat The Abyssal One variant\",\"No boss cutscene or intro animation in v1\""}
+{"date":"2026-03-29T13:59:58.384Z","field":"componentFile","source":"mcp","value_preview":"src/data/bosses.ts, src/engine/encounter.ts, src/engine/combat.ts, src/store/gridStore.ts, src/store/combatStore.ts, src"}
+{"date":"2026-03-29T13:59:58.384Z","field":"userGuide","source":"mcp","value_preview":"## Boss Encounters\n\nEvery 5 floors you'll face a named boss — a far more dangerous fight than anything else on that floo"}
+{"date":"2026-03-29T13:59:58.384Z","field":"codexEntry","source":"mcp","value_preview":"{\"tab\":\"combat\",\"title\":\"Boss Encounters\",\"summary\":\"Named boss monsters appear every 5 floors. They are mandatory, cann"}
+{"date":"2026-03-29T13:59:58.384Z","field":"lineage","source":"mcp","value_preview":"{\"parent\":\"feat-2026-034\"}"}
+{"date":"2026-03-29T14:03:22.530Z","field":"npmPackages","source":"mcp","value_preview":"[]"}
+{"date":"2026-03-29T14:03:22.530Z","field":"externalDependencies","source":"mcp","value_preview":"[]"}
+{"date":"2026-03-29T14:03:22.530Z","field":"publicInterface","source":"mcp","value_preview":"[{\"name\":\"EncounterType.Boss\",\"type\":\"enum value\",\"description\":\"New encounter type for boss fights\"},{\"name\":\"isBossFlo"}
+{"date":"2026-03-29T14:03:22.530Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"Boss enrage logic in applyCombatAction\",\"snippet\":\"// In applyCombatAction, before damage calc:\\nconst isEnra"}
+{"date":"2026-03-29T14:04:25.193Z","field":"toolingAnnotations","source":"mcp","value_preview":"[]"}

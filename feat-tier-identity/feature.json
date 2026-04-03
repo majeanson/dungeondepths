@@ -1,0 +1,94 @@
+{
+  "featureKey": "feat-2026-062",
+  "title": "Tier identity — per-tier monster pools and visual themes",
+  "status": "frozen",
+  "problem": "All tiers share the same monster pool and floor palette. Tiers feel identical past tier 1. There is no visual theme differentiation (e.g. dungeon → crypt → hell) and no tier-exclusive monsters to signal escalating danger.",
+  "schemaVersion": 1,
+  "domain": "progression",
+  "tags": [
+    "monsters",
+    "difficulty",
+    "progression",
+    "tier"
+  ],
+  "lineage": {
+    "parent": "feat-2026-038",
+    "spawnReason": "deferred scope: tier theming and monster pool segmentation were explicitly cut from the initial implementation"
+  },
+  "analysis": "Monster pool had no progression-tier gating — every tier saw identical enemy types from floor 1. Adding minTier to MonsterDef lets Crypt and Hell tiers surface exclusive harder enemy archetypes while keeping the Normal-tier pool intact for new players. Without this, escalating difficulty tiers felt cosmetic.",
+  "implementation": "Added optional minTier?: number to MonsterDef and NamedVariant interfaces in src/data/monsters.ts. Added 6 exclusive monsters: Crypt Fiend/Hollow Knight/Grave Warden (minTier 2) and Hell Knight/Doom Guard/Soul Reaper (minTier 3). Updated getMonstersForFloor and getNamedVariantsForFloor to filter by (m.minTier ?? 1) <= tier. Updated spawnMonster signature to accept diffTier = 1 and pass it to both pool functions. gridStore.ts reads useGameStore.getState().tier and passes it into spawnMonster.",
+  "decisions": [
+    {
+      "decision": "minTier is optional on MonsterDef, defaults to 1 so all existing monsters are unaffected",
+      "rationale": "Backwards-compatible — no existing call sites broke. Existing tests continue passing.",
+      "date": "2026-04-02"
+    },
+    {
+      "decision": "diffTier is a separate parameter from floor, not conflated with floor depth",
+      "rationale": "Prevents double-scaling — floor already scales HP/damage, tier is additive on top via applyTierScaling.",
+      "date": "2026-04-02"
+    },
+    {
+      "decision": "Named variants also gate on minTier so Charnel Fiend (Crypt) and Infernal Knight (Hell) appear only in their tiers",
+      "rationale": "Consistency — if a monster base is tier-gated, its named variant should be too.",
+      "date": "2026-04-02"
+    }
+  ],
+  "successCriteria": "Floor 1 in Tier 1 shows only Normal-tier monsters. Crypt Fiend appears in Tier 2 but not Tier 1. Hell Knight appears only in Tier 3+. getMonstersForFloor(1, 1) returns no minTier-2 monsters. All 244 engine tests pass.",
+  "knownLimitations": [
+    "No in-game signal that a new tier unlocks different enemy types — players discover organically",
+    "Tier 3 early floors have a small pool (only Hell Knight at floor 1) until more tier-3 monsters are added"
+  ],
+  "userGuide": "Each difficulty tier (Normal / Crypt / Hell) introduces exclusive enemy types that first appear on floor 1 of that tier. Tier 2 adds armored undead; Tier 3 adds demonic elite enemies with higher base damage. Enemy variety changes automatically — no player action needed.",
+  "componentFile": "src/data/monsters.ts",
+  "npmPackages": [],
+  "publicInterface": [
+    {
+      "name": "getMonstersForFloor",
+      "type": "(floor: number, tier?: number) => MonsterDef[]",
+      "description": "Returns all monster definitions valid for the given floor depth and progression tier."
+    },
+    {
+      "name": "getNamedVariantsForFloor",
+      "type": "(floor: number, tier?: number) => NamedVariant[]",
+      "description": "Returns named elite variants valid for the given floor and progression tier."
+    },
+    {
+      "name": "spawnMonster",
+      "type": "(rng: Rng, floor: number, tier: EncounterTier, diffTier?: number) => MonsterInstance",
+      "description": "Creates a live monster instance, gating the pool by both floor and progression tier."
+    }
+  ],
+  "externalDependencies": [],
+  "lastVerifiedDate": "2026-04-02",
+  "implementationNotes": [
+    "minTier filtering uses (m.minTier ?? 1) so the field is fully backwards-compatible",
+    "spawnMonster diffTier default=1 keeps all call-sites outside gridStore forward-compatible"
+  ],
+  "codeSnippets": [
+    {
+      "label": "MonsterDef minTier field",
+      "snippet": "export interface MonsterDef {\n  id: string\n  name: string\n  baseHp: number\n  baseDamage: [number, number]\n  baseXp: number\n  minFloor: number\n  minTier?: number   // gate on progression tier (1 = always present)\n  speed: number\n}"
+    },
+    {
+      "label": "getMonstersForFloor with tier gating",
+      "snippet": "export function getMonstersForFloor(floor: number, tier = 1): MonsterDef[] {\n  return MONSTERS.filter(m => m.minFloor <= floor && (m.minTier ?? 1) <= tier)\n}"
+    },
+    {
+      "label": "spawnMonster diffTier param (gridStore caller)",
+      "snippet": "const diffTier = useGameStore.getState().tier\nmonster = spawnMonster(rng, floor, tierForEncounter(enc), diffTier)"
+    }
+  ],
+  "statusHistory": [
+    {
+      "from": "draft",
+      "to": "active",
+      "date": "2026-04-02"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-04-02"
+    }
+  ]
+}

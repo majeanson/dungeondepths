@@ -1,0 +1,14 @@
+{"date":"2026-04-02T22:54:47.876Z","field":"analysis","source":"mcp","value_preview":"Charnel (combat-heavy) and Sanctum (shrine/chest-heavy) rooms were structurally distinct but looked identical on the gri"}
+{"date":"2026-04-02T22:54:47.876Z","field":"implementation","source":"mcp","value_preview":"In src/screens/GridScreen.tsx, updated the bgColor else-branch (plain visible floor tiles not yet encountered and with n"}
+{"date":"2026-04-02T22:54:47.876Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"Room tints are very dark — #100808 red and #07060f purple — barely distinguishable from the base floor col"}
+{"date":"2026-04-02T22:54:47.876Z","field":"successCriteria","source":"mcp","value_preview":"Charnel room floor tiles have a faint red tint vs standard floor tiles. Sanctum room floor tiles have a faint purple tin"}
+{"date":"2026-04-02T22:54:47.876Z","field":"knownLimitations","source":"mcp","value_preview":"[\"Tints are very subtle — colorblind players on small screens may not notice them\",\"Visited (encountered) tiles revert t"}
+{"date":"2026-04-02T22:54:47.876Z","field":"tags","source":"mcp","value_preview":"[\"ui\",\"grid\",\"rooms\",\"atmosphere\"]"}
+{"date":"2026-04-02T22:54:47.876Z","field":"userGuide","source":"mcp","value_preview":"Charnel rooms (monster-heavy) have a faint red floor tint. Sanctum rooms (shrine/chest-heavy) have a faint purple floor "}
+{"date":"2026-04-02T22:54:47.876Z","field":"componentFile","source":"mcp","value_preview":"src/screens/GridScreen.tsx"}
+{"date":"2026-04-02T22:54:47.876Z","field":"npmPackages","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-02T22:54:47.876Z","field":"publicInterface","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-02T22:54:47.876Z","field":"externalDependencies","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-02T22:54:47.876Z","field":"lastVerifiedDate","source":"mcp","value_preview":"2026-04-02"}
+{"date":"2026-04-02T22:54:47.876Z","field":"implementationNotes","source":"mcp","value_preview":"[\"Only unencountered plain floor tiles get the room tint — walls, exits, and visited tiles are unaffected\",\"getRoomTypeA"}
+{"date":"2026-04-02T22:54:47.876Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"Room tint in bgColor logic\",\"snippet\":\"} else {\\n  // Room-type floor tints + fog-edge bleed\\n  const rt = ge"}

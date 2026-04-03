@@ -1,0 +1,36 @@
+{
+  "name": "d2game",
+  "version": "0.1.0",
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "test": "bun test src/engine",
+    "sim:loot": "bun run src/sim/lootSim.ts",
+    "sim:floors": "bun run src/sim/runSim.ts",
+    "sim:combat": "bun run src/sim/combatSim.ts",
+    "debug:state": "bun run src/sim/debugState.ts",
+    "lint": "expo lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "expo": "^54.0.33",
+    "expo-haptics": "^55.0.10-canary-20260328-bdc6273",
+    "expo-sqlite": "~16.0.10",
+    "expo-status-bar": "~3.0.9",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-reanimated": "~3.16.7",
+    "react-native-safe-area-context": "~5.6.0",
+    "zustand": "^5.0.12"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "typescript": "~5.9.2"
+  },
+  "private": true,
+  "trustedDependencies": []
+}

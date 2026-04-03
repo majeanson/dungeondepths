@@ -1,0 +1,3063 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>D2Game Balance Report</title>
+    <style>
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      body {
+        background: #0c0b09;
+        color: #c8a96e;
+        font-family: "Courier New", Courier, monospace;
+        font-size: 13px;
+        padding: 24px;
+        min-height: 100vh;
+      }
+      h1 {
+        font-size: 22px;
+        color: #e8c87e;
+        border-bottom: 2px solid #5a3a10;
+        padding-bottom: 8px;
+        margin-bottom: 4px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+      }
+      .meta {
+        color: #8a7050;
+        font-size: 11px;
+        margin-bottom: 28px;
+      }
+      h2 {
+        font-size: 13px;
+        color: #e8c87e;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 4px;
+        border-left: 3px solid #c87a3a;
+        padding-left: 8px;
+      }
+      p.sub {
+        color: #7a6040;
+        font-size: 11px;
+        margin-bottom: 8px;
+      }
+      section {
+        margin-bottom: 32px;
+      }
+      .tscroll {
+        overflow-x: auto;
+      }
+      table {
+        border-collapse: collapse;
+        min-width: 100%;
+      }
+      th,
+      td {
+        padding: 5px 10px;
+        border: 1px solid #2a1e0e;
+        font-size: 12px;
+        white-space: nowrap;
+      }
+      th {
+        background: #1a1205;
+        color: #c8a060;
+        font-weight: normal;
+        text-align: center;
+      }
+      td.cls {
+        font-weight: bold;
+        min-width: 120px;
+      }
+      td.na {
+        color: #4a3820;
+        text-align: center;
+      }
+      td.metric {
+        color: #9a8060;
+        font-size: 11px;
+      }
+      tr:nth-child(even) td:not([style]) {
+        background: #0f0e0c;
+      }
+      .flag {
+        padding: 4px 10px;
+        margin: 3px 0;
+        border-radius: 2px;
+        font-size: 12px;
+      }
+      .flag-ok {
+        background: #0a1a0a;
+        border-left: 3px solid #4a8a4a;
+        color: #7acc7a;
+      }
+      .flag-warn {
+        background: #1a0a0a;
+        border-left: 3px solid #8a3a3a;
+        color: #cc6a6a;
+      }
+      .flag span {
+        font-weight: bold;
+        margin-right: 6px;
+      }
+      .skill-group {
+        margin-bottom: 16px;
+      }
+      .skill-cls {
+        font-weight: bold;
+        font-size: 13px;
+        display: block;
+        margin-bottom: 6px;
+      }
+      .bars {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+      .bar-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .bar-label {
+        min-width: 130px;
+        color: #9a8060;
+        font-size: 11px;
+      }
+      .bar-wrap {
+        flex: 1;
+        position: relative;
+        background: #1a1205;
+        height: 16px;
+        border: 1px solid #2a1e0e;
+        max-width: 500px;
+      }
+      .bar-fill {
+        height: 100%;
+        transition: width 0.3s;
+      }
+      .bar-pct {
+        position: absolute;
+        right: 6px;
+        top: 0;
+        line-height: 16px;
+        font-size: 11px;
+        color: #c8a060;
+      }
+      .grid2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+      }
+      @media (max-width: 900px) {
+        .grid2 {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <h1>D2Game — Balance Report</h1>
+    <p class="meta">
+      Generated 4/3/2026, 9:12:59 AM &nbsp;|&nbsp; 3,000 runs/class &times; 30
+      floors &nbsp;|&nbsp; 28 tiles/floor &nbsp;|&nbsp; sloppy 2–8%
+      &nbsp;|&nbsp; panic pot @ 20% HP
+    </p>
+
+    <section>
+      <h2>Survival Rate</h2>
+      <p class="sub">
+        % of all runs that REACHED each floor (F10 ≈ completion %)
+      </p>
+      <div class="tscroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Class</th>
+              <th>F1</th>
+              <th>F2</th>
+              <th>F3</th>
+              <th>F4</th>
+              <th>F5</th>
+              <th>F6</th>
+              <th>F7</th>
+              <th>F8</th>
+              <th>F9</th>
+              <th>F10</th>
+              <th>F11</th>
+              <th>F12</th>
+              <th>F13</th>
+              <th>F14</th>
+              <th>F15</th>
+              <th>F16</th>
+              <th>F17</th>
+              <th>F18</th>
+              <th>F19</th>
+              <th>F20</th>
+              <th>F21</th>
+              <th>F22</th>
+              <th>F23</th>
+              <th>F24</th>
+              <th>F25</th>
+              <th>F26</th>
+              <th>F27</th>
+              <th>F28</th>
+              <th>F29</th>
+              <th>F30</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cls" style="color: #c87a3a">⚔ Warrior</td>
+              <td style="background: #2d5a27; text-align: center">100%</td>
+              <td style="background: #2d5a27; text-align: center">89%</td>
+              <td style="background: #2d5a27; text-align: center">77%</td>
+              <td style="background: #2d5a27; text-align: center">61%</td>
+              <td style="background: #2d5a27; text-align: center">50%</td>
+              <td style="background: #3a5020; text-align: center">40%</td>
+              <td style="background: #3a5020; text-align: center">36%</td>
+              <td style="background: #5a4a10; text-align: center">29%</td>
+              <td style="background: #5a4a10; text-align: center">22%</td>
+              <td style="background: #5a4a10; text-align: center">16%</td>
+              <td style="background: #5a2a10; text-align: center">6%</td>
+              <td style="background: #4a1010; text-align: center">4%</td>
+              <td style="background: #4a1010; text-align: center">3%</td>
+              <td style="background: #2a0808; text-align: center">1%</td>
+              <td style="background: #2a0808; text-align: center">1%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+            </tr>
+            <tr>
+              <td class="cls" style="color: #7ac85a">† Rogue</td>
+              <td style="background: #2d5a27; text-align: center">100%</td>
+              <td style="background: #2d5a27; text-align: center">87%</td>
+              <td style="background: #2d5a27; text-align: center">72%</td>
+              <td style="background: #2d5a27; text-align: center">51%</td>
+              <td style="background: #3a5020; text-align: center">39%</td>
+              <td style="background: #3a5020; text-align: center">31%</td>
+              <td style="background: #5a4a10; text-align: center">28%</td>
+              <td style="background: #5a4a10; text-align: center">23%</td>
+              <td style="background: #5a4a10; text-align: center">18%</td>
+              <td style="background: #5a2a10; text-align: center">13%</td>
+              <td style="background: #5a2a10; text-align: center">7%</td>
+              <td style="background: #4a1010; text-align: center">5%</td>
+              <td style="background: #4a1010; text-align: center">3%</td>
+              <td style="background: #2a0808; text-align: center">2%</td>
+              <td style="background: #2a0808; text-align: center">1%</td>
+              <td style="background: #2a0808; text-align: center">1%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+            </tr>
+            <tr>
+              <td class="cls" style="color: #5a7ac8">⊹ Sorcerer</td>
+              <td style="background: #2d5a27; text-align: center">100%</td>
+              <td style="background: #2d5a27; text-align: center">82%</td>
+              <td style="background: #2d5a27; text-align: center">59%</td>
+              <td style="background: #3a5020; text-align: center">35%</td>
+              <td style="background: #5a4a10; text-align: center">28%</td>
+              <td style="background: #5a4a10; text-align: center">26%</td>
+              <td style="background: #5a4a10; text-align: center">25%</td>
+              <td style="background: #5a4a10; text-align: center">23%</td>
+              <td style="background: #5a4a10; text-align: center">21%</td>
+              <td style="background: #5a4a10; text-align: center">18%</td>
+              <td style="background: #5a2a10; text-align: center">12%</td>
+              <td style="background: #5a2a10; text-align: center">9%</td>
+              <td style="background: #4a1010; text-align: center">6%</td>
+              <td style="background: #4a1010; text-align: center">3%</td>
+              <td style="background: #4a1010; text-align: center">2%</td>
+              <td style="background: #2a0808; text-align: center">1%</td>
+              <td style="background: #2a0808; text-align: center">1%</td>
+              <td style="background: #2a0808; text-align: center">1%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+              <td style="background: #2a0808; text-align: center">0%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>HP Budget</h2>
+      <p class="sub">
+        Avg HP% entering each floor (across all runs that reached it)
+      </p>
+      <div class="tscroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Class</th>
+              <th>F1</th>
+              <th>F2</th>
+              <th>F3</th>
+              <th>F4</th>
+              <th>F5</th>
+              <th>F6</th>
+              <th>F7</th>
+              <th>F8</th>
+              <th>F9</th>
+              <th>F10</th>
+              <th>F11</th>
+              <th>F12</th>
+              <th>F13</th>
+              <th>F14</th>
+              <th>F15</th>
+              <th>F16</th>
+              <th>F17</th>
+              <th>F18</th>
+              <th>F19</th>
+              <th>F20</th>
+              <th>F21</th>
+              <th>F22</th>
+              <th>F23</th>
+              <th>F24</th>
+              <th>F25</th>
+              <th>F26</th>
+              <th>F27</th>
+              <th>F28</th>
+              <th>F29</th>
+              <th>F30</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cls" style="color: #c87a3a">⚔ Warrior</td>
+              <td style="background: #2d5a27; text-align: center">100%</td>
+              <td style="background: #2d5a27; text-align: center">66%</td>
+              <td style="background: #2d5a27; text-align: center">64%</td>
+              <td style="background: #2d5a27; text-align: center">64%</td>
+              <td style="background: #2d5a27; text-align: center">76%</td>
+              <td style="background: #2d5a27; text-align: center">55%</td>
+              <td style="background: #2d5a27; text-align: center">74%</td>
+              <td style="background: #2d5a27; text-align: center">62%</td>
+              <td style="background: #2d5a27; text-align: center">68%</td>
+              <td style="background: #2d5a27; text-align: center">73%</td>
+              <td style="background: #2d5a27; text-align: center">53%</td>
+              <td style="background: #2d5a27; text-align: center">58%</td>
+              <td style="background: #2d5a27; text-align: center">56%</td>
+              <td style="background: #2d5a27; text-align: center">58%</td>
+              <td style="background: #2d5a27; text-align: center">59%</td>
+              <td style="background: #2d5a27; text-align: center">66%</td>
+              <td style="background: #2d5a27; text-align: center">51%</td>
+              <td style="background: #2d5a27; text-align: center">55%</td>
+              <td style="background: #2d5a27; text-align: center">63%</td>
+              <td style="background: #3a5020; text-align: center">44%</td>
+              <td style="background: #2d5a27; text-align: center">60%</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+            </tr>
+            <tr>
+              <td class="cls" style="color: #7ac85a">† Rogue</td>
+              <td style="background: #2d5a27; text-align: center">100%</td>
+              <td style="background: #2d5a27; text-align: center">72%</td>
+              <td style="background: #2d5a27; text-align: center">69%</td>
+              <td style="background: #2d5a27; text-align: center">65%</td>
+              <td style="background: #2d5a27; text-align: center">78%</td>
+              <td style="background: #2d5a27; text-align: center">55%</td>
+              <td style="background: #2d5a27; text-align: center">70%</td>
+              <td style="background: #2d5a27; text-align: center">60%</td>
+              <td style="background: #2d5a27; text-align: center">61%</td>
+              <td style="background: #2d5a27; text-align: center">71%</td>
+              <td style="background: #2d5a27; text-align: center">52%</td>
+              <td style="background: #2d5a27; text-align: center">55%</td>
+              <td style="background: #2d5a27; text-align: center">53%</td>
+              <td style="background: #3a5020; text-align: center">48%</td>
+              <td style="background: #2d5a27; text-align: center">64%</td>
+              <td style="background: #3a5020; text-align: center">49%</td>
+              <td style="background: #2d5a27; text-align: center">54%</td>
+              <td style="background: #2d5a27; text-align: center">57%</td>
+              <td style="background: #3a5020; text-align: center">39%</td>
+              <td style="background: #2d5a27; text-align: center">70%</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+            </tr>
+            <tr>
+              <td class="cls" style="color: #5a7ac8">⊹ Sorcerer</td>
+              <td style="background: #2d5a27; text-align: center">100%</td>
+              <td style="background: #2d5a27; text-align: center">69%</td>
+              <td style="background: #2d5a27; text-align: center">64%</td>
+              <td style="background: #2d5a27; text-align: center">61%</td>
+              <td style="background: #2d5a27; text-align: center">76%</td>
+              <td style="background: #2d5a27; text-align: center">56%</td>
+              <td style="background: #2d5a27; text-align: center">74%</td>
+              <td style="background: #2d5a27; text-align: center">63%</td>
+              <td style="background: #2d5a27; text-align: center">66%</td>
+              <td style="background: #2d5a27; text-align: center">69%</td>
+              <td style="background: #2d5a27; text-align: center">53%</td>
+              <td style="background: #2d5a27; text-align: center">55%</td>
+              <td style="background: #2d5a27; text-align: center">54%</td>
+              <td style="background: #2d5a27; text-align: center">52%</td>
+              <td style="background: #2d5a27; text-align: center">64%</td>
+              <td style="background: #2d5a27; text-align: center">52%</td>
+              <td style="background: #3a5020; text-align: center">49%</td>
+              <td style="background: #2d5a27; text-align: center">54%</td>
+              <td style="background: #3a5020; text-align: center">49%</td>
+              <td style="background: #2d5a27; text-align: center">66%</td>
+              <td style="background: #3a5020; text-align: center">45%</td>
+              <td style="background: #3a5020; text-align: center">41%</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Fight Duration</h2>
+      <p class="sub">Avg rounds per combat per floor</p>
+      <div class="tscroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Class</th>
+              <th>F1</th>
+              <th>F2</th>
+              <th>F3</th>
+              <th>F4</th>
+              <th>F5</th>
+              <th>F6</th>
+              <th>F7</th>
+              <th>F8</th>
+              <th>F9</th>
+              <th>F10</th>
+              <th>F11</th>
+              <th>F12</th>
+              <th>F13</th>
+              <th>F14</th>
+              <th>F15</th>
+              <th>F16</th>
+              <th>F17</th>
+              <th>F18</th>
+              <th>F19</th>
+              <th>F20</th>
+              <th>F21</th>
+              <th>F22</th>
+              <th>F23</th>
+              <th>F24</th>
+              <th>F25</th>
+              <th>F26</th>
+              <th>F27</th>
+              <th>F28</th>
+              <th>F29</th>
+              <th>F30</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cls" style="color: #c87a3a">⚔ Warrior</td>
+              <td style="text-align: center">4.6</td>
+              <td style="text-align: center">3.3</td>
+              <td style="text-align: center">3.4</td>
+              <td style="text-align: center">3.7</td>
+              <td style="text-align: center">4.2</td>
+              <td style="text-align: center">3.4</td>
+              <td style="text-align: center">4.1</td>
+              <td style="text-align: center">4.1</td>
+              <td style="text-align: center">4.8</td>
+              <td style="text-align: center">5.8</td>
+              <td style="text-align: center">4.8</td>
+              <td style="text-align: center">5.0</td>
+              <td style="text-align: center">6.0</td>
+              <td style="text-align: center">5.5</td>
+              <td style="text-align: center">5.2</td>
+              <td style="text-align: center">3.8</td>
+              <td style="text-align: center">4.6</td>
+              <td style="text-align: center">4.7</td>
+              <td style="text-align: center">10.0</td>
+              <td style="text-align: center">4.3</td>
+              <td style="text-align: center">6.0</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+            </tr>
+            <tr>
+              <td class="cls" style="color: #7ac85a">† Rogue</td>
+              <td style="text-align: center">3.8</td>
+              <td style="text-align: center">2.9</td>
+              <td style="text-align: center">2.8</td>
+              <td style="text-align: center">2.9</td>
+              <td style="text-align: center">3.1</td>
+              <td style="text-align: center">2.5</td>
+              <td style="text-align: center">2.7</td>
+              <td style="text-align: center">2.9</td>
+              <td style="text-align: center">3.1</td>
+              <td style="text-align: center">3.6</td>
+              <td style="text-align: center">3.3</td>
+              <td style="text-align: center">3.5</td>
+              <td style="text-align: center">3.7</td>
+              <td style="text-align: center">4.3</td>
+              <td style="text-align: center">3.5</td>
+              <td style="text-align: center">3.4</td>
+              <td style="text-align: center">3.2</td>
+              <td style="text-align: center">2.8</td>
+              <td style="text-align: center">4.0</td>
+              <td style="text-align: center">2.3</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+            </tr>
+            <tr>
+              <td class="cls" style="color: #5a7ac8">⊹ Sorcerer</td>
+              <td style="text-align: center">5.1</td>
+              <td style="text-align: center">3.6</td>
+              <td style="text-align: center">3.2</td>
+              <td style="text-align: center">2.3</td>
+              <td style="text-align: center">2.3</td>
+              <td style="text-align: center">1.9</td>
+              <td style="text-align: center">2.0</td>
+              <td style="text-align: center">2.2</td>
+              <td style="text-align: center">2.5</td>
+              <td style="text-align: center">2.8</td>
+              <td style="text-align: center">2.4</td>
+              <td style="text-align: center">2.7</td>
+              <td style="text-align: center">2.7</td>
+              <td style="text-align: center">2.9</td>
+              <td style="text-align: center">2.8</td>
+              <td style="text-align: center">2.4</td>
+              <td style="text-align: center">2.3</td>
+              <td style="text-align: center">2.6</td>
+              <td style="text-align: center">3.0</td>
+              <td style="text-align: center">2.3</td>
+              <td style="text-align: center">4.8</td>
+              <td style="text-align: center">2.3</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Boss Kill Rate</h2>
+      <p class="sub">
+        Among runs that entered the boss floor — % that survived it
+      </p>
+      <div class="tscroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Class</th>
+              <th>F1</th>
+              <th>F2</th>
+              <th>F3</th>
+              <th>F4</th>
+              <th>F5</th>
+              <th>F6</th>
+              <th>F7</th>
+              <th>F8</th>
+              <th>F9</th>
+              <th>F10</th>
+              <th>F11</th>
+              <th>F12</th>
+              <th>F13</th>
+              <th>F14</th>
+              <th>F15</th>
+              <th>F16</th>
+              <th>F17</th>
+              <th>F18</th>
+              <th>F19</th>
+              <th>F20</th>
+              <th>F21</th>
+              <th>F22</th>
+              <th>F23</th>
+              <th>F24</th>
+              <th>F25</th>
+              <th>F26</th>
+              <th>F27</th>
+              <th>F28</th>
+              <th>F29</th>
+              <th>F30</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cls" style="color: #c87a3a">⚔ Warrior</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td style="background: #1a4a2a; text-align: center">80%</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td style="background: #5a3a10; text-align: center">39%</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td style="background: #4a1010; text-align: center">28%</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td style="background: #1a4a2a; text-align: center">100%</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td style="background: #4a1010; text-align: center">n/a</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td style="background: #4a1010; text-align: center">n/a</td>
+            </tr>
+            <tr>
+              <td class="cls" style="color: #7ac85a">† Rogue</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td style="background: #1a4a2a; text-align: center">78%</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td style="background: #3a4a10; text-align: center">51%</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td style="background: #5a3a10; text-align: center">45%</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td style="background: #4a1010; text-align: center">0%</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td style="background: #4a1010; text-align: center">n/a</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td style="background: #4a1010; text-align: center">n/a</td>
+            </tr>
+            <tr>
+              <td class="cls" style="color: #5a7ac8">⊹ Sorcerer</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td style="background: #1a4a2a; text-align: center">90%</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td style="background: #3a4a10; text-align: center">64%</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td style="background: #5a3a10; text-align: center">45%</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td style="background: #1a4a2a; text-align: center">75%</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td style="background: #4a1010; text-align: center">n/a</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td class="na" style="text-align: center">—</td>
+              <td style="background: #4a1010; text-align: center">n/a</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Level Progression</h2>
+      <p class="sub">Avg character level entering key floors</p>
+      <div class="tscroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Class</th>
+              <th>F1</th>
+              <th>F3</th>
+              <th>F5</th>
+              <th>F7</th>
+              <th>F10</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cls" style="color: #c87a3a">⚔ Warrior</td>
+              <td style="text-align: center">0.0</td>
+              <td style="text-align: center">2.7</td>
+              <td style="text-align: center">5.3</td>
+              <td style="text-align: center">8.1</td>
+              <td style="text-align: center">10.8</td>
+            </tr>
+            <tr>
+              <td class="cls" style="color: #7ac85a">† Rogue</td>
+              <td style="text-align: center">0.0</td>
+              <td style="text-align: center">2.7</td>
+              <td style="text-align: center">5.3</td>
+              <td style="text-align: center">8.1</td>
+              <td style="text-align: center">10.7</td>
+            </tr>
+            <tr>
+              <td class="cls" style="color: #5a7ac8">⊹ Sorcerer</td>
+              <td style="text-align: center">0.0</td>
+              <td style="text-align: center">2.7</td>
+              <td style="text-align: center">5.3</td>
+              <td style="text-align: center">8.1</td>
+              <td style="text-align: center">10.9</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Fight Economics</h2>
+      <p class="sub">
+        Avg damage per round: player dealt vs received, and net tempo margin
+      </p>
+      <div class="tscroll">
+        <table>
+          <thead>
+            <tr>
+              <th
+                colspan="31"
+                style="color: #c87a3a; text-align: left; padding-left: 8px"
+              >
+                ⚔ Warrior
+              </th>
+            </tr>
+            <tr>
+              <th>Metric</th>
+              <th>F1</th>
+              <th>F2</th>
+              <th>F3</th>
+              <th>F4</th>
+              <th>F5</th>
+              <th>F6</th>
+              <th>F7</th>
+              <th>F8</th>
+              <th>F9</th>
+              <th>F10</th>
+              <th>F11</th>
+              <th>F12</th>
+              <th>F13</th>
+              <th>F14</th>
+              <th>F15</th>
+              <th>F16</th>
+              <th>F17</th>
+              <th>F18</th>
+              <th>F19</th>
+              <th>F20</th>
+              <th>F21</th>
+              <th>F22</th>
+              <th>F23</th>
+              <th>F24</th>
+              <th>F25</th>
+              <th>F26</th>
+              <th>F27</th>
+              <th>F28</th>
+              <th>F29</th>
+              <th>F30</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="metric">Player dmg/rd</td>
+              <td
+                style="
+                  background: hsl(21.275107148037257deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                21
+              </td>
+              <td
+                style="
+                  background: hsl(33.287644644989776deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                33
+              </td>
+              <td
+                style="
+                  background: hsl(42.46550172838023deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                42
+              </td>
+              <td
+                style="
+                  background: hsl(47.8705601619069deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                48
+              </td>
+              <td
+                style="
+                  background: hsl(50.86713924628897deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                51
+              </td>
+              <td
+                style="
+                  background: hsl(66.09657238582676deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                66
+              </td>
+              <td
+                style="
+                  background: hsl(60.48812098489133deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                60
+              </td>
+              <td
+                style="
+                  background: hsl(73.52242662642725deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                74
+              </td>
+              <td
+                style="
+                  background: hsl(73.03308235101218deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                73
+              </td>
+              <td
+                style="
+                  background: hsl(73.92855100112143deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                74
+              </td>
+              <td
+                style="
+                  background: hsl(75.42077058251286deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                75
+              </td>
+              <td
+                style="
+                  background: hsl(78.70982504461507deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                79
+              </td>
+              <td
+                style="
+                  background: hsl(80.18613962210438deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                80
+              </td>
+              <td
+                style="
+                  background: hsl(91.49611864036265deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                91
+              </td>
+              <td
+                style="
+                  background: hsl(96.3737538179223deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                96
+              </td>
+              <td
+                style="
+                  background: hsl(109.76323789173789deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                110
+              </td>
+              <td
+                style="
+                  background: hsl(105.05546378919594deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                105
+              </td>
+              <td
+                style="
+                  background: hsl(118.1783610075947deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                118
+              </td>
+              <td
+                style="
+                  background: hsl(115.29940235203394deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                115
+              </td>
+              <td
+                style="
+                  background: hsl(119.23076923076923deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                119
+              </td>
+              <td style="background: hsl(120deg, 50%, 18%); text-align: center">
+                134
+              </td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+            </tr>
+            <tr>
+              <td class="metric">Monster dmg/rd</td>
+              <td
+                style="
+                  background: hsl(23.53626983927058deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                6
+              </td>
+              <td
+                style="
+                  background: hsl(24.748462445365824deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                5
+              </td>
+              <td
+                style="
+                  background: hsl(23.34665313207799deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                7
+              </td>
+              <td
+                style="
+                  background: hsl(23.044129493624176deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                7
+              </td>
+              <td
+                style="
+                  background: hsl(23.09974032106131deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                7
+              </td>
+              <td
+                style="
+                  background: hsl(24.463599220549245deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                6
+              </td>
+              <td
+                style="
+                  background: hsl(22.411543990518137deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                8
+              </td>
+              <td
+                style="
+                  background: hsl(19.870167311526366deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                10
+              </td>
+              <td
+                style="
+                  background: hsl(18.23480364575927deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                12
+              </td>
+              <td
+                style="
+                  background: hsl(13.62002178055755deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                16
+              </td>
+              <td
+                style="
+                  background: hsl(19.835122898276794deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                10
+              </td>
+              <td
+                style="
+                  background: hsl(20.044306776585337deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                10
+              </td>
+              <td
+                style="
+                  background: hsl(15.0854738576281deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                15
+              </td>
+              <td
+                style="
+                  background: hsl(10.724065261267427deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                19
+              </td>
+              <td
+                style="
+                  background: hsl(14.951453620804934deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                15
+              </td>
+              <td
+                style="
+                  background: hsl(25.672923076923077deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                4
+              </td>
+              <td
+                style="
+                  background: hsl(17.368851469742584deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                13
+              </td>
+              <td
+                style="
+                  background: hsl(19.88441176470588deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                10
+              </td>
+              <td style="background: hsl(0deg, 60%, 18%); text-align: center">
+                48
+              </td>
+              <td
+                style="
+                  background: hsl(15.615384615384615deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                14
+              </td>
+              <td style="background: hsl(0deg, 60%, 18%); text-align: center">
+                63
+              </td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+            </tr>
+            <tr>
+              <td class="metric">Monster avg HP</td>
+              <td style="text-align: center">93</td>
+              <td style="text-align: center">108</td>
+              <td style="text-align: center">147</td>
+              <td style="text-align: center">185</td>
+              <td style="text-align: center">211</td>
+              <td style="text-align: center">217</td>
+              <td style="text-align: center">257</td>
+              <td style="text-align: center">307</td>
+              <td style="text-align: center">359</td>
+              <td style="text-align: center">507</td>
+              <td style="text-align: center">420</td>
+              <td style="text-align: center">495</td>
+              <td style="text-align: center">653</td>
+              <td style="text-align: center">706</td>
+              <td style="text-align: center">581</td>
+              <td style="text-align: center">416</td>
+              <td style="text-align: center">483</td>
+              <td style="text-align: center">574</td>
+              <td style="text-align: center">1379</td>
+              <td style="text-align: center">511</td>
+              <td style="text-align: center">1440</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+            </tr>
+            <tr>
+              <td class="metric">Net dmg/rd</td>
+              <td style="background: #3a1a10; text-align: center">+15</td>
+              <td style="background: #3a3a10; text-align: center">+28</td>
+              <td style="background: #3a3a10; text-align: center">+36</td>
+              <td style="background: #2a4a1a; text-align: center">+41</td>
+              <td style="background: #2a4a1a; text-align: center">+44</td>
+              <td style="background: #2a4a1a; text-align: center">+61</td>
+              <td style="background: #2a4a1a; text-align: center">+53</td>
+              <td style="background: #2a4a1a; text-align: center">+63</td>
+              <td style="background: #2a4a1a; text-align: center">+61</td>
+              <td style="background: #2a4a1a; text-align: center">+58</td>
+              <td style="background: #2a4a1a; text-align: center">+65</td>
+              <td style="background: #2a4a1a; text-align: center">+69</td>
+              <td style="background: #2a4a1a; text-align: center">+65</td>
+              <td style="background: #2a4a1a; text-align: center">+72</td>
+              <td style="background: #1a4a2a; text-align: center">+81</td>
+              <td style="background: #1a4a2a; text-align: center">+105</td>
+              <td style="background: #1a4a2a; text-align: center">+92</td>
+              <td style="background: #1a4a2a; text-align: center">+108</td>
+              <td style="background: #2a4a1a; text-align: center">+68</td>
+              <td style="background: #1a4a2a; text-align: center">+105</td>
+              <td style="background: #2a4a1a; text-align: center">+71</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+            </tr>
+          </tbody>
+          <thead>
+            <tr>
+              <th
+                colspan="31"
+                style="color: #7ac85a; text-align: left; padding-left: 8px"
+              >
+                † Rogue
+              </th>
+            </tr>
+            <tr>
+              <th>Metric</th>
+              <th>F1</th>
+              <th>F2</th>
+              <th>F3</th>
+              <th>F4</th>
+              <th>F5</th>
+              <th>F6</th>
+              <th>F7</th>
+              <th>F8</th>
+              <th>F9</th>
+              <th>F10</th>
+              <th>F11</th>
+              <th>F12</th>
+              <th>F13</th>
+              <th>F14</th>
+              <th>F15</th>
+              <th>F16</th>
+              <th>F17</th>
+              <th>F18</th>
+              <th>F19</th>
+              <th>F20</th>
+              <th>F21</th>
+              <th>F22</th>
+              <th>F23</th>
+              <th>F24</th>
+              <th>F25</th>
+              <th>F26</th>
+              <th>F27</th>
+              <th>F28</th>
+              <th>F29</th>
+              <th>F30</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="metric">Player dmg/rd</td>
+              <td
+                style="
+                  background: hsl(23.77460978691479deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                24
+              </td>
+              <td
+                style="
+                  background: hsl(36.789604680394966deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                37
+              </td>
+              <td
+                style="
+                  background: hsl(49.175710350272176deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                49
+              </td>
+              <td
+                style="
+                  background: hsl(59.30601881086191deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                59
+              </td>
+              <td
+                style="
+                  background: hsl(66.26730625345208deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                66
+              </td>
+              <td
+                style="
+                  background: hsl(80.15182923184456deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                80
+              </td>
+              <td
+                style="
+                  background: hsl(85.3145776782348deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                85
+              </td>
+              <td
+                style="
+                  background: hsl(96.33708147338973deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                96
+              </td>
+              <td
+                style="
+                  background: hsl(103.97923380786636deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                104
+              </td>
+              <td
+                style="
+                  background: hsl(114.6397743054882deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                115
+              </td>
+              <td
+                style="
+                  background: hsl(114.43797018241679deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                114
+              </td>
+              <td
+                style="
+                  background: hsl(116.77365405450004deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                117
+              </td>
+              <td
+                style="
+                  background: hsl(117.79850600722975deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                118
+              </td>
+              <td style="background: hsl(120deg, 50%, 18%); text-align: center">
+                130
+              </td>
+              <td style="background: hsl(120deg, 50%, 18%); text-align: center">
+                140
+              </td>
+              <td style="background: hsl(120deg, 50%, 18%); text-align: center">
+                140
+              </td>
+              <td style="background: hsl(120deg, 50%, 18%); text-align: center">
+                170
+              </td>
+              <td style="background: hsl(120deg, 50%, 18%); text-align: center">
+                157
+              </td>
+              <td style="background: hsl(120deg, 50%, 18%); text-align: center">
+                162
+              </td>
+              <td style="background: hsl(120deg, 50%, 18%); text-align: center">
+                217
+              </td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+            </tr>
+            <tr>
+              <td class="metric">Monster dmg/rd</td>
+              <td
+                style="
+                  background: hsl(23.669453401805644deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                6
+              </td>
+              <td
+                style="
+                  background: hsl(24.231910751741548deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                6
+              </td>
+              <td
+                style="
+                  background: hsl(22.478256916593107deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                8
+              </td>
+              <td
+                style="
+                  background: hsl(21.425640788551732deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                9
+              </td>
+              <td
+                style="
+                  background: hsl(20.801348684591435deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                9
+              </td>
+              <td
+                style="
+                  background: hsl(22.712327969320356deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                7
+              </td>
+              <td
+                style="
+                  background: hsl(20.654022504653035deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                9
+              </td>
+              <td
+                style="
+                  background: hsl(17.957490523036775deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                12
+              </td>
+              <td
+                style="
+                  background: hsl(16.429049978721498deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                14
+              </td>
+              <td
+                style="
+                  background: hsl(10.930386947333243deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                19
+              </td>
+              <td
+                style="
+                  background: hsl(17.049344858346306deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                13
+              </td>
+              <td
+                style="
+                  background: hsl(16.452424148986488deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                14
+              </td>
+              <td
+                style="
+                  background: hsl(14.887672194072094deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                15
+              </td>
+              <td
+                style="
+                  background: hsl(11.629050059247628deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                18
+              </td>
+              <td
+                style="
+                  background: hsl(7.3680079782990475deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                23
+              </td>
+              <td
+                style="
+                  background: hsl(19.69636952787954deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                10
+              </td>
+              <td
+                style="
+                  background: hsl(10.923173306728824deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                19
+              </td>
+              <td
+                style="
+                  background: hsl(15.516884837151316deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                14
+              </td>
+              <td style="background: hsl(0deg, 60%, 18%); text-align: center">
+                49
+              </td>
+              <td
+                style="
+                  background: hsl(5.2699055330634295deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                25
+              </td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+            </tr>
+            <tr>
+              <td class="metric">Monster avg HP</td>
+              <td style="text-align: center">94</td>
+              <td style="text-align: center">109</td>
+              <td style="text-align: center">147</td>
+              <td style="text-align: center">188</td>
+              <td style="text-align: center">209</td>
+              <td style="text-align: center">210</td>
+              <td style="text-align: center">243</td>
+              <td style="text-align: center">303</td>
+              <td style="text-align: center">360</td>
+              <td style="text-align: center">467</td>
+              <td style="text-align: center">435</td>
+              <td style="text-align: center">487</td>
+              <td style="text-align: center">478</td>
+              <td style="text-align: center">666</td>
+              <td style="text-align: center">597</td>
+              <td style="text-align: center">506</td>
+              <td style="text-align: center">554</td>
+              <td style="text-align: center">448</td>
+              <td style="text-align: center">1030</td>
+              <td style="text-align: center">670</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+            </tr>
+            <tr>
+              <td class="metric">Net dmg/rd</td>
+              <td style="background: #3a3a10; text-align: center">+17</td>
+              <td style="background: #3a3a10; text-align: center">+31</td>
+              <td style="background: #2a4a1a; text-align: center">+42</td>
+              <td style="background: #2a4a1a; text-align: center">+51</td>
+              <td style="background: #2a4a1a; text-align: center">+57</td>
+              <td style="background: #2a4a1a; text-align: center">+73</td>
+              <td style="background: #2a4a1a; text-align: center">+76</td>
+              <td style="background: #1a4a2a; text-align: center">+84</td>
+              <td style="background: #1a4a2a; text-align: center">+90</td>
+              <td style="background: #1a4a2a; text-align: center">+96</td>
+              <td style="background: #1a4a2a; text-align: center">+101</td>
+              <td style="background: #1a4a2a; text-align: center">+103</td>
+              <td style="background: #1a4a2a; text-align: center">+103</td>
+              <td style="background: #1a4a2a; text-align: center">+111</td>
+              <td style="background: #1a4a2a; text-align: center">+117</td>
+              <td style="background: #1a4a2a; text-align: center">+130</td>
+              <td style="background: #1a4a2a; text-align: center">+150</td>
+              <td style="background: #1a4a2a; text-align: center">+143</td>
+              <td style="background: #1a4a2a; text-align: center">+112</td>
+              <td style="background: #1a4a2a; text-align: center">+192</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+            </tr>
+          </tbody>
+          <thead>
+            <tr>
+              <th
+                colspan="31"
+                style="color: #5a7ac8; text-align: left; padding-left: 8px"
+              >
+                ⊹ Sorcerer
+              </th>
+            </tr>
+            <tr>
+              <th>Metric</th>
+              <th>F1</th>
+              <th>F2</th>
+              <th>F3</th>
+              <th>F4</th>
+              <th>F5</th>
+              <th>F6</th>
+              <th>F7</th>
+              <th>F8</th>
+              <th>F9</th>
+              <th>F10</th>
+              <th>F11</th>
+              <th>F12</th>
+              <th>F13</th>
+              <th>F14</th>
+              <th>F15</th>
+              <th>F16</th>
+              <th>F17</th>
+              <th>F18</th>
+              <th>F19</th>
+              <th>F20</th>
+              <th>F21</th>
+              <th>F22</th>
+              <th>F23</th>
+              <th>F24</th>
+              <th>F25</th>
+              <th>F26</th>
+              <th>F27</th>
+              <th>F28</th>
+              <th>F29</th>
+              <th>F30</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="metric">Player dmg/rd</td>
+              <td
+                style="
+                  background: hsl(17.6354586376836deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                18
+              </td>
+              <td
+                style="
+                  background: hsl(28.776798880709546deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                29
+              </td>
+              <td
+                style="
+                  background: hsl(43.508054549908806deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                44
+              </td>
+              <td
+                style="
+                  background: hsl(72.53596741335477deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                73
+              </td>
+              <td
+                style="
+                  background: hsl(90.08245249960711deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                90
+              </td>
+              <td
+                style="
+                  background: hsl(109.55911157732426deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                110
+              </td>
+              <td
+                style="
+                  background: hsl(114.81595376682651deg, 50%, 18%);
+                  text-align: center;
+                "
+              >
+                115
+              </td>
+              <td style="background: hsl(120deg, 50%, 18%); text-align: center">
+                121
+              </td>
+              <td style="background: hsl(120deg, 50%, 18%); text-align: center">
+                125
+              </td>
+              <td style="background: hsl(120deg, 50%, 18%); text-align: center">
+                142
+              </td>
+              <td style="background: hsl(120deg, 50%, 18%); text-align: center">
+                151
+              </td>
+              <td style="background: hsl(120deg, 50%, 18%); text-align: center">
+                153
+              </td>
+              <td style="background: hsl(120deg, 50%, 18%); text-align: center">
+                154
+              </td>
+              <td style="background: hsl(120deg, 50%, 18%); text-align: center">
+                169
+              </td>
+              <td style="background: hsl(120deg, 50%, 18%); text-align: center">
+                183
+              </td>
+              <td style="background: hsl(120deg, 50%, 18%); text-align: center">
+                180
+              </td>
+              <td style="background: hsl(120deg, 50%, 18%); text-align: center">
+                192
+              </td>
+              <td style="background: hsl(120deg, 50%, 18%); text-align: center">
+                204
+              </td>
+              <td style="background: hsl(120deg, 50%, 18%); text-align: center">
+                203
+              </td>
+              <td style="background: hsl(120deg, 50%, 18%); text-align: center">
+                227
+              </td>
+              <td style="background: hsl(120deg, 50%, 18%); text-align: center">
+                212
+              </td>
+              <td style="background: hsl(120deg, 50%, 18%); text-align: center">
+                228
+              </td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+            </tr>
+            <tr>
+              <td class="metric">Monster dmg/rd</td>
+              <td
+                style="
+                  background: hsl(22.89359953391898deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                7
+              </td>
+              <td
+                style="
+                  background: hsl(23.687387923110705deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                6
+              </td>
+              <td
+                style="
+                  background: hsl(21.65085766746951deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                8
+              </td>
+              <td
+                style="
+                  background: hsl(21.588302768512982deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                8
+              </td>
+              <td
+                style="
+                  background: hsl(22.439590474456622deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                8
+              </td>
+              <td
+                style="
+                  background: hsl(24.36235256392804deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                6
+              </td>
+              <td
+                style="
+                  background: hsl(22.56338613134016deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                7
+              </td>
+              <td
+                style="
+                  background: hsl(20.645119684687057deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                9
+              </td>
+              <td
+                style="
+                  background: hsl(15.721647418932504deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                14
+              </td>
+              <td
+                style="
+                  background: hsl(10.33446820799217deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                20
+              </td>
+              <td
+                style="
+                  background: hsl(14.252929083389601deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                16
+              </td>
+              <td
+                style="
+                  background: hsl(11.661346354466513deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                18
+              </td>
+              <td
+                style="
+                  background: hsl(8.697695669047974deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                21
+              </td>
+              <td
+                style="
+                  background: hsl(7.491333128402438deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                23
+              </td>
+              <td
+                style="
+                  background: hsl(3.462806174205152deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                27
+              </td>
+              <td
+                style="
+                  background: hsl(2.118687273737425deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                28
+              </td>
+              <td
+                style="
+                  background: hsl(16.550444580152064deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                13
+              </td>
+              <td
+                style="
+                  background: hsl(10.141375446023414deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                20
+              </td>
+              <td
+                style="
+                  background: hsl(2.331672130204737deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                28
+              </td>
+              <td style="background: hsl(0deg, 60%, 18%); text-align: center">
+                42
+              </td>
+              <td style="background: hsl(0deg, 60%, 18%); text-align: center">
+                49
+              </td>
+              <td
+                style="
+                  background: hsl(4.956521739130434deg, 60%, 18%);
+                  text-align: center;
+                "
+              >
+                25
+              </td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+            </tr>
+            <tr>
+              <td class="metric">Monster avg HP</td>
+              <td style="text-align: center">94</td>
+              <td style="text-align: center">111</td>
+              <td style="text-align: center">153</td>
+              <td style="text-align: center">178</td>
+              <td style="text-align: center">206</td>
+              <td style="text-align: center">210</td>
+              <td style="text-align: center">242</td>
+              <td style="text-align: center">272</td>
+              <td style="text-align: center">332</td>
+              <td style="text-align: center">462</td>
+              <td style="text-align: center">422</td>
+              <td style="text-align: center">490</td>
+              <td style="text-align: center">528</td>
+              <td style="text-align: center">630</td>
+              <td style="text-align: center">598</td>
+              <td style="text-align: center">555</td>
+              <td style="text-align: center">468</td>
+              <td style="text-align: center">589</td>
+              <td style="text-align: center">635</td>
+              <td style="text-align: center">664</td>
+              <td style="text-align: center">1049</td>
+              <td style="text-align: center">637</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+            </tr>
+            <tr>
+              <td class="metric">Net dmg/rd</td>
+              <td style="background: #3a1a10; text-align: center">+11</td>
+              <td style="background: #3a3a10; text-align: center">+22</td>
+              <td style="background: #3a3a10; text-align: center">+35</td>
+              <td style="background: #2a4a1a; text-align: center">+64</td>
+              <td style="background: #1a4a2a; text-align: center">+83</td>
+              <td style="background: #1a4a2a; text-align: center">+104</td>
+              <td style="background: #1a4a2a; text-align: center">+107</td>
+              <td style="background: #1a4a2a; text-align: center">+112</td>
+              <td style="background: #1a4a2a; text-align: center">+111</td>
+              <td style="background: #1a4a2a; text-align: center">+122</td>
+              <td style="background: #1a4a2a; text-align: center">+136</td>
+              <td style="background: #1a4a2a; text-align: center">+134</td>
+              <td style="background: #1a4a2a; text-align: center">+133</td>
+              <td style="background: #1a4a2a; text-align: center">+147</td>
+              <td style="background: #1a4a2a; text-align: center">+157</td>
+              <td style="background: #1a4a2a; text-align: center">+152</td>
+              <td style="background: #1a4a2a; text-align: center">+178</td>
+              <td style="background: #1a4a2a; text-align: center">+184</td>
+              <td style="background: #1a4a2a; text-align: center">+176</td>
+              <td style="background: #1a4a2a; text-align: center">+185</td>
+              <td style="background: #1a4a2a; text-align: center">+164</td>
+              <td style="background: #1a4a2a; text-align: center">+203</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Floor Death Distribution</h2>
+      <p class="sub">
+        % of all deaths that occurred on each floor — spike floors indicate
+        bottlenecks
+      </p>
+      <div class="tscroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Class</th>
+              <th>F1</th>
+              <th>F2</th>
+              <th>F3</th>
+              <th>F4</th>
+              <th>F5</th>
+              <th>F6</th>
+              <th>F7</th>
+              <th>F8</th>
+              <th>F9</th>
+              <th>F10</th>
+              <th>F11</th>
+              <th>F12</th>
+              <th>F13</th>
+              <th>F14</th>
+              <th>F15</th>
+              <th>F16</th>
+              <th>F17</th>
+              <th>F18</th>
+              <th>F19</th>
+              <th>F20</th>
+              <th>F21</th>
+              <th>F22</th>
+              <th>F23</th>
+              <th>F24</th>
+              <th>F25</th>
+              <th>F26</th>
+              <th>F27</th>
+              <th>F28</th>
+              <th>F29</th>
+              <th>F30</th>
+              <th>Deaths</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cls" style="color: #c87a3a">⚔ Warrior</td>
+              <td style="background: #1a1a08; text-align: center">11%</td>
+              <td style="background: #1a1a08; text-align: center">12%</td>
+              <td style="background: #3a1a08; text-align: center">16%</td>
+              <td style="background: #1a1a08; text-align: center">11%</td>
+              <td style="background: #1a1a08; text-align: center">10%</td>
+              <td style="background: #0f0e0c; text-align: center">4%</td>
+              <td style="background: #1a1a08; text-align: center">8%</td>
+              <td style="background: #1a1a08; text-align: center">7%</td>
+              <td style="background: #0f0e0c; text-align: center">6%</td>
+              <td style="background: #1a1a08; text-align: center">10%</td>
+              <td style="background: #0f0e0c; text-align: center">2%</td>
+              <td style="background: #0f0e0c; text-align: center">1%</td>
+              <td style="background: #0f0e0c; text-align: center">1%</td>
+              <td style="background: #0f0e0c; text-align: center">1%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="text-align: center; color: #8a7050">3,000</td>
+            </tr>
+            <tr>
+              <td class="cls" style="color: #7ac85a">† Rogue</td>
+              <td style="background: #3a1a08; text-align: center">13%</td>
+              <td style="background: #3a1a08; text-align: center">15%</td>
+              <td style="background: #4a1010; text-align: center">21%</td>
+              <td style="background: #1a1a08; text-align: center">12%</td>
+              <td style="background: #1a1a08; text-align: center">9%</td>
+              <td style="background: #0f0e0c; text-align: center">3%</td>
+              <td style="background: #0f0e0c; text-align: center">4%</td>
+              <td style="background: #0f0e0c; text-align: center">5%</td>
+              <td style="background: #0f0e0c; text-align: center">4%</td>
+              <td style="background: #1a1a08; text-align: center">7%</td>
+              <td style="background: #0f0e0c; text-align: center">2%</td>
+              <td style="background: #0f0e0c; text-align: center">2%</td>
+              <td style="background: #0f0e0c; text-align: center">1%</td>
+              <td style="background: #0f0e0c; text-align: center">1%</td>
+              <td style="background: #0f0e0c; text-align: center">1%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="text-align: center; color: #8a7050">3,000</td>
+            </tr>
+            <tr>
+              <td class="cls" style="color: #5a7ac8">⊹ Sorcerer</td>
+              <td style="background: #3a1a08; text-align: center">18%</td>
+              <td style="background: #4a1010; text-align: center">24%</td>
+              <td style="background: #4a1010; text-align: center">24%</td>
+              <td style="background: #1a1a08; text-align: center">7%</td>
+              <td style="background: #0f0e0c; text-align: center">3%</td>
+              <td style="background: #0f0e0c; text-align: center">1%</td>
+              <td style="background: #0f0e0c; text-align: center">2%</td>
+              <td style="background: #0f0e0c; text-align: center">2%</td>
+              <td style="background: #0f0e0c; text-align: center">3%</td>
+              <td style="background: #1a1a08; text-align: center">6%</td>
+              <td style="background: #0f0e0c; text-align: center">3%</td>
+              <td style="background: #0f0e0c; text-align: center">3%</td>
+              <td style="background: #0f0e0c; text-align: center">2%</td>
+              <td style="background: #0f0e0c; text-align: center">1%</td>
+              <td style="background: #0f0e0c; text-align: center">1%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="background: #0f0e0c; text-align: center">0%</td>
+              <td style="text-align: center; color: #8a7050">3,000</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Death Cause by Tier</h2>
+      <p class="sub">
+        % of deaths caused by each encounter type — reveals what kills players
+      </p>
+      <div class="tscroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Class</th>
+              <th>Normal</th>
+              <th>Elite</th>
+              <th>Rare</th>
+              <th>Ancient</th>
+              <th>Boss</th>
+              <th>Avg HP% at Death</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cls" style="color: #c87a3a">⚔ Warrior</td>
+              <td style="text-align: center">2%</td>
+              <td style="text-align: center">11%</td>
+              <td style="text-align: center; color: #cc8833">41%</td>
+              <td style="text-align: center; color: #cc8833">38%</td>
+              <td style="text-align: center; color: #cc3333">8%</td>
+              <td style="text-align: center">59%</td>
+            </tr>
+            <tr>
+              <td class="cls" style="color: #7ac85a">† Rogue</td>
+              <td style="text-align: center">5%</td>
+              <td style="text-align: center">16%</td>
+              <td style="text-align: center; color: #cc8833">42%</td>
+              <td style="text-align: center; color: #cc8833">29%</td>
+              <td style="text-align: center; color: #cc3333">8%</td>
+              <td style="text-align: center">54%</td>
+            </tr>
+            <tr>
+              <td class="cls" style="color: #5a7ac8">⊹ Sorcerer</td>
+              <td style="text-align: center">8%</td>
+              <td style="text-align: center">22%</td>
+              <td style="text-align: center; color: #cc8833">41%</td>
+              <td style="text-align: center; color: #cc8833">25%</td>
+              <td style="text-align: center; color: #cc3333">5%</td>
+              <td style="text-align: center">52%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>HP% Entering Fatal Fight</h2>
+      <p class="sub">
+        How depleted was the player before dying? ≤10% = dominated, >50% =
+        spike-killed
+      </p>
+      <div class="tscroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Class</th>
+              <th>≤10%<br /><small>dominated</small></th>
+              <th>11–25%<br /><small>back foot</small></th>
+              <th>26–50%<br /><small>fighting</small></th>
+              <th>51–75%<br /><small>spike kill</small></th>
+              <th>76–100%<br /><small>ambushed</small></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cls" style="color: #c87a3a">⚔ Warrior</td>
+              <td style="background: #0f0e0c; text-align: center">8%</td>
+              <td style="background: #0f0e0c; text-align: center">7%</td>
+              <td style="background: #0f0e0c; text-align: center">16%</td>
+              <td style="background: #2a1a08; text-align: center">38%</td>
+              <td style="background: #2a1a08; text-align: center">30%</td>
+            </tr>
+            <tr>
+              <td class="cls" style="color: #7ac85a">† Rogue</td>
+              <td style="background: #0f0e0c; text-align: center">12%</td>
+              <td style="background: #0f0e0c; text-align: center">10%</td>
+              <td style="background: #0f0e0c; text-align: center">19%</td>
+              <td style="background: #2a1a08; text-align: center">31%</td>
+              <td style="background: #0f0e0c; text-align: center">28%</td>
+            </tr>
+            <tr>
+              <td class="cls" style="color: #5a7ac8">⊹ Sorcerer</td>
+              <td style="background: #0f0e0c; text-align: center">15%</td>
+              <td style="background: #0f0e0c; text-align: center">12%</td>
+              <td style="background: #0f0e0c; text-align: center">19%</td>
+              <td style="background: #0f0e0c; text-align: center">28%</td>
+              <td style="background: #0f0e0c; text-align: center">27%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Loot</h2>
+      <p class="sub">
+        Avg items found per run (all runs regardless of floor reached)
+      </p>
+      <div class="tscroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Class</th>
+              <th>Normal</th>
+              <th>Magic</th>
+              <th>Rare</th>
+              <th>Unique</th>
+              <th>Rune</th>
+              <th>Gem</th>
+              <th>Socketed</th>
+              <th>Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cls" style="color: #c87a3a">⚔ Warrior</td>
+              <td style="text-align: center">23.3</td>
+              <td style="text-align: center; color: #8888ff">13.5</td>
+              <td style="text-align: center; color: #ffaa22">11.2</td>
+              <td style="text-align: center; color: #c8a020">0.4</td>
+              <td style="text-align: center">3.1</td>
+              <td style="text-align: center">2.0</td>
+              <td style="text-align: center; color: #22cc88">1.1</td>
+              <td style="text-align: center; font-weight: bold">53.5</td>
+            </tr>
+            <tr>
+              <td class="cls" style="color: #7ac85a">† Rogue</td>
+              <td style="text-align: center">20.4</td>
+              <td style="text-align: center; color: #8888ff">11.6</td>
+              <td style="text-align: center; color: #ffaa22">9.5</td>
+              <td style="text-align: center; color: #c8a020">0.4</td>
+              <td style="text-align: center">2.7</td>
+              <td style="text-align: center">1.7</td>
+              <td style="text-align: center; color: #22cc88">0.9</td>
+              <td style="text-align: center; font-weight: bold">46.3</td>
+            </tr>
+            <tr>
+              <td class="cls" style="color: #5a7ac8">⊹ Sorcerer</td>
+              <td style="text-align: center">18.5</td>
+              <td style="text-align: center; color: #8888ff">11.1</td>
+              <td style="text-align: center; color: #ffaa22">9.2</td>
+              <td style="text-align: center; color: #c8a020">0.4</td>
+              <td style="text-align: center">2.5</td>
+              <td style="text-align: center">1.6</td>
+              <td style="text-align: center; color: #22cc88">0.8</td>
+              <td style="text-align: center; font-weight: bold">43.3</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Equipment Slot Fill Rate</h2>
+      <p class="sub">
+        % of runs with each slot filled at run end — red = gear gap in loot
+        table
+      </p>
+      <div class="tscroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Class</th>
+              <th>weapon</th>
+              <th>offhand</th>
+              <th>helmet</th>
+              <th>chest</th>
+              <th>gloves</th>
+              <th>legs</th>
+              <th>boots</th>
+              <th>belt</th>
+              <th>ring1</th>
+              <th>ring2</th>
+              <th>amulet</th>
+              <th>circlet</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cls" style="color: #c87a3a">⚔ Warrior</td>
+              <td style="background: #0a2a0a; text-align: center">90%</td>
+              <td style="background: #0a2a0a; text-align: center">79%</td>
+              <td style="background: #0a2a0a; text-align: center">83%</td>
+              <td style="background: #0a2a0a; text-align: center">80%</td>
+              <td style="background: #0a2a0a; text-align: center">79%</td>
+              <td style="background: #0a2a0a; text-align: center">80%</td>
+              <td style="background: #0a2a0a; text-align: center">80%</td>
+              <td style="background: #0a2a0a; text-align: center">83%</td>
+              <td style="background: #0a2a0a; text-align: center">67%</td>
+              <td style="background: #1a2a08; text-align: center">48%</td>
+              <td style="background: #1a2a08; text-align: center">54%</td>
+              <td style="background: #2a1a08; text-align: center">34%</td>
+            </tr>
+            <tr>
+              <td class="cls" style="color: #7ac85a">† Rogue</td>
+              <td style="background: #0a2a0a; text-align: center">87%</td>
+              <td style="background: #0a2a0a; text-align: center">74%</td>
+              <td style="background: #0a2a0a; text-align: center">78%</td>
+              <td style="background: #0a2a0a; text-align: center">75%</td>
+              <td style="background: #0a2a0a; text-align: center">76%</td>
+              <td style="background: #0a2a0a; text-align: center">76%</td>
+              <td style="background: #0a2a0a; text-align: center">76%</td>
+              <td style="background: #0a2a0a; text-align: center">79%</td>
+              <td style="background: #1a2a08; text-align: center">61%</td>
+              <td style="background: #1a2a08; text-align: center">41%</td>
+              <td style="background: #1a2a08; text-align: center">46%</td>
+              <td style="background: #2a1a08; text-align: center">26%</td>
+            </tr>
+            <tr>
+              <td class="cls" style="color: #5a7ac8">⊹ Sorcerer</td>
+              <td style="background: #0a2a0a; text-align: center">87%</td>
+              <td style="background: #0a2a0a; text-align: center">66%</td>
+              <td style="background: #0a2a0a; text-align: center">71%</td>
+              <td style="background: #0a2a0a; text-align: center">68%</td>
+              <td style="background: #0a2a0a; text-align: center">70%</td>
+              <td style="background: #0a2a0a; text-align: center">68%</td>
+              <td style="background: #0a2a0a; text-align: center">70%</td>
+              <td style="background: #0a2a0a; text-align: center">71%</td>
+              <td style="background: #1a2a08; text-align: center">48%</td>
+              <td style="background: #2a1a08; text-align: center">31%</td>
+              <td style="background: #1a2a08; text-align: center">36%</td>
+              <td style="background: #2a1a08; text-align: center">23%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Avg Equipped Slots by Floor</h2>
+      <p class="sub">
+        How geared up players are as they progress (max 12 slots)
+      </p>
+      <div class="tscroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Class</th>
+              <th>F1</th>
+              <th>F2</th>
+              <th>F3</th>
+              <th>F4</th>
+              <th>F5</th>
+              <th>F6</th>
+              <th>F7</th>
+              <th>F8</th>
+              <th>F9</th>
+              <th>F10</th>
+              <th>F11</th>
+              <th>F12</th>
+              <th>F13</th>
+              <th>F14</th>
+              <th>F15</th>
+              <th>F16</th>
+              <th>F17</th>
+              <th>F18</th>
+              <th>F19</th>
+              <th>F20</th>
+              <th>F21</th>
+              <th>F22</th>
+              <th>F23</th>
+              <th>F24</th>
+              <th>F25</th>
+              <th>F26</th>
+              <th>F27</th>
+              <th>F28</th>
+              <th>F29</th>
+              <th>F30</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cls" style="color: #c87a3a">⚔ Warrior</td>
+              <td style="text-align: center">0.0</td>
+              <td style="text-align: center">4.3</td>
+              <td style="text-align: center">6.5</td>
+              <td style="text-align: center">8.5</td>
+              <td style="text-align: center">9.8</td>
+              <td style="text-align: center">10.8</td>
+              <td style="text-align: center">11.1</td>
+              <td style="text-align: center">11.3</td>
+              <td style="text-align: center">11.5</td>
+              <td style="text-align: center">11.7</td>
+              <td style="text-align: center">11.9</td>
+              <td style="text-align: center">11.9</td>
+              <td style="text-align: center">11.9</td>
+              <td style="text-align: center">11.9</td>
+              <td style="text-align: center">11.9</td>
+              <td style="text-align: center">12.0</td>
+              <td style="text-align: center">12.0</td>
+              <td style="text-align: center">12.0</td>
+              <td style="text-align: center">12.0</td>
+              <td style="text-align: center">12.0</td>
+              <td style="text-align: center">12.0</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+            </tr>
+            <tr>
+              <td class="cls" style="color: #7ac85a">† Rogue</td>
+              <td style="text-align: center">0.0</td>
+              <td style="text-align: center">4.3</td>
+              <td style="text-align: center">6.5</td>
+              <td style="text-align: center">8.5</td>
+              <td style="text-align: center">9.9</td>
+              <td style="text-align: center">10.8</td>
+              <td style="text-align: center">11.1</td>
+              <td style="text-align: center">11.4</td>
+              <td style="text-align: center">11.5</td>
+              <td style="text-align: center">11.7</td>
+              <td style="text-align: center">11.8</td>
+              <td style="text-align: center">11.9</td>
+              <td style="text-align: center">11.9</td>
+              <td style="text-align: center">11.9</td>
+              <td style="text-align: center">11.9</td>
+              <td style="text-align: center">11.9</td>
+              <td style="text-align: center">11.9</td>
+              <td style="text-align: center">11.8</td>
+              <td style="text-align: center">11.8</td>
+              <td style="text-align: center">11.5</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+            </tr>
+            <tr>
+              <td class="cls" style="color: #5a7ac8">⊹ Sorcerer</td>
+              <td style="text-align: center">0.0</td>
+              <td style="text-align: center">4.3</td>
+              <td style="text-align: center">6.5</td>
+              <td style="text-align: center">8.5</td>
+              <td style="text-align: center">9.8</td>
+              <td style="text-align: center">10.8</td>
+              <td style="text-align: center">11.1</td>
+              <td style="text-align: center">11.3</td>
+              <td style="text-align: center">11.5</td>
+              <td style="text-align: center">11.7</td>
+              <td style="text-align: center">11.8</td>
+              <td style="text-align: center">11.9</td>
+              <td style="text-align: center">11.9</td>
+              <td style="text-align: center">11.9</td>
+              <td style="text-align: center">11.9</td>
+              <td style="text-align: center">12.0</td>
+              <td style="text-align: center">12.0</td>
+              <td style="text-align: center">12.0</td>
+              <td style="text-align: center">12.0</td>
+              <td style="text-align: center">12.0</td>
+              <td style="text-align: center">12.0</td>
+              <td style="text-align: center">12.0</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+              <td class="na">—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Potion Economy</h2>
+      <p class="sub">
+        Starting 5 + found vs used — positive net means safety margin, negative
+        = deficit
+      </p>
+      <div class="tscroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Class</th>
+              <th>Starting</th>
+              <th>Found</th>
+              <th>Total</th>
+              <th>Used</th>
+              <th>Net</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cls" style="color: #c87a3a">⚔ Warrior</td>
+              <td style="text-align: center">5</td>
+              <td style="text-align: center">5.2</td>
+              <td style="text-align: center">10.2</td>
+              <td style="text-align: center">9.4</td>
+              <td style="text-align: center; color: #7acc7a; font-weight: bold">
+                +0.8
+              </td>
+            </tr>
+            <tr>
+              <td class="cls" style="color: #7ac85a">† Rogue</td>
+              <td style="text-align: center">5</td>
+              <td style="text-align: center">4.5</td>
+              <td style="text-align: center">9.5</td>
+              <td style="text-align: center">8.6</td>
+              <td style="text-align: center; color: #7acc7a; font-weight: bold">
+                +0.9
+              </td>
+            </tr>
+            <tr>
+              <td class="cls" style="color: #5a7ac8">⊹ Sorcerer</td>
+              <td style="text-align: center">5</td>
+              <td style="text-align: center">4.0</td>
+              <td style="text-align: center">9.0</td>
+              <td style="text-align: center">8.3</td>
+              <td style="text-align: center; color: #7acc7a; font-weight: bold">
+                +0.8
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Skill Usage</h2>
+      <p class="sub">
+        % of all combat rounds using each action (attack = no skill used)
+      </p>
+      <div class="grid2">
+        <div class="skill-group">
+          <span class="skill-cls" style="color: #c87a3a">⚔ Warrior</span>
+          <div class="bars">
+            <div class="bar-row">
+              <span class="bar-label">power_strike</span>
+              <div class="bar-wrap">
+                <div
+                  class="bar-fill"
+                  style="
+                    width: 52%;
+                    background: #c87a3a44;
+                    border-right: 2px solid #c87a3a;
+                  "
+                ></div>
+                <span class="bar-pct">52%</span>
+              </div>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">attack</span>
+              <div class="bar-wrap">
+                <div
+                  class="bar-fill"
+                  style="
+                    width: 22%;
+                    background: #c87a3a44;
+                    border-right: 2px solid #c87a3a;
+                  "
+                ></div>
+                <span class="bar-pct">22%</span>
+              </div>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">battle_cry</span>
+              <div class="bar-wrap">
+                <div
+                  class="bar-fill"
+                  style="
+                    width: 12%;
+                    background: #c87a3a44;
+                    border-right: 2px solid #c87a3a;
+                  "
+                ></div>
+                <span class="bar-pct">12%</span>
+              </div>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">whirlwind</span>
+              <div class="bar-wrap">
+                <div
+                  class="bar-fill"
+                  style="
+                    width: 11%;
+                    background: #c87a3a44;
+                    border-right: 2px solid #c87a3a;
+                  "
+                ></div>
+                <span class="bar-pct">11%</span>
+              </div>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">iron_skin</span>
+              <div class="bar-wrap">
+                <div
+                  class="bar-fill"
+                  style="
+                    width: 4%;
+                    background: #c87a3a44;
+                    border-right: 2px solid #c87a3a;
+                  "
+                ></div>
+                <span class="bar-pct">4%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="skill-group">
+          <span class="skill-cls" style="color: #7ac85a">† Rogue</span>
+          <div class="bars">
+            <div class="bar-row">
+              <span class="bar-label">backstab</span>
+              <div class="bar-wrap">
+                <div
+                  class="bar-fill"
+                  style="
+                    width: 70%;
+                    background: #7ac85a44;
+                    border-right: 2px solid #7ac85a;
+                  "
+                ></div>
+                <span class="bar-pct">70%</span>
+              </div>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">attack</span>
+              <div class="bar-wrap">
+                <div
+                  class="bar-fill"
+                  style="
+                    width: 13%;
+                    background: #7ac85a44;
+                    border-right: 2px solid #7ac85a;
+                  "
+                ></div>
+                <span class="bar-pct">13%</span>
+              </div>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">shadow_step</span>
+              <div class="bar-wrap">
+                <div
+                  class="bar-fill"
+                  style="
+                    width: 10%;
+                    background: #7ac85a44;
+                    border-right: 2px solid #7ac85a;
+                  "
+                ></div>
+                <span class="bar-pct">10%</span>
+              </div>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">rapid_strike</span>
+              <div class="bar-wrap">
+                <div
+                  class="bar-fill"
+                  style="
+                    width: 6%;
+                    background: #7ac85a44;
+                    border-right: 2px solid #7ac85a;
+                  "
+                ></div>
+                <span class="bar-pct">6%</span>
+              </div>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">smoke_bomb</span>
+              <div class="bar-wrap">
+                <div
+                  class="bar-fill"
+                  style="
+                    width: 0%;
+                    background: #7ac85a44;
+                    border-right: 2px solid #7ac85a;
+                  "
+                ></div>
+                <span class="bar-pct">0%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="skill-group">
+          <span class="skill-cls" style="color: #5a7ac8">⊹ Sorcerer</span>
+          <div class="bars">
+            <div class="bar-row">
+              <span class="bar-label">spark</span>
+              <div class="bar-wrap">
+                <div
+                  class="bar-fill"
+                  style="
+                    width: 52%;
+                    background: #5a7ac844;
+                    border-right: 2px solid #5a7ac8;
+                  "
+                ></div>
+                <span class="bar-pct">52%</span>
+              </div>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">ice_blast</span>
+              <div class="bar-wrap">
+                <div
+                  class="bar-fill"
+                  style="
+                    width: 15%;
+                    background: #5a7ac844;
+                    border-right: 2px solid #5a7ac8;
+                  "
+                ></div>
+                <span class="bar-pct">15%</span>
+              </div>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">chain_lightning</span>
+              <div class="bar-wrap">
+                <div
+                  class="bar-fill"
+                  style="
+                    width: 14%;
+                    background: #5a7ac844;
+                    border-right: 2px solid #5a7ac8;
+                  "
+                ></div>
+                <span class="bar-pct">14%</span>
+              </div>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">meditate</span>
+              <div class="bar-wrap">
+                <div
+                  class="bar-fill"
+                  style="
+                    width: 7%;
+                    background: #5a7ac844;
+                    border-right: 2px solid #5a7ac8;
+                  "
+                ></div>
+                <span class="bar-pct">7%</span>
+              </div>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">fireball</span>
+              <div class="bar-wrap">
+                <div
+                  class="bar-fill"
+                  style="
+                    width: 7%;
+                    background: #5a7ac844;
+                    border-right: 2px solid #5a7ac8;
+                  "
+                ></div>
+                <span class="bar-pct">7%</span>
+              </div>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">attack</span>
+              <div class="bar-wrap">
+                <div
+                  class="bar-fill"
+                  style="
+                    width: 5%;
+                    background: #5a7ac844;
+                    border-right: 2px solid #5a7ac8;
+                  "
+                ></div>
+                <span class="bar-pct">5%</span>
+              </div>
+            </div>
+            <div class="bar-row">
+              <span class="bar-label">mana_shield</span>
+              <div class="bar-wrap">
+                <div
+                  class="bar-fill"
+                  style="
+                    width: 0%;
+                    background: #5a7ac844;
+                    border-right: 2px solid #5a7ac8;
+                  "
+                ></div>
+                <span class="bar-pct">0%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Resource Pressure</h2>
+      <p class="sub">
+        Mana starvation, potions, boss kills, gems socketed — all per run
+        averages
+      </p>
+      <div class="tscroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Class</th>
+              <th>Mana Starve</th>
+              <th>Pots/Run</th>
+              <th>Boss Kills/Run</th>
+              <th>Gems Socketed/Run</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cls" style="color: #c87a3a">⚔ Warrior</td>
+              <td style="text-align: center; color: #aaaa33">13.6%</td>
+              <td style="text-align: center">9.4</td>
+              <td style="text-align: center">0.5</td>
+              <td style="text-align: center; color: #22cc88">1.1</td>
+            </tr>
+            <tr>
+              <td class="cls" style="color: #7ac85a">† Rogue</td>
+              <td style="text-align: center; color: #aaaa33">6.5%</td>
+              <td style="text-align: center">8.6</td>
+              <td style="text-align: center">0.4</td>
+              <td style="text-align: center; color: #22cc88">0.9</td>
+            </tr>
+            <tr>
+              <td class="cls" style="color: #5a7ac8">⊹ Sorcerer</td>
+              <td style="text-align: center; color: #336633">0.0%</td>
+              <td style="text-align: center">8.3</td>
+              <td style="text-align: center">0.4</td>
+              <td style="text-align: center; color: #22cc88">0.8</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Balance Flags</h2>
+      <p class="sub">Auto-detected balance issues and confirmations</p>
+      <div class="flag flag-warn">
+        <span>⚠</span> warrior F30 survival 0.0% — nearly impossible, needs
+        tuning
+      </div>
+      <div class="flag flag-warn">
+        <span>⚠</span> rogue F30 survival 0.0% — nearly impossible, needs tuning
+      </div>
+      <div class="flag flag-warn">
+        <span>⚠</span> sorcerer F30 survival 0.0% — nearly impossible, needs
+        tuning
+      </div>
+      <div class="flag flag-ok"><span>✓</span> warrior unique 0.43/run</div>
+      <div class="flag flag-ok"><span>✓</span> rogue unique 0.39/run</div>
+      <div class="flag flag-ok"><span>✓</span> sorcerer unique 0.42/run</div>
+      <div class="flag flag-ok">
+        <span>✓</span> warrior mana starve 14% — healthy tension
+      </div>
+      <div class="flag flag-ok">
+        <span>✓</span> warrior avg 4.4 rounds/fight — healthy duration
+      </div>
+      <div class="flag flag-ok">
+        <span>✓</span> rogue mana starve 6% — healthy tension
+      </div>
+      <div class="flag flag-ok">
+        <span>✓</span> rogue avg 3.5 rounds/fight — healthy duration
+      </div>
+      <div class="flag flag-ok">
+        <span>✓</span> sorcerer mana starve 0% — meditate design (intentional)
+      </div>
+      <div class="flag flag-ok">
+        <span>✓</span> sorcerer avg 4.4 rounds/fight — healthy duration
+      </div>
+      <div class="flag flag-ok">
+        <span>✓</span> warrior F3 death concentration 16% — acceptable
+      </div>
+      <div class="flag flag-ok">
+        <span>✓</span> rogue F3 death concentration 21% — acceptable
+      </div>
+      <div class="flag flag-ok">
+        <span>✓</span> sorcerer F3 death concentration 24% — acceptable
+      </div>
+      <div class="flag flag-ok">
+        <span>✓</span> warrior spike death rate 69% — D2 feel, rare/ancient
+        encounters dangerous (shrine floors inflate this)
+      </div>
+      <div class="flag flag-ok">
+        <span>✓</span> rogue spike death rate 59% — D2 feel, rare/ancient
+        encounters dangerous (shrine floors inflate this)
+      </div>
+      <div class="flag flag-ok">
+        <span>✓</span> sorcerer spike death rate 55% — D2 feel, rare/ancient
+        encounters dangerous (shrine floors inflate this)
+      </div>
+      <div class="flag flag-ok">
+        <span>✓</span> warrior rare+ancient cause 79% of deaths (boss only 8%) —
+        D2 design: elites are the real danger
+      </div>
+      <div class="flag flag-ok">
+        <span>✓</span> rogue rare+ancient cause 71% of deaths (boss only 8%) —
+        D2 design: elites are the real danger
+      </div>
+      <div class="flag flag-ok">
+        <span>✓</span> sorcerer boss deaths 5% — bosses are skill-checks not
+        attrition (intentional)
+      </div>
+      <div class="flag flag-ok">
+        <span>✓</span> Warrior F10 0% vs sorcerer 0% — sorcerer scales late (by
+        design), warrior F5 reach is 1.8× sorcerer's
+      </div>
+      <div class="flag flag-ok">
+        <span>✓</span> warrior potion economy net +0.8 — healthy scarcity
+      </div>
+      <div class="flag flag-ok">
+        <span>✓</span> rogue potion economy net +0.9 — healthy scarcity
+      </div>
+      <div class="flag flag-ok">
+        <span>✓</span> sorcerer potion economy net +0.8 — healthy scarcity
+      </div>
+    </section>
+  </body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "featureKey": "feat-2026-073",
+  "title": "Audio engine — functional sound toggle with actual SFX",
+  "status": "draft",
+  "problem": "The settings screen has an audio on/off toggle but it has no effect — no audio engine is wired up and no sound files exist in the project. The toggle is purely cosmetic. A minimal audio layer (combat hits, item pickup, level-up) is needed for the toggle to be meaningful.",
+  "schemaVersion": 1,
+  "domain": "game/ui",
+  "tags": [
+    "settings",
+    "haptics",
+    "persistence",
+    "ui",
+    "app-store"
+  ],
+  "lineage": {
+    "parent": "feat-2026-051",
+    "spawnReason": "deferred feature: audio was acknowledged as a stub in the settings implementation; real SFX system is pre-release work"
+  }
+}

@@ -1,0 +1,245 @@
+{
+  "featureKey": "feat-2026-036",
+  "title": "Roguelite Persistence & Graveyard",
+  "status": "frozen",
+  "problem": "On death the entire run resets — loot, gear, progress. This punishes investment in the loot system which is the core of the game. Need a death model that keeps equipped gear across runs but still has real stakes.",
+  "schemaVersion": 1,
+  "analysis": "gameStore.endRun(false) handles defeat. inventoryStore holds bag (run-scoped) and equipped (cross-run). The bag is run-scoped — cleared on death. Equipped items carry across runs, but one is sacrificed each death. The graveyard is a permanent session record (Zustand in-memory, persisted via AsyncStorage save).",
+  "implementation": "1. Add GraveyardEntry type: { item: Item, floor: number, tier: number, level: number, lostAt: string (ISO date), classId?: ClassId | null, killedBy?: string }. 2. gameStore: add graveyard: GraveyardEntry[] and lastSacrifice: GraveyardEntry | null. 3. endRun(false): (a) pick 1 quality-weighted item from EQUIPPED ITEMS ONLY → graveyard; (b) clear entire bag (createInventory()); (c) non-sacrificed equipped items survive. 4. On new run start (ClassSelectScreen doDescend): refillPotions() clears any leftover potions (bag already empty), then adds 3 HP + 1 mana potion. 5. GraveyardScreen: ScrollView of GraveyardEntry cards. 6. GameOver screen: shows sacrificed item name. 7. Ghost Echo: GraveyardScreen exposes invokeGhostEcho(entryIndex) — sets ghostCharm: entry.item in gameStore. When active, GridScreen reads ghostCharm and passes it to combatStore; the charm grants 25% of the item's stats for 1 floor, then clears on nextFloor(). 8. Ghost Echo ambient hint: shown in GridScreen after 2 seconds when graveyard.length > 0 and no ghostCharm is active and hasSeenGhostEchoHint is false (settingsStore). Hint auto-dismisses after 4 seconds and calls markGhostEchoHintSeen() so it only ever shows once.",
+  "decisions": [
+    {
+      "decision": "Career stats persisted across runs via AsyncStorage (save/load in persistence.ts)",
+      "rationale": "Career stats are cross-run motivators — they must survive app restarts to have meaning.",
+      "date": "2026-03-28"
+    },
+    {
+      "decision": "Graveyard stores items lost on death for Ghost Echo mechanic — invokeGhostEcho is fully live",
+      "rationale": "Graveyard data structure was built first; Ghost Echo activation (invokeGhostEcho, ghostCharm, 25% stat pass-through for 1 floor) shipped in a subsequent session and is fully wired in GridScreen and combatStore.",
+      "date": "2026-03-28"
+    },
+    {
+      "decision": "BMAD S3: dailyStreak + lastRunDate added to CareerStats — ISO date comparison in endRun",
+      "rationale": "Daily streak incentivises return visits; ISO YYYY-MM-DD string comparison is simple and timezone-stable for the common case.",
+      "date": "2026-04-01"
+    },
+    {
+      "decision": "BMAD S3: streak resets to 1 on a missed day, increments if played on consecutive days, shown as fire emoji on MainMenu when streak is 2 or more",
+      "rationale": "Threshold of 2 avoids showing the streak indicator on day 1 of a new streak where it carries no meaning.",
+      "date": "2026-04-01"
+    },
+    {
+      "decision": "BMAD S3: runKills and runItemsFound track per-run stats, reset on startRun, shown in EndScreen run summary card",
+      "rationale": "Per-run stats give players a sense of accomplishment even on a losing run; reset on startRun ensures no carry-over.",
+      "date": "2026-04-01"
+    },
+    {
+      "decision": "BMAD S3: lastStandUsed boolean added to GameState — single death-defiance per run, survives at 1 HP, fires in both attackAction and skillAction defeat paths",
+      "rationale": "Single-use keeps it rare and meaningful. Covering both defeat paths (attack and skill) ensures no edge case skips it.",
+      "date": "2026-04-01"
+    }
+  ],
+  "successCriteria": "Death with equipped items always produces 1 graveyard entry (from equipped pool). Bag is always fully cleared on death regardless of contents. No equipped item other than the sacrifice is removed. Next run always starts with 3 HP + 1 mana potion (doDescend). Graveyard persists across app restarts. GameOver screen names the sacrificed item. Death with no equipped items clears bag and produces no graveyard entry.",
+  "tags": [
+    "persistence",
+    "roguelite",
+    "death-penalty",
+    "graveyard",
+    "asyncstorage"
+  ],
+  "knownLimitations": [
+    "Ghost Echo mechanic (use graveyard items as one-floor power) is UI note only — not implemented",
+    "Daily streak uses UTC dates — players crossing midnight in non-UTC timezone may see unexpected streak breaks"
+  ],
+  "recommendations": "Use @react-native-async-storage/async-storage (already a dep). Graveyard entries should be append-only — never mutate past entries. The shared stash is the only way to protect items across death — this is an intentional design pressure.",
+  "lastVerifiedDate": "2026-04-01",
+  "revisions": [
+    {
+      "date": "2026-03-28",
+      "author": "claude",
+      "fields_changed": [
+        "analysis",
+        "implementation",
+        "decisions",
+        "successCriteria"
+      ],
+      "reason": "Initial fill from design session"
+    },
+    {
+      "date": "2026-03-28",
+      "author": "claude",
+      "fields_changed": [
+        "decisions"
+      ],
+      "reason": "Fix decisions schema — objects with decision/rationale/alternativesConsidered/date"
+    },
+    {
+      "date": "2026-03-29",
+      "author": "claude",
+      "fields_changed": [
+        "implementation",
+        "decisions",
+        "knownLimitations",
+        "publicInterface",
+        "codeSnippets",
+        "userGuide",
+        "codexEntry"
+      ],
+      "reason": "Sync to actual implementation: AsyncStorage deferred → Zustand in-memory; GraveyardEntry gains classId+level; stash safety note added to userGuide"
+    },
+    {
+      "date": "2026-03-31",
+      "author": "claude",
+      "fields_changed": [
+        "problem",
+        "analysis",
+        "implementation",
+        "decisions",
+        "successCriteria",
+        "userGuide",
+        "codexEntry",
+        "knownLimitations",
+        "codeSnippets"
+      ],
+      "reason": "Death mechanic redesign: sacrifice pool changed from bag+equipped to equipped-only; bag is now always wiped on death; fresh 3HP+1MP pots given on next run start"
+    },
+    {
+      "date": "2026-03-31",
+      "author": "claude",
+      "fields_changed": [
+        "implementation"
+      ],
+      "reason": "BMAD session 2: add Ghost Echo mechanic (invokeGhostEcho, ghostCharm, ambient hint via hasSeenGhostEchoHint), update userGuide and codeSnippets"
+    },
+    {
+      "date": "2026-04-01",
+      "author": "claude+marc",
+      "fields_changed": [
+        "decisions"
+      ],
+      "reason": "BMAD session 3 — daily streak, run summary stats, Last Stand mechanic"
+    }
+  ],
+  "annotations": [
+    {
+      "id": "reopen-1775065873938",
+      "author": "lac advance",
+      "date": "2026-04-01",
+      "type": "reopen",
+      "body": "BMAD session 3: added daily streak tracking (dailyStreak+lastRunDate in CareerStats), per-run kill/item counters (runKills/runItemsFound), Last Stand single death-defiance per run (lastStandUsed flag), EndScreen run summary card"
+    }
+  ],
+  "domain": "progression",
+  "componentFile": "src/screens/GraveyardScreen.tsx",
+  "npmPackages": [
+    "@react-native-async-storage/async-storage"
+  ],
+  "publicInterface": [
+    {
+      "name": "GraveyardEntry",
+      "type": "TypeScript interface",
+      "description": "{ item: Item, floor: number, tier: number, level: number, lostAt: string, classId?: ClassId | null, killedBy?: string }"
+    },
+    {
+      "name": "GraveyardScreen",
+      "type": "React.FC",
+      "description": "Full-screen list of all items lost to death, accessible from MainMenu and post-death EndScreen. Tap an entry to invoke Ghost Echo."
+    },
+    {
+      "name": "invokeGhostEcho",
+      "type": "(entryIndex: number) => void (gameStore action)",
+      "description": "Sets ghostCharm to the graveyard entry's item — grants 25% stats for 1 floor. No-ops if echo already active."
+    },
+    {
+      "name": "ghostCharm",
+      "type": "Item | null (gameStore)",
+      "description": "Active Ghost Echo item; cleared by nextFloor() and clearGhostCharm()"
+    }
+  ],
+  "externalDependencies": [],
+  "codeSnippets": [
+    {
+      "label": "Quality-weighted sacrifice from equipped items only",
+      "snippet": "const QUALITY_WEIGHT = { unique: 40, rare: 20, magic: 5, normal: 1 }\nconst equippedItems = Object.values(equipped).filter(Boolean)\nconst pool = equippedItems.flatMap(item => Array(QUALITY_WEIGHT[item.quality] ?? 1).fill(item))\nconst sacrificed = pool[Math.floor(rng() * pool.length)]"
+    },
+    {
+      "label": "Atomic bag wipe + equipped sacrifice in one setState",
+      "snippet": "inventoryStore.setState((s) => {\n  const newEquipped = { ...s.equipped }\n  if (equipSlot) delete newEquipped[equipSlot]\n  const emptyBag = createInventory()\n  return { equipped: newEquipped, bag: emptyBag, magicFind: calcMF(newEquipped, emptyBag) }\n})"
+    },
+    {
+      "label": "Graveyard entry with killedBy",
+      "snippet": "const entry: GraveyardEntry = {\n  item:    { ...sacrificed, identified: true },\n  floor, tier, level,\n  lostAt:  new Date().toISOString(),\n  classId, killedBy,\n}"
+    },
+    {
+      "label": "Ghost Echo invocation (gameStore)",
+      "snippet": "invokeGhostEcho: (entryIndex) => {\n  const { graveyard, ghostCharm } = get()\n  if (ghostCharm) return   // already active — one echo at a time\n  const entry = graveyard[graveyard.length - 1 - entryIndex]  // sorted reversed\n  if (!entry) return\n  set({ ghostCharm: entry.item })\n},"
+    },
+    {
+      "label": "Ghost Echo ambient hint (GridScreen)",
+      "snippet": "// Shows once when graveyard has items and no echo is active\nuseEffect(() => {\n  if (hasSeenGhostEchoHint || ghostCharm || graveyard.length === 0) return\n  const t1 = setTimeout(() => setGhostEchoHint(true), 2000)\n  const t2 = setTimeout(() => {\n    setGhostEchoHint(false)\n    markGhostEchoHintSeen()\n  }, 6000)\n  return () => { clearTimeout(t1); clearTimeout(t2) }\n}, [])"
+    }
+  ],
+  "userGuide": "Your equipped gear survives death — but fate claims one piece as tribute. The sacrifice is drawn from your equipped items only, quality-weighted (a Unique is 40× more likely to be taken than a Normal). Your bag is always wiped on death — run loot does not carry forward.\n\nOn your next run you start with exactly 3 HP potions and 1 mana potion.\n\n**Important:** Items in the shared stash are NEVER at risk — only equipped items are in the sacrifice pool. If you want to protect a piece of gear, deposit it to the stash in town before a dangerous fight.\n\nIf you die with no equipped items, no graveyard entry is created (bag is still wiped).\n\n**Ghost Echo:** Open the Graveyard screen (accessible from the main menu and the post-death screen) and tap any entry to invoke that item as a Ghost Echo. You gain 25% of its stats for exactly 1 floor — after descending or dying, the echo fades. Only one echo can be active at a time. A one-time ambient hint appears on the dungeon grid to help you discover this mechanic.",
+  "codexEntry": {
+    "tab": "progression",
+    "title": "Death & the Graveyard",
+    "summary": "Your equipped gear survives death — except one piece. Your bag is always wiped. Start the next run fresh.",
+    "mechanics": [
+      "On death: entire bag is wiped — run loot is gone",
+      "On death: one equipped item is sacrificed to the Graveyard",
+      "Sacrifice is drawn from equipped items only (not bag)",
+      "Sacrifice probability is quality-weighted: Unique = 40pts, Rare = 20pts, Magic = 5pts, Normal = 1pt",
+      "A Unique item is ~40× more likely to be sacrificed than a Normal item",
+      "Non-sacrificed equipped items survive death intact",
+      "Next run always starts with 3 HP potions + 1 mana potion",
+      "Shared stash items are never at risk",
+      "Floor resets to 1 on death. Tier and level are never reduced."
+    ],
+    "tips": [
+      "Stash your best-in-slot gear before a dangerous fight to protect it from sacrifice.",
+      "The bag is always cleared on death — don't hoard run loot you cannot afford to lose.",
+      "The Graveyard is accessible from the main menu. Each entry shows the floor, tier, class, and date of loss."
+    ]
+  },
+  "toolingAnnotations": [],
+  "statusHistory": [
+    {
+      "from": "draft",
+      "to": "active",
+      "date": "2026-03-28"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-03-28"
+    },
+    {
+      "from": "frozen",
+      "to": "active",
+      "date": "2026-03-31",
+      "reason": "Death mechanic redesign: bag always wiped on death, sacrifice pool changed to equipped-only"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-03-31"
+    },
+    {
+      "from": "frozen",
+      "to": "active",
+      "date": "2026-04-01",
+      "reason": "BMAD session 3: added daily streak tracking (dailyStreak+lastRunDate in CareerStats), per-run kill/item counters (runKills/runItemsFound), Last Stand single death-defiance per run (lastStandUsed flag), EndScreen run summary card"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-04-01"
+    }
+  ],
+  "lineage": {
+    "children": [
+      "feat-2026-056",
+      "feat-2026-057",
+      "feat-2026-060"
+    ]
+  }
+}

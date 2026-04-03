@@ -1,0 +1,20 @@
+{"date":"2026-03-29T14:01:02.708Z","field":"domain","source":"mcp","value_preview":"game/crafting"}
+{"date":"2026-03-29T14:01:02.708Z","field":"analysis","source":"mcp","value_preview":"No crafting system exists. TownScreen has EQUIPPED and STASH tabs — a CUBE tab can be added as a third tab with zero rou"}
+{"date":"2026-03-29T14:01:02.708Z","field":"implementation","source":"mcp","value_preview":"1. src/data/recipes.ts — RecipeDef: { id, name, ingredients: IngredientMatcher[], result: ResultBuilder, hint: string }."}
+{"date":"2026-03-29T14:01:02.708Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"Cube is a tab inside TownScreen, not a separate screen\",\"rationale\":\"Players will cube items from their st"}
+{"date":"2026-03-29T14:01:02.708Z","field":"successCriteria","source":"mcp","value_preview":"7 transmutation recipes functional. 3 normal same-slot items produce a magic item. Rune upgrades work (3x El → Eld). Rec"}
+{"date":"2026-03-29T14:01:02.708Z","field":"tags","source":"mcp","value_preview":"[\"crafting\",\"cube\",\"recipes\",\"items\",\"town\"]"}
+{"date":"2026-03-29T14:01:02.708Z","field":"knownLimitations","source":"mcp","value_preview":"[\"No recipe book/codex UI — players must discover recipes or read the user guide\",\"Only 7 recipes in v1 — full D2 cube p"}
+{"date":"2026-03-29T14:01:02.708Z","field":"componentFile","source":"mcp","value_preview":"src/data/recipes.ts, src/engine/loot.ts, src/screens/CraftingScreen.tsx, src/screens/TownScreen.tsx"}
+{"date":"2026-03-29T14:01:02.708Z","field":"userGuide","source":"mcp","value_preview":"## The Cube\n\nThe Cube transmutes items and runes into new things. Access it via the CUBE tab in Town.\n\n**How it works:**"}
+{"date":"2026-03-29T14:01:02.708Z","field":"lineage","source":"mcp","value_preview":"{\"parent\":\"feat-2026-034\"}"}
+{"date":"2026-03-29T14:03:37.407Z","field":"npmPackages","source":"mcp","value_preview":"[]"}
+{"date":"2026-03-29T14:03:37.407Z","field":"externalDependencies","source":"mcp","value_preview":"[]"}
+{"date":"2026-03-29T14:03:37.407Z","field":"publicInterface","source":"mcp","value_preview":"[{\"name\":\"RecipeDef\",\"type\":\"interface\",\"description\":\"Defines ingredient matchers and result builder for a transmutatio"}
+{"date":"2026-03-29T14:03:37.407Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"RecipeDef interface and rune upgrade recipe\",\"snippet\":\"interface RecipeDef {\\n  id: string\\n  name: string\\n"}
+{"date":"2026-03-29T14:04:26.545Z","field":"toolingAnnotations","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-01T02:51:20.330Z","field":"implementation","source":"mcp","value_preview":"1. src/data/recipes.ts — RecipeDef: { id, name, hint, match: (items: Item[]) => boolean, build: (items: Item[], rng: Rng"}
+{"date":"2026-04-01T02:51:20.330Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"RecipeDef interface and rune upgrade recipe\",\"snippet\":\"interface RecipeDef {\\n  id: string\\n  name: string\\n"}
+{"date":"2026-04-01T02:51:20.330Z","field":"lastVerifiedDate","source":"mcp","value_preview":"2026-03-31"}
+{"date":"2026-04-01T17:52:00.306Z","field":"decisions","source":"mcp","value_preview":"[\"Crafting uses a Horadric Cube metaphor — select recipe, then select items from bag\",\"matchesRecipeInputs validates exa"}
+{"date":"2026-04-01T17:54:29.816Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"Crafting uses a Horadric Cube metaphor — select recipe then select items from bag\",\"rationale\":\"Recipe-fir"}

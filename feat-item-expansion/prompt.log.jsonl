@@ -1,0 +1,19 @@
+{"date":"2026-03-29T14:00:34.373Z","field":"domain","source":"mcp","value_preview":"game/items"}
+{"date":"2026-03-29T14:00:34.373Z","field":"analysis","source":"mcp","value_preview":"BASE_ITEMS in items.ts has 25 entries covering 8 weapon types, 3 shields, 3 helms, 3 chests, 2 gloves, 2 legs, 2 boots, "}
+{"date":"2026-03-29T14:00:34.373Z","field":"implementation","source":"mcp","value_preview":"1. src/data/items.ts — new base items: two_handed_sword [2×4, socketRange 0–6, fl6], battle_axe [2×4, fl8], war_axe [2×3"}
+{"date":"2026-03-29T14:00:34.373Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"Belt is a new equipment slot, not stored in bag\",\"rationale\":\"Belts in D2 provided utility and are a meani"}
+{"date":"2026-03-29T14:00:34.373Z","field":"successCriteria","source":"mcp","value_preview":"35+ base item types. 20+ unique items defined. 11+ runewords. Belt slot functional in equipment panel. At least one aspi"}
+{"date":"2026-03-29T14:00:34.373Z","field":"tags","source":"mcp","value_preview":"[\"items\",\"loot\",\"runewords\",\"uniques\",\"content\"]"}
+{"date":"2026-03-29T14:00:34.373Z","field":"knownLimitations","source":"mcp","value_preview":"[\"No set item system in v1 — set bonuses deferred to future phase\",\"Two-handed weapons share the weapon slot only (no of"}
+{"date":"2026-03-29T14:00:34.373Z","field":"componentFile","source":"mcp","value_preview":"src/data/items.ts, src/engine/loot.ts, src/data/runewords.ts, src/store/inventoryStore.ts, src/components/EquipmentPanel"}
+{"date":"2026-03-29T14:00:34.373Z","field":"userGuide","source":"mcp","value_preview":"## New Items\n\nThe item pool now includes two-handed weapons, bows, belts, and circlets. Unique items drop with fixed sta"}
+{"date":"2026-03-29T14:00:34.373Z","field":"lineage","source":"mcp","value_preview":"{\"parent\":\"feat-2026-034\"}"}
+{"date":"2026-03-29T14:03:28.994Z","field":"npmPackages","source":"mcp","value_preview":"[]"}
+{"date":"2026-03-29T14:03:28.994Z","field":"externalDependencies","source":"mcp","value_preview":"[]"}
+{"date":"2026-03-29T14:03:28.994Z","field":"publicInterface","source":"mcp","value_preview":"[{\"name\":\"ItemSlot (belt)\",\"type\":\"type extension\",\"description\":\"New 'belt' slot added to ItemSlot union\"},{\"name\":\"Equ"}
+{"date":"2026-03-29T14:03:28.994Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"Stone of Jordan unique definition\",\"snippet\":\"{ id: 'stone_of_jordan', name: 'Stone of Jordan', baseId: 'ring"}
+{"date":"2026-03-29T14:04:25.597Z","field":"toolingAnnotations","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-01T02:51:04.373Z","field":"implementation","source":"mcp","value_preview":"1. src/data/items.ts — new base items: two_handed_sword, battle_axe, war_axe, hand_axe, short_bow, long_bow, belt (new '"}
+{"date":"2026-04-01T02:51:04.373Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"nextUid — stateless, no shared counter\",\"snippet\":\"function nextUid(): string {\\n  return `item_${Date.now()."}
+{"date":"2026-04-01T02:51:04.373Z","field":"knownLimitations","source":"mcp","value_preview":"[\"No set item system in v1 — set bonuses deferred to future phase\",\"Two-handed weapons share the weapon slot only (no of"}
+{"date":"2026-04-01T02:51:04.373Z","field":"lastVerifiedDate","source":"mcp","value_preview":"2026-03-31"}

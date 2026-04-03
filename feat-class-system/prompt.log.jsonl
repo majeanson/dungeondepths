@@ -1,0 +1,6 @@
+{"date":"2026-04-01T02:52:07.968Z","field":"toolingAnnotations","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-01T02:52:07.968Z","field":"implementation","source":"mcp","value_preview":"1. src/data/classes.ts: ClassDef interface with bonusHp, defensePerLevel, bonusCritChance, bonusDex, baseMana, manaPerLe"}
+{"date":"2026-04-01T02:52:07.968Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"Class stat summary per class\",\"snippet\":\"// Warrior: bonusHp=+20, defensePerLevel=2, baseMana=20, manaPerLeve"}
+{"date":"2026-04-01T02:52:07.968Z","field":"lastVerifiedDate","source":"mcp","value_preview":"2026-03-31"}
+{"date":"2026-04-01T17:51:43.082Z","field":"decisions","source":"mcp","value_preview":"[\"Three classes: Warrior (tank), Rogue (burst/evasion), Sorcerer (elemental scaling)\",\"Class selected at run start, pers"}
+{"date":"2026-04-01T17:53:58.163Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"Three classes: Warrior (tank), Rogue (burst/evasion), Sorcerer (elemental scaling)\",\"rationale\":\"Classic D"}

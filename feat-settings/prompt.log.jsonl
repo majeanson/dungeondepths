@@ -1,0 +1,24 @@
+{"date":"2026-03-29T14:02:47.207Z","field":"domain","source":"mcp","value_preview":"game/ui"}
+{"date":"2026-03-29T14:02:47.207Z","field":"analysis","source":"mcp","value_preview":"No settings system exists. useHaptics.ts (feat-048) needs a hapticsEnabled flag. save/load (feat-050) needs a clearSave("}
+{"date":"2026-03-29T14:02:47.207Z","field":"implementation","source":"mcp","value_preview":"1. src/store/settingsStore.ts — Zustand: { hapticsEnabled: boolean, audioEnabled: boolean, setHaptics: (v: boolean)=>voi"}
+{"date":"2026-03-29T14:02:47.207Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"Settings persisted to a separate AsyncStorage key from main save\",\"rationale\":\"Settings should survive a s"}
+{"date":"2026-03-29T14:02:47.207Z","field":"successCriteria","source":"mcp","value_preview":"Haptics toggle disables/enables haptic feedback immediately. Reset progress wipes save and returns to fresh game. App ve"}
+{"date":"2026-03-29T14:02:47.207Z","field":"tags","source":"mcp","value_preview":"[\"settings\",\"haptics\",\"persistence\",\"ui\",\"app-store\"]"}
+{"date":"2026-03-29T14:02:47.207Z","field":"knownLimitations","source":"mcp","value_preview":"[\"No per-haptics-event granularity (e.g. can't disable only crit haptics)\",\"Audio toggle has no effect in v1\"]"}
+{"date":"2026-03-29T14:02:47.207Z","field":"componentFile","source":"mcp","value_preview":"src/store/settingsStore.ts, src/screens/SettingsScreen.tsx, App.tsx, src/hooks/useHaptics.ts"}
+{"date":"2026-03-29T14:02:47.207Z","field":"npmPackages","source":"mcp","value_preview":"[\"expo-constants\"]"}
+{"date":"2026-03-29T14:02:47.207Z","field":"lineage","source":"mcp","value_preview":"{\"parent\":\"feat-2026-034\"}"}
+{"date":"2026-03-29T14:04:12.163Z","field":"userGuide","source":"mcp","value_preview":"Access Settings from the ⚙ button on the main menu. Toggle haptics on/off. Reset Progress permanently deletes all saved "}
+{"date":"2026-03-29T14:04:12.163Z","field":"externalDependencies","source":"mcp","value_preview":"[]"}
+{"date":"2026-03-29T14:04:12.163Z","field":"publicInterface","source":"mcp","value_preview":"[{\"name\":\"useSettingsStore\",\"type\":\"Zustand store\",\"description\":\"{ hapticsEnabled: boolean, audioEnabled: boolean, setH"}
+{"date":"2026-03-29T14:04:12.163Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"settingsStore with AsyncStorage persistence\",\"snippet\":\"export const useSettingsStore = create<SettingsState>"}
+{"date":"2026-03-29T14:04:29.108Z","field":"toolingAnnotations","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-01T02:50:37.849Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"Settings persisted to a separate AsyncStorage key from main save\",\"rationale\":\"Settings should survive a s"}
+{"date":"2026-04-01T02:50:37.849Z","field":"implementation","source":"mcp","value_preview":"1. src/store/settingsStore.ts — SettingsState: { hapticsEnabled: boolean, audioEnabled: boolean, onboardingDone: boolean"}
+{"date":"2026-04-01T02:50:37.849Z","field":"successCriteria","source":"mcp","value_preview":"Haptics toggle disables/enables haptic feedback immediately. Reset progress wipes save and returns to fresh game. App ve"}
+{"date":"2026-04-01T02:50:37.849Z","field":"publicInterface","source":"mcp","value_preview":"[{\"name\":\"useSettingsStore\",\"type\":\"Zustand store\",\"description\":\"{ hapticsEnabled, audioEnabled, onboardingDone, hasSee"}
+{"date":"2026-04-01T02:50:37.849Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"settingsStore — full state shape\",\"snippet\":\"export interface SettingsState {\\n  hapticsEnabled:       boolea"}
+{"date":"2026-04-01T02:50:37.849Z","field":"userGuide","source":"mcp","value_preview":"Access Settings from the ⚙ button on the main menu.\n\n**Haptics:** Toggle vibration feedback on/off. Takes effect immedia"}
+{"date":"2026-04-01T02:50:37.849Z","field":"lastVerifiedDate","source":"mcp","value_preview":"2026-03-31"}
+{"date":"2026-04-01T17:52:03.210Z","field":"decisions","source":"mcp","value_preview":"[\"Settings persisted via AsyncStorage in persistence.ts (SettingsData interface)\",\"settingsStore exposes individual togg"}
+{"date":"2026-04-01T17:54:34.801Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"Settings persisted via AsyncStorage in persistence.ts (SettingsData interface)\",\"rationale\":\"Settings are "}

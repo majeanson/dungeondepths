@@ -1,0 +1,106 @@
+{
+  "featureKey": "feat-2026-052",
+  "title": "App Store Preparation",
+  "status": "frozen",
+  "problem": "The app has no icon, no splash screen, a placeholder bundle ID (com.anonymous), no display name, no privacy policy, and no App Store metadata. It cannot be submitted to the Apple App Store in its current state.",
+  "schemaVersion": 1,
+  "domain": "ops/distribution",
+  "analysis": "app.json currently has Expo defaults: name='d2game', slug='d2game', no bundleIdentifier, no icon, no splash screen. Cannot submit to App Store without: unique bundle ID, 1024×1024 icon, splash screen, display name, privacy policy URL, and valid EAS build config. expo-constants available for version display. No external network calls are made — privacy policy can be a simple 'no data collected' statement.",
+  "implementation": "1. app.json — name: 'Dungeon Depths', slug: 'dungeon-depths', version: '1.0.0', orientation: 'portrait', userInterfaceStyle: 'dark', backgroundColor: '#0a0a0a', ios: { bundleIdentifier: 'com.majeanson.dungeondepths', supportsTablet: false, requireFullScreen: true, buildNumber: '1' }, android: { package: 'com.majeanson.dungeondepths', versionCode: 1 }, icon: './assets/icon.png', splash: { image: './assets/splash.png', backgroundColor: '#0a0a0a', resizeMode: 'contain' }. 2. assets/icon.png — 1024×1024: #0a0a0a background, large stylized red ⚔ sword icon centered, 'D' letterform optional. Generate via SVG→PNG using a script or design tool. 3. assets/splash.png — 1284×2778 (iPhone 14 Pro Max): dark bg, 'DUNGEON DEPTHS' in centered white bold text, red sword icon above. 4. assets/adaptive-icon.png — 1024×1024 foreground layer for Android. 5. eas.json — { build: { development: { developmentClient: true, distribution: 'internal' }, preview: { distribution: 'internal', ios: { simulator: true } }, production: { autoIncrement: true } } }. 6. Privacy policy — single HTML file at assets/privacy.html: 'Dungeon Depths collects no personal data. All game progress is stored locally on your device. No network requests are made.' Host on GitHub Pages or Vercel for App Store URL requirement. 7. App Store metadata: Category: Games > Role Playing, Age Rating: 12+, Description: 'A Diablo-inspired roguelite dungeon crawler for iOS. Battle monsters, collect loot, and build your character across infinite procedurally generated floors.', Keywords: dungeon,rpg,roguelite,diablo,loot,fantasy. 8. Remove __DEV__ console.log calls from production.",
+  "decisions": [
+    {
+      "decision": "Bundle ID: com.majeanson.dungeondepths",
+      "rationale": "Follows reverse-domain convention using the developer's npm username (majeanson). 'dungeondepths' is the app's public name.",
+      "alternativesConsidered": [
+        "com.anonymous.d2game — the Expo default, cannot submit"
+      ],
+      "date": "2026-03-29"
+    },
+    {
+      "decision": "Privacy policy hosted externally, not in-app",
+      "rationale": "App Store requires a URL to a privacy policy. An in-app page doesn't satisfy this requirement — it must be a publicly accessible web URL.",
+      "alternativesConsidered": [
+        "In-app privacy page — doesn't satisfy App Store URL requirement"
+      ],
+      "date": "2026-03-29"
+    }
+  ],
+  "successCriteria": "eas build --platform ios --profile production completes. App displays 'Dungeon Depths' as name. Icon and splash screen appear correctly on device. Bundle ID is com.majeanson.dungeondepths. Privacy policy URL is live and accessible.",
+  "tags": [
+    "app-store",
+    "ios",
+    "build",
+    "distribution",
+    "ops"
+  ],
+  "knownLimitations": [
+    "Icon and splash assets must be manually created — SVG/Figma source not included in this feature",
+    "EAS account and Apple Developer Program membership required for production build",
+    "Android build not prioritized in v1"
+  ],
+  "componentFile": "app.json, eas.json, assets/icon.png, assets/splash.png",
+  "lineage": {
+    "parent": "feat-2026-034",
+    "children": [
+      "feat-2026-074"
+    ]
+  },
+  "lastVerifiedDate": "2026-03-29",
+  "revisions": [
+    {
+      "date": "2026-03-29",
+      "author": "claude",
+      "fields_changed": [
+        "analysis",
+        "implementation",
+        "decisions",
+        "successCriteria"
+      ],
+      "reason": "Initial full feature definition for App Store preparation"
+    }
+  ],
+  "annotations": [],
+  "userGuide": "App Store prep is ops work. Requires: Apple Developer account ($99/yr), EAS account (free tier sufficient for 1 build/month), and Expo CLI. Run `eas build --platform ios --profile production` after all features are complete.",
+  "npmPackages": [
+    "expo-constants"
+  ],
+  "externalDependencies": [
+    "Apple Developer Program account",
+    "EAS Build (Expo Application Services)"
+  ],
+  "publicInterface": [
+    {
+      "name": "app.json",
+      "type": "Expo config",
+      "description": "Final production config: bundle ID, display name, version, icon, splash, orientation"
+    },
+    {
+      "name": "eas.json",
+      "type": "EAS Build config",
+      "description": "development / preview / production build profiles"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "label": "app.json production config",
+      "snippet": "{\n  \"expo\": {\n    \"name\": \"Dungeon Depths\",\n    \"slug\": \"dungeon-depths\",\n    \"version\": \"1.0.0\",\n    \"orientation\": \"portrait\",\n    \"userInterfaceStyle\": \"dark\",\n    \"backgroundColor\": \"#0a0a0a\",\n    \"icon\": \"./assets/icon.png\",\n    \"splash\": { \"image\": \"./assets/splash.png\", \"backgroundColor\": \"#0a0a0a\", \"resizeMode\": \"contain\" },\n    \"ios\": {\n      \"bundleIdentifier\": \"com.majeanson.dungeondepths\",\n      \"supportsTablet\": false,\n      \"requireFullScreen\": true\n    }\n  }\n}"
+    },
+    {
+      "label": "eas.json build profiles",
+      "snippet": "{\n  \"build\": {\n    \"development\": { \"developmentClient\": true, \"distribution\": \"internal\" },\n    \"preview\":     { \"distribution\": \"internal\", \"ios\": { \"simulator\": true } },\n    \"production\":  { \"autoIncrement\": true }\n  }\n}"
+    }
+  ],
+  "toolingAnnotations": [],
+  "statusHistory": [
+    {
+      "from": "draft",
+      "to": "active",
+      "date": "2026-03-29"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-03-29"
+    }
+  ]
+}

@@ -1,0 +1,1721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D2Game · Product Story</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#12100e;--bg-card:#1a1714;--bg-hover:#201d1a;--bg-sidebar:#0e0c0a;
+  --border:#2a2420;--border-soft:#221e1b;
+  --text:#e8ddd4;--text-mid:#b0a49c;--text-soft:#7a6a5a;
+  --accent:#c4a255;
+  --mono:'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  --status-active:#4aad72;--status-draft:#c4a255;--status-frozen:#5b82cc;--status-deprecated:#cc5b5b;
+}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:Georgia,'Times New Roman',serif;
+  -webkit-font-smoothing:antialiased;
+  line-height:1.75;font-size:1rem;
+}
+
+/* ── Topbar ── */
+#topbar{
+  position:fixed;top:0;left:0;right:0;height:48px;
+  background:var(--bg-sidebar);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:0;
+  padding:0 20px;z-index:200;
+}
+#topbar-brand{
+  font-family:var(--mono);font-size:0.82rem;color:var(--accent);
+  white-space:nowrap;margin-right:20px;
+}
+#topbar-project{
+  font-family:var(--sans);font-size:0.82rem;color:var(--text-mid);
+  white-space:nowrap;flex:1;overflow:hidden;text-overflow:ellipsis;
+}
+#topbar-right{
+  display:flex;align-items:center;gap:16px;flex-shrink:0;
+}
+#reading-time{
+  font-family:var(--mono);font-size:0.72rem;color:var(--text-soft);
+  white-space:nowrap;
+}
+#print-btn{
+  padding:4px 14px;border-radius:6px;
+  border:1px solid var(--border);
+  background:transparent;color:var(--text-soft);
+  font-family:var(--mono);font-size:0.72rem;
+  cursor:pointer;transition:all 0.15s;
+  white-space:nowrap;
+}
+#print-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+/* ── Reading column ── */
+#content{
+  margin-top:48px;
+  padding:60px 20px 120px;
+}
+.reading-col{
+  max-width:720px;
+  margin:0 auto;
+}
+
+/* ── Opening section ── */
+.opening-section{
+  margin-bottom:64px;
+}
+.opening-eyebrow{
+  font-family:var(--mono);font-size:0.7rem;letter-spacing:0.15em;
+  text-transform:uppercase;color:var(--text-soft);
+  margin-bottom:20px;
+}
+.opening-title{
+  font-family:var(--sans);font-size:2.6rem;font-weight:800;
+  color:var(--text);letter-spacing:-0.02em;line-height:1.1;
+  margin-bottom:24px;
+}
+.opening-summary{
+  font-size:1.1rem;color:var(--text-mid);line-height:1.8;
+  margin-bottom:32px;
+}
+.stats-row{
+  display:flex;flex-wrap:wrap;gap:12px;
+  padding:20px;border-radius:10px;
+  background:var(--bg-card);border:1px solid var(--border);
+}
+.stat-item{
+  display:flex;flex-direction:column;
+  padding:0 16px;border-right:1px solid var(--border-soft);
+}
+.stat-item:last-child{border-right:none;}
+.stat-num{
+  font-family:var(--mono);font-size:1.4rem;font-weight:700;
+  color:var(--accent);line-height:1;
+}
+.stat-label{
+  font-family:var(--sans);font-size:0.72rem;color:var(--text-soft);
+  margin-top:4px;
+}
+
+/* ── Domain chapters ── */
+.domain-chapter{
+  margin-bottom:80px;
+  padding-top:48px;
+  border-top:1px solid var(--border);
+}
+.domain-chapter:first-of-type{border-top:none;}
+.chapter-number{
+  font-family:var(--mono);font-size:0.68rem;letter-spacing:0.18em;
+  text-transform:uppercase;color:var(--text-soft);
+  margin-bottom:8px;
+}
+.chapter-title{
+  font-family:var(--sans);font-size:2rem;font-weight:700;
+  color:var(--accent);letter-spacing:-0.01em;line-height:1.15;
+  margin-bottom:6px;
+}
+.chapter-meta{
+  font-family:var(--mono);font-size:0.72rem;color:var(--text-soft);
+  margin-bottom:40px;
+}
+
+/* ── Feature articles ── */
+.feature-article{
+  margin-bottom:52px;
+  padding-bottom:52px;
+  border-bottom:1px solid var(--border-soft);
+}
+.feature-article:last-child{border-bottom:none;}
+.feature-headline{
+  display:flex;align-items:flex-start;gap:12px;
+  margin-bottom:6px;
+  flex-wrap:wrap;
+}
+.feature-title{
+  font-family:var(--sans);font-size:1.35rem;font-weight:700;
+  color:var(--text);letter-spacing:-0.01em;line-height:1.3;
+}
+.status-badge{
+  display:inline-block;
+  padding:2px 10px;border-radius:999px;
+  font-family:var(--mono);font-size:0.68rem;
+  border:1px solid;
+  white-space:nowrap;margin-top:4px;
+  flex-shrink:0;
+}
+.feature-key-label{
+  font-family:var(--mono);font-size:0.72rem;color:var(--text-soft);
+  margin-bottom:20px;
+  letter-spacing:0.04em;
+}
+.feature-section-label{
+  font-family:var(--sans);font-size:0.72rem;font-weight:600;
+  letter-spacing:0.1em;text-transform:uppercase;
+  color:var(--text-soft);margin-bottom:10px;margin-top:24px;
+}
+.feature-problem{
+  font-size:1rem;color:var(--text-mid);line-height:1.75;
+}
+
+/* ── Markdown rendered content ── */
+.md-p{margin:0 0 0.75em;line-height:1.75;}
+.md-p:last-child{margin-bottom:0;}
+.md-h{font-family:var(--mono);font-size:0.78rem;letter-spacing:0.08em;text-transform:uppercase;
+  color:var(--accent);margin:1.2em 0 0.4em;}
+.md-ul{margin:0.4em 0 0.75em 1.2em;padding:0;}
+.md-ul li{margin-bottom:0.3em;line-height:1.65;}
+.md-ul li code,.md-p code,.impl-text code{
+  font-family:var(--mono);font-size:0.82em;
+  background:rgba(196,162,85,0.1);border:1px solid rgba(196,162,85,0.2);
+  padding:1px 5px;border-radius:3px;color:var(--accent);
+}
+
+/* ── Implementation expand ── */
+.impl-wrap{margin-top:0;}
+.impl-text{
+  font-size:0.92rem;color:var(--text-soft);line-height:1.7;
+}
+.read-more-btn{
+  display:inline-block;margin-top:8px;
+  background:none;border:none;
+  color:var(--accent);font-family:var(--mono);font-size:0.75rem;
+  cursor:pointer;padding:0;
+  transition:opacity 0.15s;
+}
+.read-more-btn:hover{opacity:0.7;}
+
+/* ── Pull quotes ── */
+.decisions-block{margin-top:28px;}
+.pull-quote{
+  margin:16px 0;
+  padding:18px 22px;
+  border-left:3px solid var(--accent);
+  background:var(--bg-card);
+  border-radius:0 8px 8px 0;
+  position:relative;
+}
+.pull-quote-text{
+  font-size:1rem;color:var(--text);
+  font-style:italic;line-height:1.65;
+  margin-bottom:8px;
+}
+.pull-quote-rationale{
+  font-family:var(--sans);font-size:0.82rem;color:var(--text-soft);
+  font-style:normal;
+}
+.pull-quote-mark{
+  position:absolute;bottom:12px;right:18px;
+  font-size:1.5rem;color:var(--accent);opacity:0.25;
+  line-height:1;
+}
+
+/* ── Caveats box ── */
+.caveats-box{
+  margin-top:24px;
+  padding:14px 18px;
+  border-left:3px solid rgba(196,162,85,0.5);
+  background:rgba(196,162,85,0.06);
+  border-radius:0 8px 8px 0;
+}
+.caveats-label{
+  font-family:var(--sans);font-size:0.68rem;font-weight:700;
+  letter-spacing:0.12em;text-transform:uppercase;
+  color:var(--accent);margin-bottom:8px;opacity:0.8;
+}
+.caveats-list{
+  list-style:disc;padding-left:18px;
+  font-size:0.88rem;color:var(--text-soft);line-height:1.65;
+}
+.caveats-list li{margin-bottom:4px;}
+
+/* ── Roadmap / closing ── */
+.closing-chapter .chapter-title{color:var(--text-mid);}
+.roadmap-list{display:flex;flex-direction:column;gap:12px;}
+.roadmap-item{
+  display:grid;
+  grid-template-columns:auto 1fr;
+  grid-template-rows:auto auto;
+  column-gap:14px;row-gap:2px;
+  padding:14px 16px;
+  background:var(--bg-card);border:1px solid var(--border);
+  border-radius:8px;
+}
+.roadmap-key{
+  font-family:var(--mono);font-size:0.72rem;color:var(--text-soft);
+  grid-column:1;grid-row:1;
+  white-space:nowrap;
+}
+.roadmap-title{
+  font-family:var(--sans);font-size:0.92rem;font-weight:600;color:var(--text-mid);
+  grid-column:2;grid-row:1;
+}
+.roadmap-problem{
+  font-size:0.8rem;color:var(--text-soft);
+  grid-column:2;grid-row:2;
+  font-style:italic;
+}
+
+/* ── Print styles ── */
+@media print{
+  #topbar{display:none!important;}
+  #content{margin-top:0;padding:32px;}
+  body{background:#fff;color:#111;font-size:11pt;}
+  .domain-chapter{page-break-before:always;}
+  .domain-chapter:first-of-type{page-break-before:avoid;}
+  .opening-section{page-break-before:avoid;}
+  .pull-quote{border-left:2px solid #333;background:#f9f9f9;}
+  .pull-quote-text{color:#222;}
+  .pull-quote-rationale{color:#555;}
+  .caveats-box{border-left:2px solid #c4a255;background:#fffbf2;}
+  .caveats-label{color:#8a6e2a;}
+  .caveats-list{color:#444;}
+  .chapter-title{color:#7a5a20;}
+  .feature-title{color:#111;}
+  .opening-title{color:#111;}
+  .opening-summary{color:#333;}
+  .stat-num{color:#7a5a20;}
+  .stats-row{background:#f5f3ee;border:1px solid #ddd;}
+  .roadmap-item{background:#f9f9f9;border:1px solid #ddd;}
+  .read-more-btn{display:none!important;}
+  .impl-full{display:inline!important;}
+  .impl-short{display:none!important;}
+}
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<div id="topbar">
+  <div id="topbar-brand">◈ lac · story</div>
+  <div id="topbar-project">D2Game</div>
+  <div id="topbar-right">
+    <div id="reading-time">54 min read · 10,889 words</div>
+    <button id="print-btn" onclick="window.print()">⎙ Print</button>
+  </div>
+</div>
+
+<!-- Content -->
+<div id="content">
+  <div class="reading-col">
+
+    <!-- Opening / Executive Summary -->
+    <section class="opening-section">
+      <div class="opening-eyebrow">Life as Code · Product Story</div>
+      <h1 class="opening-title">D2Game</h1>
+      <p class="opening-summary">D2Game is a system built around 42 features spanning 12 domains: progression, combat, game/ui, game/combat, game/progression, ops/distribution, game/crafting, game/ux, game/items, game/mobile, game/persistence and game/maintenance. It addresses challenges including: The app has no icon, no splash screen, a placeholder bundle ID (com; The settings screen has an audio on/off toggle but it has no effect — no audio e…; blockChance is a stat on items but has zero effect in combat.</p>
+      <div class="stats-row">
+        <div class="stat-item">
+          <div class="stat-num">42</div>
+          <div class="stat-label">Total features</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">24</div>
+          <div class="stat-label">Frozen (shipped)</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">0</div>
+          <div class="stat-label">Active (in progress)</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">18</div>
+          <div class="stat-label">Draft (planned)</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">12</div>
+          <div class="stat-label">Domains</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Domain chapters -->
+    <section class="domain-chapter" id="chapter-1">
+        <div class="chapter-number">Chapter 1</div>
+        <h2 class="chapter-title">progression</h2>
+        <div class="chapter-meta">9 features</div>
+        <article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Death Screen Depth — Epitaph, Echo Gift &amp; Floor Comparison</h3>
+        <span class="status-badge" style="color:var(--status-frozen);border-color:var(--status-frozen)44;background:var(--status-frozen)18;">frozen</span>
+      </div>
+      <div class="feature-key-label">feat-2026-056</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">The death screen is a dead end. It shows what was lost but gives no narrative, no insight, and no forward momentum. Ghost Echo — the game's richest retention mechanic — is buried in a side screen instead of being the first thing the player sees after dying. Players leave the death screen without context, without a hook, and without knowing if they improved.</p></div>
+      <div class="feature-section-label">How it was solved</div>
+         <div class="impl-wrap" id="impl-10">
+           <div class="impl-text">
+             <span class="impl-short"><p class="md-p">App.tsx: generateEpitaph() pure function produces two lines from existing run data (className, absFloor, killedBy, runKills, runItemsFound, sacrificedItem). Six branches cover empty runs, rare/unique sacrifices, empty sockets, few kills, massacre runs, and default. EndScreen destructures floor (previously not destructured) and computes absFloor = (tier-1)*10+floor. Epitaph block renders as italic</p><span class="impl-ellipsis">…</span></span><span class="impl-full" style="display:none;"><p class="md-p">App.tsx: generateEpitaph() pure function produces two lines from existing run data (className, absFloor, killedBy, runKills, runItemsFound, sacrificedItem). Six branches cover empty runs, rare/unique sacrifices, empty sockets, few kills, massacre runs, and default. EndScreen destructures floor (previously not destructured) and computes absFloor = (tier-1)*10+floor. Epitaph block renders as italic purple text above the sacrifice card. Ghost Echo gift: invokeGhostEcho(0) called directly from a '◈ CARRY HER ECHO' button inside the sacrifice card — ghostCharm persists through startRun since startRun does not clear it. Floor comparison: deepestFloor added to CareerStats, updated in endRun via Math.max; EndScreen shows FLOOR {n} · BEST {m} or ★ NEW BEST when absFloor &gt;= deepestFloor; hidden on run #1.</p></span>
+           </div>
+           <button class="read-more-btn" onclick="toggleImpl('impl-10')">Read more ▾</button>
+         </div>
+      <div class="decisions-block">
+            <blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Epitaph generated from existing run data — no new tracked state</div>
+                    <div class="pull-quote-rationale">— All inputs (killedBy, floor, tier, runKills, runItemsFound, item quality/sockets) were already available on EndScreen. Adding new tracking fields would require save migration and would duplicate data already captured by careerStats.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Echo gift uses invokeGhostEcho(0) — no new store action</div>
+                    <div class="pull-quote-rationale">— invokeGhostEcho already idempotently checks for existing ghostCharm and resolves the most recent graveyard entry at index 0. The death screen adds the ghost echo gift by calling the same action that GraveyardScreen uses, so no duplicate state path exists.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote>
+          </div>
+      <aside class="caveats-box">
+            <div class="caveats-label">Caveats</div>
+            <ul class="caveats-list">
+              <li>Epitaph uses gendered &#39;her&#39; pronoun regardless of class — acceptable for v1, revisit if character customisation is added</li><li>Echo gift button hidden when another ghost charm is already active (e.g. from Ascend flow)</li><li>Floor comparison hidden on the first ever run to avoid &#39;★ NEW BEST&#39; on a trivial first death</li>
+            </ul>
+          </aside>
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Infinite Difficulty Tiers</h3>
+        <span class="status-badge" style="color:var(--status-frozen);border-color:var(--status-frozen)44;background:var(--status-frozen)18;">frozen</span>
+      </div>
+      <div class="feature-key-label">feat-2026-038</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">Floor scaling stops at floor 10 with no endgame. A 3-tier system (Normal/Nightmare/Hell) has a hard ceiling. Need infinite tiers so gear acquired at any point has a harder tier to push into, and the designer can add godly gear without a cap.</p></div>
+      <div class="feature-section-label">How it was solved</div>
+         <div class="impl-wrap" id="impl-16">
+           <div class="impl-text">
+             <span class="impl-short"><p class="md-p">1. gameStore: <code>tier: number</code> (starts 1, persists across deaths). <code>careerStats.tiersCleared: number[]</code> tracks first-time tier completions. <code>careerStats.ascensions: number</code> counts prestige loops. <code>firstTimeTierClear: number | null</code> in-memory flag set by nextFloor, read by GridScreen, cleared by clearFirstTimeTierClear(). 2. nextFloor(): when floor &gt;= 10, detects isFirstClear = !tiersCleared.includes</p><span class="impl-ellipsis">…</span></span><span class="impl-full" style="display:none;"><p class="md-p">1. gameStore: <code>tier: number</code> (starts 1, persists across deaths). <code>careerStats.tiersCleared: number[]</code> tracks first-time tier completions. <code>careerStats.ascensions: number</code> counts prestige loops. <code>firstTimeTierClear: number | null</code> in-memory flag set by nextFloor, read by GridScreen, cleared by clearFirstTimeTierClear(). 2. nextFloor(): when floor &gt;= 10, detects isFirstClear = !tiersCleared.includes(completedTier), sets firstTimeTierClear, appends to tiersCleared, resets floor to 1, increments tier. 3. endRun(): preserves tiersCleared and ascensions in updatedCareerStats across every run. 4. ascendRun(): increments careerStats.ascensions, pre-loads ghostCharm from last graveyard entry, resets floor/hp/mana to floor 1 values. 5. Monster stat multiplier: hpMult = 1 + (tier-1) <em> 0.5, damageMult = 1 + (tier-1) </em> 0.35 — applied in combatStore startCombat. 6. Loot quality bonus MF: (tier-1) <em> 20 added to magicFind for loot rolls. 7. HUD: shows T{tier}·F{floor} badge with optional boss skull. 8. gridStore.initFloor uses tier in seed: seed ^ (floor </em> 0x1337) ^ (tier * 99991). 9. TierClearOverlay: enhanced with isFirstTime prop — shows '✦ FIRST CLEAR ✦' eyebrow and extra gold label on first-time clears. 10. MainMenu: ascension badge '✦×N' shown when careerStats.ascensions &gt; 0. 11. Victory screen: ASCEND button shown when graveyard has entries; triggers ascendRun() and navigates to classSelect.</p></span>
+           </div>
+           <button class="read-more-btn" onclick="toggleImpl('impl-16')">Read more ▾</button>
+         </div>
+      <div class="decisions-block">
+            <blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Infinite numeric tiers instead of named Normal/Nightmare/Hell</div>
+                    <div class="pull-quote-rationale">— No hard ceiling means the designer can always introduce harder content. Named tiers imply finality; numbers imply an open ladder.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Tier persists across deaths; floor resets to 1 on death within a tier</div>
+                    <div class="pull-quote-rationale">— Death is a floor-level setback, not a tier-level setback. Losing a tier would feel too punishing given the graveyard sacrifice also occurs.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Monster multiplier: HP = 1 + (tier-1)*0.5, damage = 1 + (tier-1)*0.35</div>
+                    <div class="pull-quote-rationale">— Additive scaling prevents absurd numbers at high tiers while keeping each tier noticeably harder. Tier 5 monsters have 3x HP — challenging but not impossible with tier-appropriate gear.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Loot MF bonus: (tier-1)*20 added to magicFind for all loot rolls</div>
+                    <div class="pull-quote-rationale">— Ensures higher tiers are always more rewarding in quality, not just harder. The gear treadmill needs a carrot, not just a stick.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Track first-time tier clears in careerStats.tiersCleared: number[]</div>
+                    <div class="pull-quote-rationale">— Allows the TierClearOverlay to distinguish a first-time clear from a repeat. First clears get a special &#39;✦ FIRST CLEAR ✦&#39; eyebrow for recognition without permanently changing the flow.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Ascension mechanic: ASCEND button on victory screen pre-loads Ghost Echo from last graveyard entry</div>
+                    <div class="pull-quote-rationale">— Ascension is a deliberate prestige-style restart that keeps tier progress, increments an ascension counter, and rewards the player with a Ghost Echo head-start — making the loop feel rewarding rather than punitive.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote>
+          </div>
+      <aside class="caveats-box">
+            <div class="caveats-label">Caveats</div>
+            <ul class="caveats-list">
+              <li>No tier-specific monster pool — same monsters appear at all tiers, just scaled</li><li>No visual theme change per tier in v1</li><li>Very high tiers (20+) untested for balance</li>
+            </ul>
+          </aside>
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Roguelite Persistence &amp; Graveyard</h3>
+        <span class="status-badge" style="color:var(--status-frozen);border-color:var(--status-frozen)44;background:var(--status-frozen)18;">frozen</span>
+      </div>
+      <div class="feature-key-label">feat-2026-036</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">On death the entire run resets — loot, gear, progress. This punishes investment in the loot system which is the core of the game. Need a death model that keeps equipped gear across runs but still has real stakes.</p></div>
+      <div class="feature-section-label">How it was solved</div>
+         <div class="impl-wrap" id="impl-21">
+           <div class="impl-text">
+             <span class="impl-short"><p class="md-p">1. Add GraveyardEntry type: { item: Item, floor: number, tier: number, level: number, lostAt: string (ISO date), classId?: ClassId | null, killedBy?: string }. 2. gameStore: add graveyard: GraveyardEntry[] and lastSacrifice: GraveyardEntry | null. 3. endRun(false): (a) pick 1 quality-weighted item from EQUIPPED ITEMS ONLY → graveyard; (b) clear entire bag (createInventory()); (c) non-sacrificed eq</p><span class="impl-ellipsis">…</span></span><span class="impl-full" style="display:none;"><p class="md-p">1. Add GraveyardEntry type: { item: Item, floor: number, tier: number, level: number, lostAt: string (ISO date), classId?: ClassId | null, killedBy?: string }. 2. gameStore: add graveyard: GraveyardEntry[] and lastSacrifice: GraveyardEntry | null. 3. endRun(false): (a) pick 1 quality-weighted item from EQUIPPED ITEMS ONLY → graveyard; (b) clear entire bag (createInventory()); (c) non-sacrificed equipped items survive. 4. On new run start (ClassSelectScreen doDescend): refillPotions() clears any leftover potions (bag already empty), then adds 3 HP + 1 mana potion. 5. GraveyardScreen: ScrollView of GraveyardEntry cards. 6. GameOver screen: shows sacrificed item name. 7. Ghost Echo: GraveyardScreen exposes invokeGhostEcho(entryIndex) — sets ghostCharm: entry.item in gameStore. When active, GridScreen reads ghostCharm and passes it to combatStore; the charm grants 25% of the item's stats for 1 floor, then clears on nextFloor(). 8. Ghost Echo ambient hint: shown in GridScreen after 2 seconds when graveyard.length &gt; 0 and no ghostCharm is active and hasSeenGhostEchoHint is false (settingsStore). Hint auto-dismisses after 4 seconds and calls markGhostEchoHintSeen() so it only ever shows once.</p></span>
+           </div>
+           <button class="read-more-btn" onclick="toggleImpl('impl-21')">Read more ▾</button>
+         </div>
+      <div class="decisions-block">
+            <blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Career stats persisted across runs via AsyncStorage (save/load in persistence.ts)</div>
+                    <div class="pull-quote-rationale">— Career stats are cross-run motivators — they must survive app restarts to have meaning.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Graveyard stores items lost on death for Ghost Echo mechanic (UI only — mechanic not yet live)</div>
+                    <div class="pull-quote-rationale">— Graveyard data structure is ready; the Ghost Echo activation mechanic is deferred until the core loop is stable.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; BMAD S3: dailyStreak + lastRunDate added to CareerStats — ISO date comparison in endRun</div>
+                    <div class="pull-quote-rationale">— Daily streak incentivises return visits; ISO YYYY-MM-DD string comparison is simple and timezone-stable for the common case.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; BMAD S3: streak resets to 1 on a missed day, increments if played on consecutive days, shown as fire emoji on MainMenu when streak is 2 or more</div>
+                    <div class="pull-quote-rationale">— Threshold of 2 avoids showing the streak indicator on day 1 of a new streak where it carries no meaning.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; BMAD S3: runKills and runItemsFound track per-run stats, reset on startRun, shown in EndScreen run summary card</div>
+                    <div class="pull-quote-rationale">— Per-run stats give players a sense of accomplishment even on a losing run; reset on startRun ensures no carry-over.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; BMAD S3: lastStandUsed boolean added to GameState — single death-defiance per run, survives at 1 HP, fires in both attackAction and skillAction defeat paths</div>
+                    <div class="pull-quote-rationale">— Single-use keeps it rare and meaningful. Covering both defeat paths (attack and skill) ensures no edge case skips it.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote>
+          </div>
+      <aside class="caveats-box">
+            <div class="caveats-label">Caveats</div>
+            <ul class="caveats-list">
+              <li>Ghost Echo mechanic (use graveyard items as one-floor power) is UI note only — not implemented</li><li>Daily streak uses UTC dates — players crossing midnight in non-UTC timezone may see unexpected streak breaks</li>
+            </ul>
+          </aside>
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Run Meta Layer — Heatmap, Echo Whisper &amp; Graveyard Study</h3>
+        <span class="status-badge" style="color:var(--status-frozen);border-color:var(--status-frozen)44;background:var(--status-frozen)18;">frozen</span>
+      </div>
+      <div class="feature-key-label">feat-2026-057</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">Between runs, the player has no diagnostic feedback (where do I keep dying?), no ambient presence from past runs (Ghost Echo is a silent stat bonus), and no permanent meta-progression beyond XP and stash items. The graveyard is a memorial with no utility beyond echo invocation. Long-term players hit a ceiling where every run feels stateless.</p></div>
+      <div class="feature-section-label">How it was solved</div>
+         <div class="impl-wrap" id="impl-25">
+           <div class="impl-text">
+             <span class="impl-short"><p class="md-p">gameStore.ts: floorDeaths: number[] added to CareerStats (index = absFloor-1, incremented in endRun on death). echoWhisperShown: boolean added to GameState (reset each startRun), markEchoWhisperShown() action. GraveyardEntry.studied?: boolean field. careerStats.studiedBonuses: string[] (quality key per studied entry). studyGraveyardEntry(uid) action marks entry as studied and appends quality strin</p><span class="impl-ellipsis">…</span></span><span class="impl-full" style="display:none;"><p class="md-p">gameStore.ts: floorDeaths: number[] added to CareerStats (index = absFloor-1, incremented in endRun on death). echoWhisperShown: boolean added to GameState (reset each startRun), markEchoWhisperShown() action. GraveyardEntry.studied?: boolean field. careerStats.studiedBonuses: string[] (quality key per studied entry). studyGraveyardEntry(uid) action marks entry as studied and appends quality string. GraveyardScreen.tsx: FloorHeatmap component renders 30 bars (red, height proportional to death count, floor labels every 5) above the entry list. EntryCard gains STUDY ✦ button when not studied and not active echo; shows studied bonus description inline after study. GridScreen.tsx: ECHO_WHISPERS lookup table (11 slot-keyed strings). useEffect fires 2.5s after mount when floor===1 &amp;&amp; ghostCharm active &amp;&amp; !echoWhisperShown — renders purple italic whisper text overlay for 6s.</p></span>
+           </div>
+           <button class="read-more-btn" onclick="toggleImpl('impl-25')">Read more ▾</button>
+         </div>
+      <div class="decisions-block">
+            <blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Graveyard Study is irreversible — studying an entry permanently marks it and prevents echo invocation</div>
+                    <div class="pull-quote-rationale">— The value of the study mechanic comes from the decision: echo (temporary floor power) vs. knowledge (permanent record). If study were reversible the choice would have no weight. The sacrifice framing mirrors the graveyard&#39;s existing death-penalty philosophy.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Study bonuses are flavor-only in v1 — descriptions shown in Graveyard, no mechanical effect</div>
+                    <div class="pull-quote-rationale">— Mechanical effects (e.g. extended fog radius, auto-identification) require changes across multiple engine files and need balance testing. Shipping flavor bonuses first validates the core decision mechanic without risking balance. Effects can be layered in v2 once the careerStats.studiedBonuses[] array is populated with real player data.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Echo Whisper fires once per run, on floor 1 only, with a 2.5s delay</div>
+                    <div class="pull-quote-rationale">— Firing on floor 1 gives the whisper context — the player just invoked the echo and is about to explore. The 2.5s delay ensures the player has settled into the grid view before the text appears. Once-per-run prevents the whisper from becoming intrusive noise across floors.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote>
+          </div>
+      <aside class="caveats-box">
+            <div class="caveats-label">Caveats</div>
+            <ul class="caveats-list">
+              <li>Study bonuses are flavor-only — no mechanical effect shipped in v1</li><li>Whisper strings are hardcoded slot-keyed lookup (11 entries) — no dynamic generation from run history</li><li>Heatmap only shows up to 30 floors (absoluteFloor 1-30); tiers beyond tier 3 are not visualised</li>
+            </ul>
+          </aside>
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">XP &amp; Persistent Leveling</h3>
+        <span class="status-badge" style="color:var(--status-frozen);border-color:var(--status-frozen)44;background:var(--status-frozen)18;">frozen</span>
+      </div>
+      <div class="feature-key-label">feat-2026-037</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">Player power comes entirely from gear drops with no intrinsic growth. XP and levels would give a persistent power-creep layer that survives death — acting like an extra equipment slot that scales up indefinitely.</p></div>
+      <div class="feature-section-label">How it was solved</div>
+         <div class="impl-wrap" id="impl-39">
+           <div class="impl-text">
+             <span class="impl-short"><p class="md-p">1. gameStore: xp: number, level: number (both persist across deaths). 2. gainXp(amount) action: xp += amount, compute new level via levelFromXp() (level N requires N<em>(N+1)/2 </em> 100 XP), call set if level changed (+5 maxHp/level, +2 maxMana for level delta). 3. combatStore.handleVictory: xpReward = monster.baseXp <em> floor </em> tierMultiplier; calls useGameStore.getState().gainXp(xpReward). 4. buildPlaye</p><span class="impl-ellipsis">…</span></span><span class="impl-full" style="display:none;"><p class="md-p">1. gameStore: xp: number, level: number (both persist across deaths). 2. gainXp(amount) action: xp += amount, compute new level via levelFromXp() (level N requires N<em>(N+1)/2 </em> 100 XP), call set if level changed (+5 maxHp/level, +2 maxMana for level delta). 3. combatStore.handleVictory: xpReward = monster.baseXp <em> floor </em> tierMultiplier; calls useGameStore.getState().gainXp(xpReward). 4. buildPlayerStats: accepts playerLevel, applies +5 maxHp/level, +1 damage/level, +1 defense/level (Warrior +2), +2% critChance every 5 levels. 5. HUD: level badge + XP bar. 6. LevelUpOverlay: shown in CombatScreen on level-up. Displays the newly unlocked skill if one unlocks at this level. When no skill unlocks, shows a dimmed 'NEXT SKILL' preview card: the earliest skill for this class with levelRequired &gt; current level, showing name, description, and 'unlocks at level N'. This helps players understand the skill unlock curve even when a level-up grants only stat bonuses. 7. CombatScreen: two useState values — levelUpSkill (the skill that just unlocked, or null) and levelUpNextSkill (the next upcoming skill). Level-up useEffect computes both: <code>setLevelUpSkill(unlocked); setLevelUpNextSkill(nextUpcoming)</code> where nextUpcoming = SKILLS filtered by classId with levelRequired &gt; current level, sorted ascending, [0] ?? null.</p></span>
+           </div>
+           <button class="read-more-btn" onclick="toggleImpl('impl-39')">Read more ▾</button>
+         </div>
+      <div class="decisions-block">
+            <blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; XP and level persist across deaths, never reset</div>
+                    <div class="pull-quote-rationale">— Level is the intended long-term power-creep layer that survives death. Resetting level on death would make it indistinguishable from a floor-based stat.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Level curve: total XP for level N = N*(N+1)/2 * 100</div>
+                    <div class="pull-quote-rationale">— Triangular number curve naturally slows progression without a hard cap. Level 10 costs 5500 XP total, level 20 costs 21000 — meaningful grind without being infinite.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Auto-distribute stat bonuses per level, no manual allocation in v1</div>
+                    <div class="pull-quote-rationale">— Keeps UI simple. Manual allocation is a future feature that can be layered on the same XP system without breaking changes.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Bonuses: +5 maxHp/level, +1 damage/level, +1 defense/level, +2% critChance every 5 levels</div>
+                    <div class="pull-quote-rationale">— Roughly matches what a good Magic item gives per level. Player feels like they are always getting stronger but gear still matters more at any specific tier.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote>
+          </div>
+      <aside class="caveats-box">
+            <div class="caveats-label">Caveats</div>
+            <ul class="caveats-list">
+              <li>No manual stat allocation in v1</li><li>No XP from non-combat encounters (chests, shrines)</li><li>Level cap is infinite but untested above level 50 for balance</li>
+            </ul>
+          </aside>
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Roguelite Persistence — Ghost Echo live + deferred mechanics</h3>
+        <span class="status-badge" style="color:var(--status-draft);border-color:var(--status-draft)44;background:var(--status-draft)18;">draft</span>
+      </div>
+      <div class="feature-key-label">feat-2026-060</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">feature.json documents Ghost Echo as "UI only — not yet live" but the invokeGhostEcho action is fully implemented and wired in GridScreen. Additionally: careerStats.floorDeaths is never reset between runs, meta-progression bonuses (unlockables) are not yet defined, and the graveyard has no cap.</p></div>
+      
+      
+      
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Study bonuses — functional implementation (not flavor text)</h3>
+        <span class="status-badge" style="color:var(--status-draft);border-color:var(--status-draft)44;background:var(--status-draft)18;">draft</span>
+      </div>
+      <div class="feature-key-label">feat-2026-076</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">The "Study" action in the Graveyard shows a permanent knowledge bonus description per item quality, but none of these bonuses are actually applied in game logic. Studying an item consumes it for flavor text only. The bonus system needs to be wired into the relevant systems (loot display, identification, etc.).</p></div>
+      
+      
+      
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Tier identity — per-tier monster pools and visual themes</h3>
+        <span class="status-badge" style="color:var(--status-draft);border-color:var(--status-draft)44;background:var(--status-draft)18;">draft</span>
+      </div>
+      <div class="feature-key-label">feat-2026-062</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">All tiers share the same monster pool and floor palette. Tiers feel identical past tier 1. There is no visual theme differentiation (e.g. dungeon → crypt → hell) and no tier-exclusive monsters to signal escalating danger.</p></div>
+      
+      
+      
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">XP from non-combat encounters (chests, shrines, secrets)</h3>
+        <span class="status-badge" style="color:var(--status-draft);border-color:var(--status-draft)44;background:var(--status-draft)18;">draft</span>
+      </div>
+      <div class="feature-key-label">feat-2026-061</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">XP is only awarded from killing monsters. Chests, shrines, and secret rooms grant no XP, making exploration feel unrewarded and deprioritized relative to combat grinding.</p></div>
+      
+      
+      
+    </article>
+      </section>
+<section class="domain-chapter" id="chapter-2">
+        <div class="chapter-number">Chapter 2</div>
+        <h2 class="chapter-title">combat</h2>
+        <div class="chapter-meta">7 features</div>
+        <article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Block Chance System</h3>
+        <span class="status-badge" style="color:var(--status-frozen);border-color:var(--status-frozen)44;background:var(--status-frozen)18;">frozen</span>
+      </div>
+      <div class="feature-key-label">feat-2026-041</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">blockChance is a stat on items but has zero effect in combat. Shields and high-dex builds have no mechanical identity. Block gives offhand/shield items a defensive purpose distinct from raw defense.</p></div>
+      <div class="feature-section-label">How it was solved</div>
+         <div class="impl-wrap" id="impl-2">
+           <div class="impl-text">
+             <span class="impl-short"><p class="md-p">1. combat.ts: after monster attack hits (post-miss check), roll blockChance% — on block: set incomingDamage = 0, result includes isBlocked: true. 2. blockChance source: playerStats.blockChance from equipped items. 3. Passive offhand bonus: if player has offhand equipped and it has no blockChance stat, grant 10% base block (holding anything in off-hand is slightly defensive). 4. Block cap enforced</p><span class="impl-ellipsis">…</span></span><span class="impl-full" style="display:none;"><p class="md-p">1. combat.ts: after monster attack hits (post-miss check), roll blockChance% — on block: set incomingDamage = 0, result includes isBlocked: true. 2. blockChance source: playerStats.blockChance from equipped items. 3. Passive offhand bonus: if player has offhand equipped and it has no blockChance stat, grant 10% base block (holding anything in off-hand is slightly defensive). 4. Block cap enforced at 75%. 5. roundToText: show 'Blocked!' when isBlocked. 6. Block only vs physical attacks — elemental damage is unblockable (goes around the shield). 7. PlayerCombatStats: add blockChance field. 8. buildPlayerStats: read blockChance from equipped offhand primarily, also from any item with blockChance affix.</p></span>
+           </div>
+           <button class="read-more-btn" onclick="toggleImpl('impl-2')">Read more ▾</button>
+         </div>
+      <div class="decisions-block">
+            <blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Block resolves after the miss check — you can only block attacks that land</div>
+                    <div class="pull-quote-rationale">— Keeps the two systems independent and readable. Miss = attacker failed. Block = defender succeeded. Sequential resolution avoids double-negation confusion in log.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Passive 10% base block when any offhand is equipped, even without blockChance stat</div>
+                    <div class="pull-quote-rationale">— Makes the offhand slot feel defensively meaningful even for non-block builds. Holding anything in your off-hand is slightly protective.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Block cap at 75% — elemental damage unblockable</div>
+                    <div class="pull-quote-rationale">— 75% physical block cap matches D2. Elemental bypass distinguishes enchanted monster threat profile and ensures resist gear remains relevant even for shield builds.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote>
+          </div>
+      <aside class="caveats-box">
+            <div class="caveats-label">Caveats</div>
+            <ul class="caveats-list">
+              <li>Monster blocking not implemented — only player blocks</li><li>No visual shield indicator beyond &#39;Blocked!&#39; in combat log</li><li>Block% not shown as active metric in CombatScreen</li>
+            </ul>
+          </aside>
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Elemental Damage &amp; Resistance System</h3>
+        <span class="status-badge" style="color:var(--status-frozen);border-color:var(--status-frozen)44;background:var(--status-frozen)18;">frozen</span>
+      </div>
+      <div class="feature-key-label">feat-2026-039</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">Fire/cold/lightning damage and resistance stats exist on items but are ignored during combat resolution. The elemental system is decorative — no mechanical difference between a fire ring and any other ring.</p></div>
+      <div class="feature-section-label">How it was solved</div>
+         <div class="impl-wrap" id="impl-13">
+           <div class="impl-text">
+             <span class="impl-short"><p class="md-p">1. combat.ts: add resolvePlayerElemental(playerStats, rng): { fire, cold, lightning } — reads fireDamage/coldDamage/lightningDamage stats, applies resist cap of 75%. 2. Add resolveMonsterElemental(monster, playerStats, rng): checks monster affixes (fireEnchanted adds 50% of monster base damage as fire, etc.), applies player fireResist/coldResist/lightResist. 3. Status effects: cold hit applies 'ch</p><span class="impl-ellipsis">…</span></span><span class="impl-full" style="display:none;"><p class="md-p">1. combat.ts: add resolvePlayerElemental(playerStats, rng): { fire, cold, lightning } — reads fireDamage/coldDamage/lightningDamage stats, applies resist cap of 75%. 2. Add resolveMonsterElemental(monster, playerStats, rng): checks monster affixes (fireEnchanted adds 50% of monster base damage as fire, etc.), applies player fireResist/coldResist/lightResist. 3. Status effects: cold hit applies 'chilled' for 1 round (attackSpeed -30%), fire applies 'burning' (+3 damage next round), lightning bypasses 25% of defense. 4. CombatState: add statusEffects: string[] field. 5. roundToText: append elemental hit lines 'Fire: +8', 'Resisted 4'. 6. Update PlayerCombatStats type to include elemental stat fields. 7. buildPlayerStats: read equipped elemental stats via equipped items passed in.</p></span>
+           </div>
+           <button class="read-more-btn" onclick="toggleImpl('impl-13')">Read more ▾</button>
+         </div>
+      <div class="decisions-block">
+            <blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Elemental damage is additive on top of physical, never replaces it</div>
+                    <div class="pull-quote-rationale">— A fire ring should always add value. If elemental replaced physical, low-physical builds would be punished for stacking resist gear.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Resist cap at 75%, same as Diablo 2</div>
+                    <div class="pull-quote-rationale">— Prevents full immunity builds that trivialize enchanted monsters. 75% is a well-tested ceiling that still makes resist gear feel powerful.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Status effects last exactly 1 round — chilled, burning, lightning bypass</div>
+                    <div class="pull-quote-rationale">— Simple and readable. Multi-round tracking adds complexity without meaningful strategic depth at this game&#39;s combat scale (3-6 rounds typical).</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Block (offhand) only stops physical damage, not elemental</div>
+                    <div class="pull-quote-rationale">— Gives enchanted monsters a distinct threat profile — a shield build is not invincible against a Fire Enchanted monster, creating target prioritization.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote>
+          </div>
+      <aside class="caveats-box">
+            <div class="caveats-label">Caveats</div>
+            <ul class="caveats-list">
+              <li>Poison damage/resistance not implemented in v1</li><li>No visual indicator for status effects beyond combat log text</li><li>Player elemental stats require passing equipped items into buildPlayerStats — needs refactor of that call site</li>
+            </ul>
+          </aside>
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Attack Accuracy &amp; Miss Chance</h3>
+        <span class="status-badge" style="color:var(--status-frozen);border-color:var(--status-frozen)44;background:var(--status-frozen)18;">frozen</span>
+      </div>
+      <div class="feature-key-label">feat-2026-040</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">Every attack lands — combat has no uncertainty beyond damage rolls. Missing attacks (and having monsters miss) would make dexterity a meaningful defensive stat and give Extra Fast monsters a real evasion advantage.</p></div>
+      <div class="feature-section-label">How it was solved</div>
+         <div class="impl-wrap" id="impl-15">
+           <div class="impl-text">
+             <span class="impl-short"><p class="md-p">1. Add hitChance calculation to applyCombatAction: playerHitChance = clamp(60 + dexterity <em> 0.8, 20, 95) where dexterity comes from playerStats. 2. Monster evasion: monsterEvasion = monster.speed </em> 15 (range 7–22). 3. Net player hit chance: clamp(playerHitChance - monsterEvasion, 20, 95). 4. Roll against hit chance — on miss: newMonsterHp unchanged, result includes isMiss: true. 5. Monster hit cha</p><span class="impl-ellipsis">…</span></span><span class="impl-full" style="display:none;"><p class="md-p">1. Add hitChance calculation to applyCombatAction: playerHitChance = clamp(60 + dexterity <em> 0.8, 20, 95) where dexterity comes from playerStats. 2. Monster evasion: monsterEvasion = monster.speed </em> 15 (range 7–22). 3. Net player hit chance: clamp(playerHitChance - monsterEvasion, 20, 95). 4. Roll against hit chance — on miss: newMonsterHp unchanged, result includes isMiss: true. 5. Monster hit chance: 65 + monster.speed <em> 10, capped 30–95. 6. Player dodge from dexterity: dex </em> 0.3% (separate from block). 7. roundToText: show 'Miss!' when isMiss, 'Dodged!' when player dodges. 8. Extra Fast affix: +20 to monster evasion, +10 to monster hit. 9. PlayerCombatStats: add dexterity field, buildPlayerStats reads from equipped items.</p></span>
+           </div>
+           <button class="read-more-btn" onclick="toggleImpl('impl-15')">Read more ▾</button>
+         </div>
+      <div class="decisions-block">
+            <blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Hit chance range clamped 20%-95% for both player and monsters</div>
+                    <div class="pull-quote-rationale">— Never feels completely impossible (20% floor) and always has some uncertainty (95% ceiling). Removing all misses or all hits breaks tension.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Dexterity drives both offensive accuracy and defensive dodge</div>
+                    <div class="pull-quote-rationale">— Makes dexterity a dual-purpose stat — relevant for fast/evasive builds AND precision/critical builds. One stat, two payoffs.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Monster speed drives evasion — fast monsters are harder to hit</div>
+                    <div class="pull-quote-rationale">— speed is already a MonsterDef field and affects turn order. Reusing it for evasion gives it combat meaning without new monster data.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote>
+          </div>
+      <aside class="caveats-box">
+            <div class="caveats-label">Caveats</div>
+            <ul class="caveats-list">
+              <li>No dodge animation or indicator beyond combat log text</li><li>Dexterity starting values need tuning — very low dex build could feel broken at 20% floor</li><li>Hit chance not displayed in CombatScreen in v1</li>
+            </ul>
+          </aside>
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Active Combat Skills</h3>
+        <span class="status-badge" style="color:var(--status-frozen);border-color:var(--status-frozen)44;background:var(--status-frozen)18;">frozen</span>
+      </div>
+      <div class="feature-key-label">feat-2026-042</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">Combat has exactly one player action: attack. No expression, no build identity beyond stats. Class-specific skills give players a mana-gated second dimension — each class has 4 unique skills unlocked by level, rewarding progression and creating distinct playstyle identities.</p></div>
+      <div class="feature-section-label">How it was solved</div>
+         <div class="impl-wrap" id="impl-33">
+           <div class="impl-text">
+             <span class="impl-short"><p class="md-p">1. gameStore: add mana/maxMana (class-specific scaling). 2. src/data/skills.ts: 13 SkillDefs tagged with classId, levelRequired, manaCost, description. 3. Warrior: power<em>strike (L1, 12mp, 2×dmg), battle</em>cry (L5, 15mp, -35% dmg 2rds), iron<em>skin (L8, 0mp, +30 def 2rds, monster attacks), whirlwind (L12, 28mp, attack twice). 4. Rogue: backstab (L1, 10mp, 3× crit guaranteed), shadow</em>step (L5, 10mp, mon</p><span class="impl-ellipsis">…</span></span><span class="impl-full" style="display:none;"><p class="md-p">1. gameStore: add mana/maxMana (class-specific scaling). 2. src/data/skills.ts: 13 SkillDefs tagged with classId, levelRequired, manaCost, description. 3. Warrior: power<em>strike (L1, 12mp, 2×dmg), battle</em>cry (L5, 15mp, -35% dmg 2rds), iron<em>skin (L8, 0mp, +30 def 2rds, monster attacks), whirlwind (L12, 28mp, attack twice). 4. Rogue: backstab (L1, 10mp, 3× crit guaranteed), shadow</em>step (L5, 10mp, monster cannot retaliate), rapid<em>strike (L8, 14mp, 3×70% hits), smoke</em>bomb (L12, 0mp, enemy hit -50% 2rds). 5. Sorcerer: fireball (L0, 28mp, 3× spellPower fire), meditate (L0, 0mp, 15HP+12mana/turn 3 turns, monster attacks), ice<em>blast (L6, 20mp, 2.5× spellPower cold, halves enemy hit), chain</em>lightning (L10, 25mp, 2× spellPower lightning, pierces resistance), mana<em>shield (L14, 0mp, absorb 50% dmg as mana 2rds). 6. combatStore: attackAction/skillAction/handleVictory all use deterministic RNG: makeRng(seed ^ (floor <em> 0x9e3779b9) ^ (roundNumber </em> 0x6b429177) ^ offset) — seed from useGameStore.getState().seed. No Date.now() in combat. 7. POST</em>COMBAT_RECOVERY = 0.10; handleVictory emits le('✦ You catch your breath — +X HP', 'heal') after every victory. 8. refillPotions() clears consumables then adds 3 generateHpPotion() + 1 generateManaPotion() — was previously only clearing without re-adding. 9. CombatScreen skill section: fixed grid layout. classSkills divided into rows of 2 (Math.ceil(classSkills.length / 2) rows). Null slots rendered as transparent 'skillBtnEmpty' placeholders to preserve grid shape. Warrior/rogue = 2×2, sorcerer = 3×2 (with 1 empty). skillGlyph fontSize: 24px (up from 14px). 10. Potion buttons show 'none' sub-label (potionEmptyNote style) when count === 0 in addition to the existing opacity:0.35 disabled state. 11. LevelUpOverlay.tsx: new nextSkill?: SkillDef | null prop. When newSkill is null but nextSkill is set, renders a dimmed 'NEXT SKILL' card showing name, description, and 'unlocks at level N'. CombatScreen tracks two states: levelUpSkill (unlocked now) and levelUpNextSkill (SKILLS.filter(classId, levelRequired &gt; level).sort().at(0)). HUD mana bar in blue.</p></span>
+           </div>
+           <button class="read-more-btn" onclick="toggleImpl('impl-33')">Read more ▾</button>
+         </div>
+      <div class="decisions-block">
+            <blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Skill system uses a union SkillId type for compile-time exhaustiveness</div>
+                    <div class="pull-quote-rationale">— TypeScript exhaustiveness ensures every SkillId is handled in switch statements; adding a new skill without handling it is a compile error.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Skills defined in src/data/skills.ts as SkillDef objects with classId, levelRequired, manaCost, description</div>
+                    <div class="pull-quote-rationale">— Centralised skill table makes balancing and adding skills straightforward; no logic lives in the data file.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Skill execution dispatched through src/engine/skills/*.ts per class</div>
+                    <div class="pull-quote-rationale">— Keeps combat engine logic separate from data definitions; each class file is independently testable.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; StatusCounters tracks per-round buff durations and cooldowns in combatStore</div>
+                    <div class="pull-quote-rationale">— Buff durations and cooldowns are round-scoped state — owned by combatStore alongside the round counter so they tick in sync.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; BMAD S3: spark added as sorcerer L0 offensive — 1x lightning spell power, 8 mana, fills 3x2 grid</div>
+                    <div class="pull-quote-rationale">— Sorcerer had 5 skills leaving a null placeholder in the grid. Spark fills it and gives sorcerer an offensive starter that makes the opening floor viable before fireball.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; BMAD S3: iron_skin and smoke_bomb given cooldownRounds:3 — prevents back-to-back defensive cycling</div>
+                    <div class="pull-quote-rationale">— Without cooldowns, a player could loop iron_skin/smoke_bomb every round indefinitely, removing all risk from combat.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; BMAD S3: cooldown coexists with buff window — 2-round buff, 3-round cooldown = 1 dead round after buff expires</div>
+                    <div class="pull-quote-rationale">— Cooldown is longer than buff so there is always a gap, but not so long that defensive skills feel unavailable.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; BMAD S3: whirlwind mana cost reduced 28 to 18</div>
+                    <div class="pull-quote-rationale">— 28 mana blocked early warrior use of their signature skill — 18 makes it available earlier without being free.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; BMAD S3: meditate reworked to mana-only — initial +30 on cast plus 30/round for 2 rounds = 90 total, no HP heal</div>
+                    <div class="pull-quote-rationale">— Meditate was doing both HP and mana, making it a dominant skill with no trade-off. Mana-only creates a clear sorcerer resource management identity.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; BMAD S3: shadow_step to backstab combo tracked via lastSkillUsed in CombatState, logs SHADOW CRIT at crit type (visual only for now)</div>
+                    <div class="pull-quote-rationale">— Establishes the combo infrastructure and visual feedback; mechanical damage bonus deferred until balance is validated.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Balance pass: Spark gets spellVarianceFlat:12 — rolls spellPower to spellPower+12 instead of flat spellPower</div>
+                    <div class="pull-quote-rationale">— Simulation showed Spark dealt 8 DPS at floor 1 vs basic attack&#39;s 12.1, making it a mana-wasting downgrade. Adding 0–12 flat bonus lifts the floor-1 average to ~14, making Spark viable from turn 1 while naturally scaling less at deep floors where spellPower dominates anyway.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Balance pass: Whirlwind second hit is now guaranteed (removed !isMiss guard)</div>
+                    <div class="pull-quote-rationale">— Old Whirlwind only triggered the second hit if the first landed, making it strictly worse than Power Strike in expected DPS (45.6 vs 50.6) at higher mana cost (18 vs 12). After fix, both deal ~equal DPS (~51), making Whirlwind the &#39;burst ceiling&#39; choice when mana is plentiful vs Power Strike&#39;s mana-efficiency role. Both skills now have a clear identity.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Balance pass: Rapid Strike gets bonusHitChance:30 — 30% chance to trigger a 4th hit at 70% damage</div>
+                    <div class="pull-quote-rationale">— Rapid Strike had no situation where it beat Backstab. Adding a 30% proc for a 4th hit gives Rapid Strike a burst ceiling (280% vs Backstab&#39;s guaranteed 300%) and a high-variance identity. The proc adds ~10% average damage, keeping Backstab the reliable mana-efficient choice while Rapid Strike becomes the &#39;lucky spike&#39; option vs high-HP targets.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote>
+          </div>
+      <aside class="caveats-box">
+            <div class="caveats-label">Caveats</div>
+            <ul class="caveats-list">
+              <li>Shadow Step→Backstab combo is log-only — no actual damage amplification implemented yet</li><li>Cooldown UI shows CD:N in skill meta but no countdown animation</li><li>Skill unlock requires level check but no UI indicator of what unlocks at what level</li>
+            </ul>
+          </aside>
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Monster blocking — enemy block chance + UI feedback</h3>
+        <span class="status-badge" style="color:var(--status-draft);border-color:var(--status-draft)44;background:var(--status-draft)18;">draft</span>
+      </div>
+      <div class="feature-key-label">feat-2026-064</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">Block chance is computed for the player but monsters never block player attacks. The block% stat is not surfaced anywhere in the UI (inventory, combat log, or stats panel), so players have no way to know if their gear provides block.</p></div>
+      
+      
+      
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Poison damage implementation + status effect visuals</h3>
+        <span class="status-badge" style="color:var(--status-draft);border-color:var(--status-draft)44;background:var(--status-draft)18;">draft</span>
+      </div>
+      <div class="feature-key-label">feat-2026-063</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">Poison damage type is defined in the schema but never dealt — no monster or item applies poison DoT. Status effects (burn, chill, poison) have no visual indicator on the grid or combat log. Players cannot tell if they or enemies are afflicted.</p></div>
+      
+      
+      
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Skill combos + cooldown animation</h3>
+        <span class="status-badge" style="color:var(--status-draft);border-color:var(--status-draft)44;background:var(--status-draft)18;">draft</span>
+      </div>
+      <div class="feature-key-label">feat-2026-065</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">Shadow Step → Backstab combo triggers correctly in the engine but only logs to console — no visual pop, damage number, or combo text appears in the UI. Skill cooldowns have no animation or countdown indicator, making abilities feel unresponsive.</p></div>
+      
+      
+      
+    </article>
+      </section>
+<section class="domain-chapter" id="chapter-3">
+        <div class="chapter-number">Chapter 3</div>
+        <h2 class="chapter-title">game/ui</h2>
+        <div class="chapter-meta">5 features</div>
+        <article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Settings Screen</h3>
+        <span class="status-badge" style="color:var(--status-frozen);border-color:var(--status-frozen)44;background:var(--status-frozen)18;">frozen</span>
+      </div>
+      <div class="feature-key-label">feat-2026-051</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">There is no settings screen — players cannot toggle haptics, mute future audio, reset their save, or view app version. This is a hard requirement for App Store submission (Apple requires a data/reset option) and for player preference.</p></div>
+      <div class="feature-section-label">How it was solved</div>
+         <div class="impl-wrap" id="impl-30">
+           <div class="impl-text">
+             <span class="impl-short"><p class="md-p">1. src/store/settingsStore.ts — SettingsState: { hapticsEnabled: boolean, audioEnabled: boolean, onboardingDone: boolean, hasSeenFirstBoss: boolean, zoomLevel: 0|1|2, hasSeenGhostEchoHint: boolean, loaded: boolean }. Actions: setHaptics, setAudio, setOnboardingDone, markFirstBossSeen, setZoomLevel(z: 0|1|2), markGhostEchoHintSeen(), loadFromDisk(): Promise&lt;void&gt;. Each mutating action calls saveSet</p><span class="impl-ellipsis">…</span></span><span class="impl-full" style="display:none;"><p class="md-p">1. src/store/settingsStore.ts — SettingsState: { hapticsEnabled: boolean, audioEnabled: boolean, onboardingDone: boolean, hasSeenFirstBoss: boolean, zoomLevel: 0|1|2, hasSeenGhostEchoHint: boolean, loaded: boolean }. Actions: setHaptics, setAudio, setOnboardingDone, markFirstBossSeen, setZoomLevel(z: 0|1|2), markGhostEchoHintSeen(), loadFromDisk(): Promise&lt;void&gt;. Each mutating action calls saveSettings() with the full SettingsData object (all 6 fields). loadFromDisk() calls loadSettings() and applies defaults for optional fields (zoomLevel ?? 1, hasSeenGhostEchoHint ?? false). 2. src/screens/SettingsScreen.tsx — sections: AUDIO/HAPTICS (toggle rows with Switch), DANGER ZONE (RESET PROGRESS button → Alert.alert confirmation), ABOUT (version from expo-constants). 3. App.tsx — 'settings' in GameScreen type. ⚙ icon on main menu header. 4. SettingsScreen RESET PROGRESS: clearSave() + reset stores to initial state + setScreen('grid'). 5. GridScreen: reads savedZoom = useSettingsStore(s =&gt; s.zoomLevel) to initialize zoom state. Calls persistZoom (setZoomLevel) on every zoom change (buttons + pinch). 6. useHaptics.ts reads hapticsEnabled before every haptic call.</p></span>
+           </div>
+           <button class="read-more-btn" onclick="toggleImpl('impl-30')">Read more ▾</button>
+         </div>
+      <div class="decisions-block">
+            <blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Settings persisted via AsyncStorage in persistence.ts (SettingsData interface)</div>
+                    <div class="pull-quote-rationale">— Settings are user preferences that must survive app restarts; AsyncStorage is the correct persistence layer for this game.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; settingsStore exposes individual toggles and markX actions</div>
+                    <div class="pull-quote-rationale">— Granular actions are easier to call from UI components than a generic setField action; each action also triggers saveSettings automatically.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; BMAD S3: hasSeenCodexHint boolean added — tracks whether player dismissed the Codex first-open hint; markCodexHintSeen action; persisted in SettingsData</div>
+                    <div class="pull-quote-rationale">— One-time hints should be persisted so they never re-appear after dismissal even across app restarts.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote>
+          </div>
+      <aside class="caveats-box">
+            <div class="caveats-label">Caveats</div>
+            <ul class="caveats-list">
+              <li>No per-haptics-event granularity (e.g. can&#39;t disable only crit haptics)</li><li>Audio toggle has no effect in v1</li>
+            </ul>
+          </aside>
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Shared Stash &amp; Town Screen</h3>
+        <span class="status-badge" style="color:var(--status-frozen);border-color:var(--status-frozen)44;background:var(--status-frozen)18;">frozen</span>
+      </div>
+      <div class="feature-key-label">feat-2026-044</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">Players pick up items in the dungeon and must immediately decide to keep or drop them — there is no persistent storage that survives across runs. Items found with one class cannot be used by another. Players also have no way to review their character stats or manage equipped gear outside of a run.</p></div>
+      <div class="feature-section-label">How it was solved</div>
+         <div class="impl-wrap" id="impl-31">
+           <div class="impl-text">
+             <span class="impl-short"><p class="md-p">1. gameStore: add sharedStash: Item[], depositToStash(item), withdrawFromStash(uid), equipFromStash(uid), unequipToStash(slot). 2. equipFromStash: moves item from stash to equipped slot; displaced item goes back to stash. 3. unequipToStash: removes from equipped, pushes to stash. 4. src/screens/TownScreen.tsx: two tabs — EQUIPPED (all 10 equip slots with unequip-to-stash button) and STASH(N) (list</p><span class="impl-ellipsis">…</span></span><span class="impl-full" style="display:none;"><p class="md-p">1. gameStore: add sharedStash: Item[], depositToStash(item), withdrawFromStash(uid), equipFromStash(uid), unequipToStash(slot). 2. equipFromStash: moves item from stash to equipped slot; displaced item goes back to stash. 3. unequipToStash: removes from equipped, pushes to stash. 4. src/screens/TownScreen.tsx: two tabs — EQUIPPED (all 10 equip slots with unequip-to-stash button) and STASH(N) (list of stash items with equip-from-stash or bag-withdraw). 5. Header: ← MAP (back to grid/menu), TOWN title, SWITCH CLASS (to ClassSelectScreen). 6. Character card: class dot + name (class color), level badge, stat chips (HP/MP/DMG/DEF/CRIT/SP via buildPlayerStats). 7. App.tsx: screen === 'town' renders TownScreen; excluded from showMainMenu condition. 8. LootScreen: STASH button removed — dungeon loot goes to bag only. 9. combatStore: add townPortalScrolls: number (resets to 0 on run start), gainScroll() action. Scrolls drop from handleVictory: chest=100%, ancient=20%, elite=10%, rare=10%. Max 3 held. 10. GridScreen TOWN button: disabled when townPortalScrolls===0, consumes 1 scroll on press. Shows 📜×N or 'no scroll'. Chest encounter also calls gainScroll(). 11. Main menu TOWN button: navigates to 'town' (free, no scroll cost).</p></span>
+           </div>
+           <button class="read-more-btn" onclick="toggleImpl('impl-31')">Read more ▾</button>
+         </div>
+      <div class="decisions-block">
+            <blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Stash is accessible only in town (TownScreen), not from dungeon loot screen</div>
+                    <div class="pull-quote-rationale">— Dungeon stashing broke the intended flow: pick up items → manage in town. Keeping stash town-only creates a deliberate decision loop: survive the floor → return to town → deposit keepers → start next run.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Visiting town from the dungeon requires a Town Portal Scroll (rare consumable) — no scroll, no town</div>
+                    <div class="pull-quote-rationale">— A potion cost was too cheap — players have 4 potions per run and would visit town freely. Scrolls are gated by drop luck: you only get them from chests (always) and elite/rare kills (10-20% chance). This makes each town visit a deliberate, rare event rather than a habit. Inspired directly by Diablo 2&#39;s Town Portal scroll mechanic.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; TownScreen combines character sheet + stash management in a tabbed UI</div>
+                    <div class="pull-quote-rationale">— Players need both views in sequence: see current stats, see what&#39;s in stash, decide what to equip. A combined screen reduces navigation friction. Two tabs (EQUIPPED / STASH) keep it scannable.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Equipping from stash displaces the current item back to stash (not to bag)</div>
+                    <div class="pull-quote-rationale">— Bag space is limited (20 slots). Stash is the intended storage layer. Sending the displaced item to the bag would fill it up during normal stash management. Stash-to-stash swaps keep the bag free for dungeon pickups.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Shared stash is a flat Item[] in gameStore (Zustand), not a separate store or SQLite</div>
+                    <div class="pull-quote-rationale">— The stash is logically global game state (like graveyard, xp, tier). Zustand keeps all persistent state co-located. SQLite is reserved for future full save-slot implementation. A flat array is sufficient for v1 — no size cap enforced.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote>
+          </div>
+      <aside class="caveats-box">
+            <div class="caveats-label">Caveats</div>
+            <ul class="caveats-list">
+              <li>No stash size cap in v1 — players can accumulate unlimited items</li><li>Stash is Zustand in-memory only — it does not persist to disk between app restarts (future: AsyncStorage/SQLite serialization)</li><li>No item sorting or filtering in stash view</li><li>Charms and runes in stash must be manually withdrawn to bag (BAG button) — they cannot be directly equipped</li><li>Town Portal Scrolls reset to 0 on new run start (refillPotions) — stash management before starting a run must happen from the main menu TOWN button (which is free)</li>
+            </ul>
+          </aside>
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">UI Polish Phase 2 — Visual Hierarchy &amp; Screen Consistency</h3>
+        <span class="status-badge" style="color:var(--status-frozen);border-color:var(--status-frozen)44;background:var(--status-frozen)18;">frozen</span>
+      </div>
+      <div class="feature-key-label">feat-2026-049</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">Every screen was built independently and lacks visual cohesion — font scales, spacing, and color usage are inconsistent. The main menu has no dungeon atmosphere. Combat log is plain monochrome text. The grid dungeon tiles are grey boxes. Item cards show no rarity color in the grid. There are no screen transitions — cuts are jarring. The overall aesthetic doesn't match the dark fantasy tone of a Diablo-inspired game.</p></div>
+      <div class="feature-section-label">How it was solved</div>
+         <div class="impl-wrap" id="impl-38">
+           <div class="impl-text">
+             <span class="impl-short"><p class="md-p">1. src/theme.ts — export COLORS (bg, surface, border, text primary/secondary/dim, quality colors, class colors), FONT (xs=9, sm=11, md=13, lg=16, xl=20, xxl=26), SPACING (xs=4, sm=8, md=14, lg=20, xl=28). Used as import in all screens for consistency. 2. GridScreen.tsx — tile visual overhaul: unexplored tiles show unicode stone chars ('▓','░','▒') in dark grey. Boss tile: red border + skull emoji.</p><span class="impl-ellipsis">…</span></span><span class="impl-full" style="display:none;"><p class="md-p">1. src/theme.ts — export COLORS (bg, surface, border, text primary/secondary/dim, quality colors, class colors), FONT (xs=9, sm=11, md=13, lg=16, xl=20, xxl=26), SPACING (xs=4, sm=8, md=14, lg=20, xl=28). Used as import in all screens for consistency. 2. GridScreen.tsx — tile visual overhaul: unexplored tiles show unicode stone chars ('▓','░','▒') in dark grey. Boss tile: red border + skull emoji. Chest tile: yellow border + chest emoji. Exit tile: green border + ↓ arrow. Fog of war: tiles beyond 2 steps from player position render at 30% opacity. Floor + tier header badge: top bar showing 'FLOOR 7 · TIER II' in proper typography. 3. CombatScreen.tsx — monster name color varies by type: Normal=#999, Elite=#3498db, Rare=#c8a020, Ancient=#e74c3c, Boss=#ff0000 + pulsing border. Boss header adds ☠ skull before name + 'BOSS' badge. Combat log lines: 4 most recent shown, older fade to near-invisible. 4. App.tsx MainMenu — title 'DUNGEON DEPTHS' with letter-spacing:8, subtitle 'A DIABLO-STYLE ROGUELITE', animated border pulse on the card. Class dot indicator: shows current classId color if a class is active. 5. LootScreen.tsx — item cards get quality-colored left border (2px). Rare/unique items get a subtle animated shimmer (Animated opacity oscillation 0.7→1 loop). 6. TetrisGrid (ItemCard) — potion items show 🧪 or 💧 centered in their 1×1 cell instead of a plain color block. Rune items show their rune initial (El, Eld...) in gold. 7. Screen transitions — add a shared useFadeTransition hook: Animated.Value opacity 0→1 on mount over 180ms. Apply to all screen root Views. 8. EquipmentPanel.tsx — slot labels are more descriptive, empty slots show a faint icon hint (⚔ for weapon, 🛡 for offhand etc).</p></span>
+           </div>
+           <button class="read-more-btn" onclick="toggleImpl('impl-38')">Read more ▾</button>
+         </div>
+      <div class="decisions-block">
+            <blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Visual polish pass 2 targets InventoryScreen, CombatScreen, GridScreen consistency</div>
+                    <div class="pull-quote-rationale">— These three screens are the most frequently visited; consistency here has the highest player impact.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; BMAD S3: MF (magic find) stat line added to InventoryScreen between vitals and skills strip — shows LVL N and MF N% in gold</div>
+                    <div class="pull-quote-rationale">— Magic find is an invisible stat that drives loot decisions; surfacing it in the inventory gives players actionable build feedback.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; BMAD S3: DPad center converted from non-interactive View to TouchableOpacity with onLongPress (400ms) — accepts onWait prop</div>
+                    <div class="pull-quote-rationale">— Long-press is a discoverable interaction pattern that avoids cluttering the grid UI with an explicit wait button.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; BMAD S3: potion heal in InventoryScreen reads effectiveStats.heal (floor-scaled) instead of hardcoded 30 — both handleBagEquip and handleSheetUse updated</div>
+                    <div class="pull-quote-rationale">— Floor-scaled potions were implemented in loot.ts but InventoryScreen was still applying a flat 30 HP heal, breaking the floor scaling.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote>
+          </div>
+      <aside class="caveats-box">
+            <div class="caveats-label">Caveats</div>
+            <ul class="caveats-list">
+              <li>DPad long-press wait triggers haptic only — no game-state turn-skip mechanic yet</li>
+            </ul>
+          </aside>
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Audio engine — functional sound toggle with actual SFX</h3>
+        <span class="status-badge" style="color:var(--status-draft);border-color:var(--status-draft)44;background:var(--status-draft)18;">draft</span>
+      </div>
+      <div class="feature-key-label">feat-2026-073</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">The settings screen has an audio on/off toggle but it has no effect — no audio engine is wired up and no sound files exist in the project. The toggle is purely cosmetic. A minimal audio layer (combat hits, item pickup, level-up) is needed for the toggle to be meaningful.</p></div>
+      
+      
+      
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Stash persistence to disk + size cap</h3>
+        <span class="status-badge" style="color:var(--status-draft);border-color:var(--status-draft)44;background:var(--status-draft)18;">draft</span>
+      </div>
+      <div class="feature-key-label">feat-2026-067</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">The shared stash lives only in Zustand memory and is wiped on app restart. There is no size limit — the stash can grow unboundedly, which will cause performance issues and makes it feel undesigned. Both issues must be solved together since adding a cap without persistence creates frustrating item loss.</p></div>
+      
+      
+      
+    </article>
+      </section>
+<section class="domain-chapter" id="chapter-4">
+        <div class="chapter-number">Chapter 4</div>
+        <h2 class="chapter-title">game/combat</h2>
+        <div class="chapter-meta">4 features</div>
+        <article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Boss Encounters</h3>
+        <span class="status-badge" style="color:var(--status-frozen);border-color:var(--status-frozen)44;background:var(--status-frozen)18;">frozen</span>
+      </div>
+      <div class="feature-key-label">feat-2026-045</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">Every 5 floors the player deserves a climactic fight — currently all encounters draw from the same random pool with no milestone moments. There are no named bosses, no special mechanics (enrage, phase shifts, immunity windows), and no guaranteed high-quality loot rewards. The dungeon has no sense of pacing or act structure.</p></div>
+      <div class="feature-section-label">How it was solved</div>
+         <div class="impl-wrap" id="impl-3">
+           <div class="impl-text">
+             <span class="impl-short"><p class="md-p">1. src/data/bosses.ts — BossDef interface: { id, name, floorRequired, hpMultiplier, dmgMultiplier, xpMultiplier, mechanics: BossMechanic[] }. BossMechanic = 'enrage' | 'regen' | 'immune<em>round' | 'no</em>flee'. Define 6 bosses: The Warden (fl5), Bonekeeper (fl10), Inferno Witch (fl15), Shadow Stalker (fl20), Iron Colossus (fl25), The Abyssal One (fl30+, repeating every 10 after). 2. engine/encounter.ts</p><span class="impl-ellipsis">…</span></span><span class="impl-full" style="display:none;"><p class="md-p">1. src/data/bosses.ts — BossDef interface: { id, name, floorRequired, hpMultiplier, dmgMultiplier, xpMultiplier, mechanics: BossMechanic[] }. BossMechanic = 'enrage' | 'regen' | 'immune<em>round' | 'no</em>flee'. Define 6 bosses: The Warden (fl5), Bonekeeper (fl10), Inferno Witch (fl15), Shadow Stalker (fl20), Iron Colossus (fl25), The Abyssal One (fl30+, repeating every 10 after). 2. engine/encounter.ts — add EncounterType.Boss. Add isBossFloor(floor): boolean = floor &gt; 0 &amp;&amp; floor % 5 === 0. Add spawnBoss(floor, rng): MonsterInstance — picks boss by floorRequired, applies hpMultiplier/dmgMultiplier. 3. engine/combat.ts — CombatAction gains bossEnraged?: boolean. applyCombatAction checks round &gt; 5 &amp;&amp; boss → apply 1.5× dmg multiplier. Immune round: every 7th round boss takes 0 damage. Regen: boss heals 3% maxHp each round. 4. store/gridStore.ts — when generating encounter for a tile, if isBossFloor(floor) and no boss yet killed this floor, force EncounterType.Boss. Store bossKilledOnFloor: number[] to prevent respawn. 5. store/combatStore.ts — fleeAction checks encounterType === Boss → log 'Cannot flee from boss!' and return. Boss victory awards 3× XP. 6. engine/loot.ts — bossLootTable: guaranteed rare + 30% unique + 3–5 item drops total. 7. CombatScreen.tsx — boss header: red pulsing name with BOSS badge, phase indicator ('ENRAGED' after round 5), flee button disabled with tooltip.</p></span>
+           </div>
+           <button class="read-more-btn" onclick="toggleImpl('impl-3')">Read more ▾</button>
+         </div>
+      <div class="decisions-block">
+            <blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Boss spawns every 5 floors, not randomly</div>
+                    <div class="pull-quote-rationale">— Predictable milestones let players prepare (use town portal, equip best gear). Random boss floors would feel punishing with no agency.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Enrage triggers at round 5, not a HP threshold</div>
+                    <div class="pull-quote-rationale">— Round-based enrage punishes turtling (using potions indefinitely) without being unfair to low-damage builds. HP threshold enrage is invisible and frustrating.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Cannot flee from boss encounters</div>
+                    <div class="pull-quote-rationale">— Boss is a commitment. Fleeing would trivialize the milestone. Players who aren&#39;t ready should use a town portal scroll before entering the boss room.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote>
+          </div>
+      <aside class="caveats-box">
+            <div class="caveats-label">Caveats</div>
+            <ul class="caveats-list">
+              <li>Boss roster is 6 named bosses — floors 35+ repeat The Abyssal One variant</li><li>No boss cutscene or intro animation in v1</li><li>Immune round mechanic is not visually telegraphed — just 0 damage in log</li><li>bossDefeated is run-scoped (floor-level, in gridStore) and not persisted — if the app crashes after defeating a boss but before calling nextFloor, the boss will not re-spawn (bossDefeated stays true in memory until the next initFloor call)</li>
+            </ul>
+          </aside>
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Room Grammar — Charnel &amp; Sanctum Encounter Bias</h3>
+        <span class="status-badge" style="color:var(--status-frozen);border-color:var(--status-frozen)44;background:var(--status-frozen)18;">frozen</span>
+      </div>
+      <div class="feature-key-label">feat-2026-055</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">BSP-generated rooms are geometrically varied but semantically identical — every room has the same encounter distribution regardless of shape. Long corridor rooms and wide open chambers roll the same odds. Players cannot read the dungeon before engaging it, removing a layer of spatial decision-making.</p></div>
+      <div class="feature-section-label">How it was solved</div>
+         <div class="impl-wrap" id="impl-23">
+           <div class="impl-text">
+             <span class="impl-short"><p class="md-p">grid.ts: added RoomType enum (Standard/Charnel/Sanctum), exported Room interface, classifyRooms(rooms) assigns type by aspect ratio and area, getRoomTypeAt(rooms, roomTypes, pos) looks up the type for any grid position. generateFloor() now returns roomTypes[] alongside rooms[]. gridStore: added rooms: Room[] and roomTypes: RoomType[] to GridState; initFloor populates both from generateFloor; moveP</p><span class="impl-ellipsis">…</span></span><span class="impl-full" style="display:none;"><p class="md-p">grid.ts: added RoomType enum (Standard/Charnel/Sanctum), exported Room interface, classifyRooms(rooms) assigns type by aspect ratio and area, getRoomTypeAt(rooms, roomTypes, pos) looks up the type for any grid position. generateFloor() now returns roomTypes[] alongside rooms[]. gridStore: added rooms: Room[] and roomTypes: RoomType[] to GridState; initFloor populates both from generateFloor; movePlayer calls getRoomTypeAt(rooms, roomTypes, next) before rollEncounter and applies inline weight bias — Charnel: elite×3, ancient×2, shrine/chest≈0; Sanctum: shrine×5, chest×4, elite×0.3; Standard: unmodified floorPacingWeights.</p></span>
+           </div>
+           <button class="read-more-btn" onclick="toggleImpl('impl-23')">Read more ▾</button>
+         </div>
+      <div class="decisions-block">
+            <blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Classify rooms by geometry (aspect ratio + area) rather than random assignment</div>
+                    <div class="pull-quote-rationale">— Seeded generation means room shapes are deterministic — classifying by geometry makes the grammar consistent and learnable. A Charnel room is always narrow; the player&#39;s visual read of the corridor predicts the encounter type.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Bias encounter weights, not override them — room type adjusts probabilities, not outcomes</div>
+                    <div class="pull-quote-rationale">— A Charnel room that guarantees an elite every step would feel oppressive and exploit-prone. Biasing weights preserves variance and the seeded PRNG&#39;s run-reproducibility while still making the room type meaningful.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote>
+          </div>
+      <aside class="caveats-box">
+            <div class="caveats-label">Caveats</div>
+            <ul class="caveats-list">
+              <li>Corridor tiles between rooms always resolve as Standard (no room boundary lookup for non-room floor tiles)</li><li>Room classification is purely geometric — no hand-authored control over special rooms</li><li>Visual distinction between room types not yet implemented (no floor tint difference)</li>
+            </ul>
+          </aside>
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Boss improvements — floor 35+ variety, immune telegraph, crash recovery</h3>
+        <span class="status-badge" style="color:var(--status-draft);border-color:var(--status-draft)44;background:var(--status-draft)18;">draft</span>
+      </div>
+      <div class="feature-key-label">feat-2026-068</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">Three bugs/gaps: (1) Boss pool has only 3 bosses so floors 35+ repeat them, breaking the escalating-threat narrative. (2) The immune round activates without any telegraph — players take full damage with no warning. (3) bossDefeated flag lives only in runtime state and is lost on crash, causing the boss to respawn on the same floor after a force-quit.</p></div>
+      
+      
+      
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Room visual identity — distinct tile themes per room type</h3>
+        <span class="status-badge" style="color:var(--status-draft);border-color:var(--status-draft)44;background:var(--status-draft)18;">draft</span>
+      </div>
+      <div class="feature-key-label">feat-2026-075</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">All room types (combat, chest, shrine, boss, exit) render with the same floor/wall tile colors. Players cannot visually distinguish room types at a glance — the room grammar exists in data but is invisible in the UI. Boss rooms, shrines, and exits should have immediately recognizable visual signatures.</p></div>
+      
+      
+      
+    </article>
+      </section>
+<section class="domain-chapter" id="chapter-5">
+        <div class="chapter-number">Chapter 5</div>
+        <h2 class="chapter-title">game/progression</h2>
+        <div class="chapter-meta">4 features</div>
+        <article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Class System — Warrior / Rogue / Sorcerer</h3>
+        <span class="status-badge" style="color:var(--status-frozen);border-color:var(--status-frozen)44;background:var(--status-frozen)18;">frozen</span>
+      </div>
+      <div class="feature-key-label">feat-2026-043</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">Every run is identical. Players have no identity, no pre-run strategy, no build fantasy. A three-class system (Warrior, Rogue, Sorcerer) gives each run a distinct flavor — different base stats, different skill sets, and a clear difficulty gradient that rewards mastery.</p></div>
+      <div class="feature-section-label">How it was solved</div>
+         <div class="impl-wrap" id="impl-6">
+           <div class="impl-text">
+             <span class="impl-short"><p class="md-p">1. src/data/classes.ts: ClassDef interface with bonusHp, defensePerLevel, bonusCritChance, bonusDex, baseMana, manaPerLevel, spellPowerPerFloor, spellPowerPerLevel, skillIds[]. 2. CLASSES array: Warrior (red, 4 skills), Rogue (green, 4 skills), Sorcerer (blue, 5 skills). 3. src/screens/ClassSelectScreen.tsx: 3 class cards, tap to select + confirm; shows flavor text, stat preview, skill list. 4. ga</p><span class="impl-ellipsis">…</span></span><span class="impl-full" style="display:none;"><p class="md-p">1. src/data/classes.ts: ClassDef interface with bonusHp, defensePerLevel, bonusCritChance, bonusDex, baseMana, manaPerLevel, spellPowerPerFloor, spellPowerPerLevel, skillIds[]. 2. CLASSES array: Warrior (red, 4 skills), Rogue (green, 4 skills), Sorcerer (blue, 5 skills). 3. src/screens/ClassSelectScreen.tsx: 3 class cards, tap to select + confirm; shows flavor text, stat preview, skill list. 4. gameStore: classId: ClassId | null, selectClass(id) action. 5. maxHpForFloor() and maxManaForLevel() both accept optional classId. 6. buildPlayerStats() uses classDef bonuses. 7. CombatScreen skill grid: fixed 2-column layout with Math.ceil(classSkills.length / 2) rows. Warrior/Rogue (4 skills) → 2×2 grid; Sorcerer (5 skills) → 2×3 grid with one null placeholder in the last row. Null slots render as &lt;View style={styles.skillBtnEmpty} /&gt; (transparent spacer), ensuring the grid never collapses. 8. Skill glyph in skill buttons: fontSize 24 (was 14) for legibility. 9. combatStore skill filter: only SKILLS where classId matches. 10. spellPower = floor <em> spellPowerPerFloor + level </em> spellPowerPerLevel (Warrior/Rogue = 0). 11. Monte Carlo sim (src/sim/classBalanceSim.ts) validates balance across 15 scenarios.</p></span>
+           </div>
+           <button class="read-more-btn" onclick="toggleImpl('impl-6')">Read more ▾</button>
+         </div>
+      <div class="decisions-block">
+            <blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Three classes: Warrior (tank), Rogue (burst/evasion), Sorcerer (elemental scaling)</div>
+                    <div class="pull-quote-rationale">— Classic D2-inspired trinity. Covers the three playstyle archetypes (durability, speed, power) without overlap.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Class selected at run start, persists for the run only — no persistent class across runs</div>
+                    <div class="pull-quote-rationale">— Roguelite design: each run is a fresh identity. Cross-run class persistence would reduce variety.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Each class has a fixed skillIds array defining available skills</div>
+                    <div class="pull-quote-rationale">— Deterministic skill lists per class make balance tractable and skill grid layout predictable.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; BMAD S3: sorcerer skillIds updated to include spark as first entry (L0 starter) — fills 3x2 skill grid with 6 skills</div>
+                    <div class="pull-quote-rationale">— Sorcerer previously had 5 skills leaving a null placeholder. Spark fills the grid and provides a usable offensive option from floor 1.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; BMAD S3: class descriptions revised to be more evocative — Warrior armored juggernaut, Rogue swift assassin, Sorcerer arcane caster</div>
+                    <div class="pull-quote-rationale">— Original descriptions were functional but flat. More evocative copy communicates playstyle identity to a new player at the class select screen.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote>
+          </div>
+      <aside class="caveats-box">
+            <div class="caveats-label">Caveats</div>
+            <ul class="caveats-list">
+              <li>No class change mid-run — you commit at the ClassSelectScreen</li><li>Sorcerer&#39;s late-game advantage (deep spell power scaling) means Rogue may surpass Warrior in fully-geared min-maxed scenarios — this is a known design tradeoff</li><li>No class-specific loot affinity in v1 (e.g., Warrior doesn&#39;t see more weapon drops)</li>
+            </ul>
+          </aside>
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Run Stakes — Pre-Run Intent with Bonus Drop</h3>
+        <span class="status-badge" style="color:var(--status-frozen);border-color:var(--status-frozen)44;background:var(--status-frozen)18;">frozen</span>
+      </div>
+      <div class="feature-key-label">feat-2026-058</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">Every run starts with no declared intention beyond class selection. Players in short sessions (10–15 min) have no micro-goal to anchor the run — only the macro goal of reaching floor 30. Without a session-scoped win condition, a run that ends on floor 4 feels like pure failure even if the player achieved something meaningful.</p></div>
+      <div class="feature-section-label">How it was solved</div>
+         <div class="impl-wrap" id="impl-26">
+           <div class="impl-text">
+             <span class="impl-short"><p class="md-p">gameStore.ts: StakeId type ('slayer'|'scavenger'|'deepdiver'), STAKE_DEFS array (exported), activeStake/stakeClaimed/stakeBonusItem/echoWhisperShown added to GameState. claimStake() uses makeRng(seed^0xd4e5f612^floor) to roll 35% — if hit, calls rollLoot('chest', floor, 50) and stores first item as stakeBonusItem. Stake checks wired into recordKill (slayer threshold 25), recordRunItem (scavenger t</p><span class="impl-ellipsis">…</span></span><span class="impl-full" style="display:none;"><p class="md-p">gameStore.ts: StakeId type ('slayer'|'scavenger'|'deepdiver'), STAKE_DEFS array (exported), activeStake/stakeClaimed/stakeBonusItem/echoWhisperShown added to GameState. claimStake() uses makeRng(seed^0xd4e5f612^floor) to roll 35% — if hit, calls rollLoot('chest', floor, 50) and stores first item as stakeBonusItem. Stake checks wired into recordKill (slayer threshold 25), recordRunItem (scavenger threshold 10), nextFloor (deepdiver threshold absFloor 5). startRun resets stakeClaimed+stakeBonusItem, leaves activeStake unchanged. ClassSelectScreen: stake picker row (3 chips: ⚔ SLAYER / 📦 SCAVENGER / ↓ DEEPDIVER) above DESCEND button; active chip gold-bordered; hint text shows target and '35% bonus drop on success'. GridScreen: top-right progress badge (e.g. SLAYER 18/25) visible while stake active and unclaimed; '★ STAKE CLAIMED' toast on completion (4s); if bonus item present, adds to bag via inventoryStore.addItem and shows '★ STAKE CLAIMED — bonus item added to bag'.</p></span>
+           </div>
+           <button class="read-more-btn" onclick="toggleImpl('impl-26')">Read more ▾</button>
+         </div>
+      <div class="decisions-block">
+            <blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; activeStake persists across runs — not reset by startRun</div>
+                    <div class="pull-quote-rationale">— The stake represents the player&#39;s declared hunt style, not a per-run commitment. A player who always wants to slay should not have to re-select every run. stakeClaimed resets each run, so the reward mechanic still triggers once per completion.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; 35% bonus drop probability — not guaranteed</div>
+                    <div class="pull-quote-rationale">— A guaranteed drop would make stakes feel like a farming mechanic — players would optimise for the fastest completable stake rather than their preferred playstyle. 35% is frequent enough to feel meaningful but rare enough to stay exciting. The RNG is seeded from (seed ^ constant ^ floor) to maintain run reproducibility.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Stake bonus item delivered directly to bag — no new loot screen</div>
+                    <div class="pull-quote-rationale">— Opening a loot screen mid-run for a single item would break the movement flow and require wiring a new loot entry point. Directly calling inventoryStore.addItem() with a toast notification delivers the reward without interrupting the game loop.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote>
+          </div>
+      <aside class="caveats-box">
+            <div class="caveats-label">Caveats</div>
+            <ul class="caveats-list">
+              <li>DEEPDIVER progress counter shows absoluteFloor (e.g. tier 2 floor 1 = floor 11) rather than a simple &#39;reached floor 5 in this run&#39; — could confuse returning players on higher tiers</li><li>Stake completion not recorded in careerStats (stakesCompleted counter not yet added)</li><li>Bag-full edge case silently drops the bonus item — no fallback to stash or notification</li>
+            </ul>
+          </aside>
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Class-specific loot affinity and starting gear</h3>
+        <span class="status-badge" style="color:var(--status-draft);border-color:var(--status-draft)44;background:var(--status-draft)18;">draft</span>
+      </div>
+      <div class="feature-key-label">feat-2026-066</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">All classes share an identical loot pool — a Necromancer has the same drop distribution as a Barbarian. No class has weighted affinity toward its thematic gear (e.g. wands/staves for Necro, axes/maces for Barb), and there are no class-locked starting items.</p></div>
+      
+      
+      
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Run stakes — completion tracking in careerStats + bag-full feedback</h3>
+        <span class="status-badge" style="color:var(--status-draft);border-color:var(--status-draft)44;background:var(--status-draft)18;">draft</span>
+      </div>
+      <div class="feature-key-label">feat-2026-077</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">Two gaps: (1) Stake completions are never recorded in careerStats, so there is no history of which stakes were completed and no basis for future meta-unlocks tied to stake achievements. (2) When the bag is full and a stake bonus item would drop, it is silently discarded — the player gets no notification and may not realize they missed a reward.</p></div>
+      
+      
+      
+    </article>
+      </section>
+<section class="domain-chapter" id="chapter-6">
+        <div class="chapter-number">Chapter 6</div>
+        <h2 class="chapter-title">ops/distribution</h2>
+        <div class="chapter-meta">2 features</div>
+        <article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">App Store Preparation</h3>
+        <span class="status-badge" style="color:var(--status-frozen);border-color:var(--status-frozen)44;background:var(--status-frozen)18;">frozen</span>
+      </div>
+      <div class="feature-key-label">feat-2026-052</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">The app has no icon, no splash screen, a placeholder bundle ID (com.anonymous), no display name, no privacy policy, and no App Store metadata. It cannot be submitted to the Apple App Store in its current state.</p></div>
+      <div class="feature-section-label">How it was solved</div>
+         <div class="impl-wrap" id="impl-0">
+           <div class="impl-text">
+             <span class="impl-short"><p class="md-p">1. app.json — name: 'Dungeon Depths', slug: 'dungeon-depths', version: '1.0.0', orientation: 'portrait', userInterfaceStyle: 'dark', backgroundColor: '#0a0a0a', ios: { bundleIdentifier: 'com.majeanson.dungeondepths', supportsTablet: false, requireFullScreen: true, buildNumber: '1' }, android: { package: 'com.majeanson.dungeondepths', versionCode: 1 }, icon: './assets/icon.png', splash: { image: '.</p><span class="impl-ellipsis">…</span></span><span class="impl-full" style="display:none;"><p class="md-p">1. app.json — name: 'Dungeon Depths', slug: 'dungeon-depths', version: '1.0.0', orientation: 'portrait', userInterfaceStyle: 'dark', backgroundColor: '#0a0a0a', ios: { bundleIdentifier: 'com.majeanson.dungeondepths', supportsTablet: false, requireFullScreen: true, buildNumber: '1' }, android: { package: 'com.majeanson.dungeondepths', versionCode: 1 }, icon: './assets/icon.png', splash: { image: './assets/splash.png', backgroundColor: '#0a0a0a', resizeMode: 'contain' }. 2. assets/icon.png — 1024×1024: #0a0a0a background, large stylized red ⚔ sword icon centered, 'D' letterform optional. Generate via SVG→PNG using a script or design tool. 3. assets/splash.png — 1284×2778 (iPhone 14 Pro Max): dark bg, 'DUNGEON DEPTHS' in centered white bold text, red sword icon above. 4. assets/adaptive-icon.png — 1024×1024 foreground layer for Android. 5. eas.json — { build: { development: { developmentClient: true, distribution: 'internal' }, preview: { distribution: 'internal', ios: { simulator: true } }, production: { autoIncrement: true } } }. 6. Privacy policy — single HTML file at assets/privacy.html: 'Dungeon Depths collects no personal data. All game progress is stored locally on your device. No network requests are made.' Host on GitHub Pages or Vercel for App Store URL requirement. 7. App Store metadata: Category: Games &gt; Role Playing, Age Rating: 12+, Description: 'A Diablo-inspired roguelite dungeon crawler for iOS. Battle monsters, collect loot, and build your character across infinite procedurally generated floors.', Keywords: dungeon,rpg,roguelite,diablo,loot,fantasy. 8. Remove _<em>DEV</em>_ console.log calls from production.</p></span>
+           </div>
+           <button class="read-more-btn" onclick="toggleImpl('impl-0')">Read more ▾</button>
+         </div>
+      <div class="decisions-block">
+            <blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Bundle ID: com.majeanson.dungeondepths</div>
+                    <div class="pull-quote-rationale">— Follows reverse-domain convention using the developer&#39;s npm username (majeanson). &#39;dungeondepths&#39; is the app&#39;s public name.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Privacy policy hosted externally, not in-app</div>
+                    <div class="pull-quote-rationale">— App Store requires a URL to a privacy policy. An in-app page doesn&#39;t satisfy this requirement — it must be a publicly accessible web URL.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote>
+          </div>
+      <aside class="caveats-box">
+            <div class="caveats-label">Caveats</div>
+            <ul class="caveats-list">
+              <li>Icon and splash assets must be manually created — SVG/Figma source not included in this feature</li><li>EAS account and Apple Developer Program membership required for production build</li><li>Android build not prioritized in v1</li>
+            </ul>
+          </aside>
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">EAS build setup — icons, splash, and first TestFlight submission</h3>
+        <span class="status-badge" style="color:var(--status-draft);border-color:var(--status-draft)44;background:var(--status-draft)18;">draft</span>
+      </div>
+      <div class="feature-key-label">feat-2026-074</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">App Store prep feature is frozen but actual build artifacts don't exist: no app icon (1024×1024), no splash screen asset, no EAS project configuration (eas.json), and no Apple Developer account enrollment. These are blocking items for any real device or TestFlight distribution.</p></div>
+      
+      
+      
+    </article>
+      </section>
+<section class="domain-chapter" id="chapter-7">
+        <div class="chapter-number">Chapter 7</div>
+        <h2 class="chapter-title">game/crafting</h2>
+        <div class="chapter-meta">2 features</div>
+        <article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Cube Crafting System</h3>
+        <span class="status-badge" style="color:var(--status-frozen);border-color:var(--status-frozen)44;background:var(--status-frozen)18;">frozen</span>
+      </div>
+      <div class="feature-key-label">feat-2026-047</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">Junk loot accumulates with no use — normal and magic items that don't make the cut go to the void. There is no transmutation system (D2's Horadric Cube equivalent) for upgrading, rerolling, or combining items into better ones. Runes are underused because there's no cube to upgrade low runes into higher ones. Players have no crafting agency between dungeon runs.</p></div>
+      <div class="feature-section-label">How it was solved</div>
+         <div class="impl-wrap" id="impl-9">
+           <div class="impl-text">
+             <span class="impl-short"><p class="md-p">1. src/data/recipes.ts — RecipeDef: { id, name, hint, match: (items: Item[]) =&gt; boolean, build: (items: Item[], rng: Rng) =&gt; Item }. 7 recipes: (a) 3x normal same-slot → 1x magic; (b) 3x magic same-slot → 1x rare; (c) 1x magic item + Eld rune → reroll magic affixes; (d) 1x normal weapon/armor + El+El → add 1 socket; (e) 3x same rune → next rune in ladder; (f) 5x small<em>charm → 1x large</em>charm; (g) 1</p><span class="impl-ellipsis">…</span></span><span class="impl-full" style="display:none;"><p class="md-p">1. src/data/recipes.ts — RecipeDef: { id, name, hint, match: (items: Item[]) =&gt; boolean, build: (items: Item[], rng: Rng) =&gt; Item }. 7 recipes: (a) 3x normal same-slot → 1x magic; (b) 3x magic same-slot → 1x rare; (c) 1x magic item + Eld rune → reroll magic affixes; (d) 1x normal weapon/armor + El+El → add 1 socket; (e) 3x same rune → next rune in ladder; (f) 5x small<em>charm → 1x large</em>charm; (g) 1x rare item + Nef rune → reroll rare affixes. Export <code>getRecipeById(id: string): RecipeDef | undefined</code> for use by loot.ts. 2. engine/loot.ts — <code>import { getRecipeById } from '../data/recipes'</code> (static import at file top — replaces any dynamic require()). transmute(ingredients: Item[], rng: Rng): Item | null — matches against RECIPES, returns generated result or null on no match. 3. src/screens/CraftingScreen.tsx — integrated as 3rd tab in TownScreen. UI: 4 ingredient slots (tap to select from stash/bag), recipe hint panel, TRANSMUTE button. On transmute: remove ingredients from stash/bag, add result to stash. 4. TownScreen.tsx — adds 'cube' tab. 5. No new store — ingredient slots are local useState in CraftingScreen.</p></span>
+           </div>
+           <button class="read-more-btn" onclick="toggleImpl('impl-9')">Read more ▾</button>
+         </div>
+      <div class="decisions-block">
+            <blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Crafting uses a Horadric Cube metaphor — select recipe then select items from bag</div>
+                    <div class="pull-quote-rationale">— Recipe-first flow prevents players from randomly selecting items hoping for a match; they choose intent then gather ingredients.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; matchesRecipeInputs validates exact ingredient requirements before enabling transmute button</div>
+                    <div class="pull-quote-rationale">— Hard gate on the button prevents wasted transmutes; the function validates both count and type constraints in one pass.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Atomic operation — result item added first, inputs consumed only if bag has space</div>
+                    <div class="pull-quote-rationale">— Prevents a full-bag scenario from eating inputs without producing output; player never loses items to a space error.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; BMAD S3: countMatchedInputs added alongside matchesRecipeInputs — shows N/M partial progress hint during ingredient selection</div>
+                    <div class="pull-quote-rationale">— Without partial feedback, players had no signal whether they were on the right track while selecting ingredients; N/M shows progress without revealing the full recipe.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote>
+          </div>
+      <aside class="caveats-box">
+            <div class="caveats-label">Caveats</div>
+            <ul class="caveats-list">
+              <li>No recipe book/codex UI — players must discover recipes or read the user guide</li><li>Only 7 recipes in v1 — full D2 cube parity deferred</li><li>Rare reroll (recipe g) can produce worse stats than the input — same as D2, intentional</li>
+            </ul>
+          </aside>
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Horadric Cube — recipe book UI and expanded recipes</h3>
+        <span class="status-badge" style="color:var(--status-draft);border-color:var(--status-draft)44;background:var(--status-draft)18;">draft</span>
+      </div>
+      <div class="feature-key-label">feat-2026-070</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">The cube has 7 recipes discoverable only by trial-and-error — there is no in-game recipe book or Codex entry. Players have no way to learn recipes without external documentation. Additionally the recipe set is too small to support late-game crafting depth.</p></div>
+      
+      
+      
+    </article>
+      </section>
+<section class="domain-chapter" id="chapter-8">
+        <div class="chapter-number">Chapter 8</div>
+        <h2 class="chapter-title">game/ux</h2>
+        <div class="chapter-meta">2 features</div>
+        <article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Game Feel — Haptics, Animations &amp; Visual Feedback</h3>
+        <span class="status-badge" style="color:var(--status-frozen);border-color:var(--status-frozen)44;background:var(--status-frozen)18;">frozen</span>
+      </div>
+      <div class="feature-key-label">feat-2026-048</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">Combat, level-ups, and loot drops are all text-only events with no physical or visual feedback. Hits, crits, defeats, and victories all feel the same. There are no screen shake animations, no HP bar flash on damage taken, no haptic pulses, no level-up overlay. The gap between mechanics and feel makes the game feel like a spreadsheet rather than an action RPG.</p></div>
+      <div class="feature-section-label">How it was solved</div>
+         <div class="impl-wrap" id="impl-14">
+           <div class="impl-text">
+             <span class="impl-short"><p class="md-p">1. src/hooks/useHaptics.ts — wraps expo-haptics: impactLight, impactMedium, impactHeavy, notificationSuccess, notificationError. Guards against haptics disabled in settingsStore. 2. src/hooks/useCombatAnimations.ts — returns Animated.Value instances: shakeX (translateX for player HP bar), monsterFlash (opacity/color for monster HP bar), levelUpPulse (scale for level-up overlay). triggerShake(): An</p><span class="impl-ellipsis">…</span></span><span class="impl-full" style="display:none;"><p class="md-p">1. src/hooks/useHaptics.ts — wraps expo-haptics: impactLight, impactMedium, impactHeavy, notificationSuccess, notificationError. Guards against haptics disabled in settingsStore. 2. src/hooks/useCombatAnimations.ts — returns Animated.Value instances: shakeX (translateX for player HP bar), monsterFlash (opacity/color for monster HP bar), levelUpPulse (scale for level-up overlay). triggerShake(): Animated.sequence([...3 oscillations...]).start(). triggerFlash(): Animated sequence on monster bar. 3. CombatScreen.tsx — wrap player HP bar in Animated.View with translateX from shakeX. Wrap monster HP bar section in Animated.View with opacity flash. In attackAction callback: trigger monsterFlash. When playerHp decreases: trigger shakeX + impactMedium. On crit in log: impactHeavy. On victory: notificationSuccess. On defeat: notificationError. On potion: impactLight. 4. src/components/LevelUpOverlay.tsx — full-screen semi-transparent gold overlay. Shows '★ LEVEL UP ★', new level number, stat gains. useEffect watches gameStore.level — when it increases, animate in (scale 0→1, opacity 0→1) then auto-dismiss after 1.8s. 5. Combat log color coding: lines containing 'crit'/'CRIT' → #f39c12 orange, 'Victory'/'XP' → #2ecc71 green, 'damage'/'dealt' → #e74c3c red, 'healed'/'Potion'→ #27ae60, 'Scroll'→ #9b59b6, 'LEVEL UP'→ #c8a020 gold, default → #666 grey. 6. GridScreen.tsx — tile onPress: impactLight. Encounter discovery (boss/rare/chest): impactHeavy. 7. All haptic calls gated by settingsStore.hapticsEnabled (read from store directly, no prop drilling).</p></span>
+           </div>
+           <button class="read-more-btn" onclick="toggleImpl('impl-14')">Read more ▾</button>
+         </div>
+      <div class="decisions-block">
+            <blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Haptics via expo-haptics with silent fallback for devices without support</div>
+                    <div class="pull-quote-rationale">— expo-haptics is already in the Expo SDK; the try/catch silent fallback pattern means haptics degrade gracefully on simulators and older devices.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Log entry types drive color — crit gold, xp teal, scroll purple, victory green, levelUp gold, heal green, enraged orange</div>
+                    <div class="pull-quote-rationale">— Typed log entries decouple color from content string parsing; adding a new event type only requires adding to the union.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; BMAD S3: tier background tints — TIER_BG map with 5 subtle hues per tier applied to gridArea background</div>
+                    <div class="pull-quote-rationale">— Subtle tints signal depth tier change without being distracting; pure black for all tiers made every tier feel identical.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; BMAD S3: per-item quality loot log in handleVictory — star unique, diamond rare, diamond magic, dot common — each with typed log color</div>
+                    <div class="pull-quote-rationale">— Previously all loot dropped as a single summary line. Per-item lines with quality prefixes let players see at a glance what they found without leaving the combat log.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; BMAD S3: monster affix names resolved from MONSTER_AFFIXES map in combat-start log at enraged type</div>
+                    <div class="pull-quote-rationale">— Raw affix IDs like fireEnchanted were logged previously. Human-readable names from MONSTER_AFFIXES make the log immediately legible.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; BMAD S3: flee button label changed to stays/blocked to clarify that fleeing keeps the player on the current floor</div>
+                    <div class="pull-quote-rationale">— Players assumed flee meant game over or retreat to town. The label stays makes clear the cost is staying on the floor, not losing progress.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote>
+          </div>
+      <aside class="caveats-box">
+            <div class="caveats-label">Caveats</div>
+            <ul class="caveats-list">
+              <li>No particle effects (would require a dedicated library like react-native-skia)</li><li>Shake animation is horizontal only — vertical shake not implemented</li><li>LevelUpOverlay only triggers mid-combat — level-up during town/menu transitions won&#39;t show it (rare edge case)</li>
+            </ul>
+          </aside>
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">DPad long-press turn-skip mechanic</h3>
+        <span class="status-badge" style="color:var(--status-draft);border-color:var(--status-draft)44;background:var(--status-draft)18;">draft</span>
+      </div>
+      <div class="feature-key-label">feat-2026-071</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">The DPad long-press is wired up but does nothing meaningful in game state — no turn is consumed, no action is taken. A "wait / skip turn" mechanic is essential for tactical play (baiting enemy movement, recovering stamina in place) and is a standard roguelike primitive.</p></div>
+      
+      
+      
+    </article>
+      </section>
+<section class="domain-chapter" id="chapter-9">
+        <div class="chapter-number">Chapter 9</div>
+        <h2 class="chapter-title">game/items</h2>
+        <div class="chapter-meta">2 features</div>
+        <article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Item Expansion — New Bases, Uniques &amp; Runewords</h3>
+        <span class="status-badge" style="color:var(--status-frozen);border-color:var(--status-frozen)44;background:var(--status-frozen)18;">frozen</span>
+      </div>
+      <div class="feature-key-label">feat-2026-046</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">The item pool is thin — 8 weapon types, 3 shields, 3 helms, 3 chests, no two-handed weapons, no bows, no belts. Unique items (fixed-stat legendaries) don't exist at all. The runeword list covers only 3 words. Players have no aspirational gear targets and loot excitement fades quickly after the first few floors.</p></div>
+      <div class="feature-section-label">How it was solved</div>
+         <div class="impl-wrap" id="impl-17">
+           <div class="impl-text">
+             <span class="impl-short"><p class="md-p">1. src/data/items.ts — new base items: two<em>handed</em>sword, battle<em>axe, war</em>axe, hand<em>axe, short</em>bow, long<em>bow, belt (new 'belt' slot), circlet (helmet variant), throwing</em>knife. Add 'belt' to ItemSlot type. EquipmentPanel gains belt slot. 2. engine/loot.ts UNIQUE_ITEMS array — 15 new uniques across weapons, armor, rings, amulets, belts, circlets. Static imports at file top: `import { matchRuneword, g</p><span class="impl-ellipsis">…</span></span><span class="impl-full" style="display:none;"><p class="md-p">1. src/data/items.ts — new base items: two<em>handed</em>sword, battle<em>axe, war</em>axe, hand<em>axe, short</em>bow, long<em>bow, belt (new 'belt' slot), circlet (helmet variant), throwing</em>knife. Add 'belt' to ItemSlot type. EquipmentPanel gains belt slot. 2. engine/loot.ts UNIQUE<em>ITEMS array — 15 new uniques across weapons, armor, rings, amulets, belts, circlets. Static imports at file top: <code>import { matchRuneword, getRunewordById } from '../data/runewords'</code> and <code>import { getRecipeById } from '../data/recipes'</code> (replaces previous dynamic require() calls in computeEffectiveStats and transmute). 3. nextUid() is a stateless function (no module-level counter): <code>function nextUid(): string { return \</code>item</em>${Date.now().toString(36)}<em>${Math.random().toString(36).slice(2, 11)}\<code> }</code>. Removes the old <code>let </em>uid = 0</code> mutable module-level counter. 4. computeEffectiveStats: uses getRunewordById(runewordId) (static import) instead of require('../data/runewords'). 5. transmute(): uses getRecipeById from static import instead of require('../data/recipes'). 6. src/data/runewords.ts — 8 new runewords: Stealth, Leaf, Strength, Zephyr, Lore, Smoke, Malice, Spirit. 7. EquipmentPanel.tsx — adds belt slot visually. 8. inventoryStore.ts — belt added to EquipSlot type.</p></span>
+           </div>
+           <button class="read-more-btn" onclick="toggleImpl('impl-17')">Read more ▾</button>
+         </div>
+      <div class="decisions-block">
+            <blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Belt is a new equipment slot, not stored in bag</div>
+                    <div class="pull-quote-rationale">— Belts in D2 provided utility and are a meaningful equip slot. Adding it as an equip slot (not a bag-only item) gives players another progression axis.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; 15 new uniques, all with 2–3 distinctive stats rather than many small bonuses</div>
+                    <div class="pull-quote-rationale">— D2&#39;s best uniques are remembered for 1-2 defining properties. Goldwrap = MF. Stone of Jordan = mana/spellPower. Each unique should have an identity that creates a build around it.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Runewords target specific slots (e.g. Leaf→staff only)</div>
+                    <div class="pull-quote-rationale">— Slot restrictions create meaningful crafting decisions. &#39;Save my Tal rune for a staff&#39; is interesting. Unrestricted runewords reduce choice.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote>
+          </div>
+      <aside class="caveats-box">
+            <div class="caveats-label">Caveats</div>
+            <ul class="caveats-list">
+              <li>No set item system in v1 — set bonuses deferred to future phase</li><li>Two-handed weapons share the weapon slot only (no offhand restriction enforced)</li><li>Bows have no ranged mechanics — they deal damage same as melee in v1</li><li>nextUid() uses Math.random() — not seeded, so uid generation is non-deterministic by design (uids are identifiers, not game logic)</li>
+            </ul>
+          </aside>
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Set items, bow mechanics, and deterministic UID</h3>
+        <span class="status-badge" style="color:var(--status-draft);border-color:var(--status-draft)44;background:var(--status-draft)18;">draft</span>
+      </div>
+      <div class="feature-key-label">feat-2026-069</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">Three gaps: (1) Set items (coordinated multi-piece bonuses) are absent — the highest item tier in D2. (2) Bows are in the loot pool but have no ranged attack mechanic; they behave identically to melee weapons. (3) nextUid uses Math.random(), which can theoretically collide and is not seedable for replay/testing.</p></div>
+      
+      
+      
+    </article>
+      </section>
+<section class="domain-chapter" id="chapter-10">
+        <div class="chapter-number">Chapter 10</div>
+        <h2 class="chapter-title">game/mobile</h2>
+        <div class="chapter-meta">2 features</div>
+        <article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Phase 1 — Text UI Prototype</h3>
+        <span class="status-badge" style="color:var(--status-frozen);border-color:var(--status-frozen)44;background:var(--status-frozen)18;">frozen</span>
+      </div>
+      <div class="feature-key-label">feat-2026-035</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">The engine is proven (94 tests green) but there is no playable game yet. We need a fully playable loop — grid exploration, combat, loot, and inventory — using only text labels and colored boxes (no pixel art, no Skia). Fun must be validated on a real device before any art work begins.</p></div>
+      <div class="feature-section-label">How it was solved</div>
+         <div class="impl-wrap" id="impl-19">
+           <div class="impl-text">
+             <span class="impl-short"><p class="md-p">1. STORES: Zustand slices — gridStore (floor generation, fog, player pos, stamina), combatStore (active monster, round log, player HP), inventoryStore (flat list + equipped slots), gameStore (floor depth, seed, run state). 2. GRID SCREEN: FlatList of rows, each row is a FlatList of cells (View 16×16px). Tile colors: Wall=black, Floor=dark gray, Exit=green, Fog=near-black. Player dot = white circle</p><span class="impl-ellipsis">…</span></span><span class="impl-full" style="display:none;"><p class="md-p">1. STORES: Zustand slices — gridStore (floor generation, fog, player pos, stamina), combatStore (active monster, round log, player HP), inventoryStore (flat list + equipped slots), gameStore (floor depth, seed, run state). 2. GRID SCREEN: FlatList of rows, each row is a FlatList of cells (View 16×16px). Tile colors: Wall=black, Floor=dark gray, Exit=green, Fog=near-black. Player dot = white circle. D-pad: 4 arrow buttons fixed at bottom-left. Swipe detection via PanResponder. 3. COMBAT SCREEN: Modal overlay. Monster display name + affix badges as colored Text. HP bars: View with width% style. Round log: last 3 lines as Text. Three buttons: Attack (red), Potion (green, disabled if 0), Flee (gray). 4. LOOT SCREEN: After combat victory, show dropped items with quality color. Tap to pick up (auto-place in inventory) or Leave. 5. INVENTORY SCREEN: ScrollView of ItemCard rows. Each card shows name (quality color), size, sockets, stats. Equip button swaps with current slot item. 6. HUD: absolute positioned overlay on GridScreen — stamina bar top-left, HP top-right, floor number top-center.</p></span>
+           </div>
+           <button class="read-more-btn" onclick="toggleImpl('impl-19')">Read more ▾</button>
+         </div>
+      <div class="decisions-block">
+            <blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; React state machine (screen enum) instead of react-navigation for Phase 1</div>
+                    <div class="pull-quote-rationale">— react-navigation adds ~2MB and requires native linking. For a prototype validating fun, a simple currentScreen state switch is faster to implement and debug. Can migrate to react-navigation in Phase 3 when screens multiply.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Grid rendered as View cells (not Skia) in Phase 1</div>
+                    <div class="pull-quote-rationale">— Skia adds native build complexity. For a text prototype, RN View cells are sufficient to validate movement feel and encounter triggers. Skia canvas is Phase 5 (polish). The engine grid logic is completely decoupled from rendering so the swap is a UI-only change.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote>
+          </div>
+      <aside class="caveats-box">
+            <div class="caveats-label">Caveats</div>
+            <ul class="caveats-list">
+              <li>No pixel art — colored boxes only</li><li>No Skia canvas — performance may suffer at 50×50 with many View cells (acceptable for prototype)</li><li>Inventory is flat list, not Tetris grid (Phase 3)</li><li>No save/load yet (Phase 4)</li><li>No sound (Phase 5)</li>
+            </ul>
+          </aside>
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">D2Game — iOS Grid RPG</h3>
+        <span class="status-badge" style="color:var(--status-frozen);border-color:var(--status-frozen)44;background:var(--status-frozen)18;">frozen</span>
+      </div>
+      <div class="feature-key-label">feat-2026-034</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">Build a mobile game combining Pokemon-style 50×50 grid exploration, Diablo 2 loot philosophy (even normal items can be exciting via sockets/runewords), and roguelite floor progression. No existing iOS game nails all three simultaneously in a pick-up-and-play format.</p></div>
+      <div class="feature-section-label">How it was solved</div>
+         <div class="impl-wrap" id="impl-41">
+           <div class="impl-text">
+             <span class="impl-short"><p class="md-p">Expo (React Native) + TypeScript. Engine layer (src/engine/) is pure TS — zero React, 100% bun-testable. Rendering: plain React Native for all UI (combat, inventory, menus, grid). State: Zustand slices (gridStore, combatStore, inventoryStore, gameStore, settingsStore). Persistence: @react-native-async-storage/async-storage via src/services/persistence.ts (saveGame/scheduleSave/loadGame). Seeded PR</p><span class="impl-ellipsis">…</span></span><span class="impl-full" style="display:none;"><p class="md-p">Expo (React Native) + TypeScript. Engine layer (src/engine/) is pure TS — zero React, 100% bun-testable. Rendering: plain React Native for all UI (combat, inventory, menus, grid). State: Zustand slices (gridStore, combatStore, inventoryStore, gameStore, settingsStore). Persistence: @react-native-async-storage/async-storage via src/services/persistence.ts (saveGame/scheduleSave/loadGame). Seeded PRNG (mulberry32) ensures every run is reproducible by seed. Sim scripts (sim/) allow headless floor/loot/combat simulation without a device. Class system: 3 classes (Warrior/Rogue/Sorcerer) each with unique stats and 4–5 skills, balanced via Monte Carlo sim. Shared stash persists across deaths in gameStore. Town screen provides character overview + stash management.</p>
+<p class="md-p">Current UX state (verified 2026-03-31): - HUD: stamina bar hidden when ST &gt; 30%; compact badge + bar shown when ST ≤ 30%. Reduces HUD clutter during normal play. - GridScreen zoom: persisted to settingsStore.zoomLevel (0|1|2) so preferred zoom survives app restarts. - Zoom lock toggle: when active, single-finger swipe adjusts zoom instead of moving the character. Zoom-lock button adjacent to zoom in/out. - Ghost Echo ambient hint: shown once in GridScreen (after 2s delay) when graveyard has items and no echo is active. markGhostEchoHintSeen() ensures it never repeats. - Combat RNG: fully deterministic — seed ^ (floor <em> 0x9e3779b9) ^ (roundNumber </em> 0x6b429177) with unique offsets for attacks, skills, and loot. - Ascension: ASCEND button on victory screen (when graveyard non-empty) starts a new run with pre-loaded Ghost Echo and increments careerStats.ascensions.</p></span>
+           </div>
+           <button class="read-more-btn" onclick="toggleImpl('impl-41')">Read more ▾</button>
+         </div>
+      <div class="decisions-block">
+            <blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Seeded PRNG (mulberry32) for all randomness</div>
+                    <div class="pull-quote-rationale">— Every run must be reproducible from a seed. This enables deterministic bun tests, bug reproduction via seed+steps, and future daily-challenge mode. Non-seeded Math.random() would make tests flaky.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Engine-first development: all game logic written and bun-tested before any UI screen exists</div>
+                    <div class="pull-quote-rationale">— Game systems (loot, combat, grid) are pure data transformations. Keeping them React-free means they can be tested headless, simulated at scale (10k items, 1000 combats), and iterated without a device. UI that depends on untested engine code leads to hard-to-debug emergent bugs.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Combat as a fast gate (3–6 rounds, numbers-only UI)</div>
+                    <div class="pull-quote-rationale">— Playtesting Diablo 2 and similar games shows the dopamine comes from the drop, not the fight. Combat complexity competes for design budget with loot and inventory. Keeping combat to a transaction screen (&lt;5s) lets players do more runs and see more loot.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Normal (white) items are valuable via the socket/runeword system</div>
+                    <div class="pull-quote-rationale">— D2’s most memorable items are runewords built into white bases. If white items are junk, players stop picking them up and loot excitement drops by 50%. Every white drop with sockets must show a tooltip flag: ‘Runeword candidate (N sockets)’.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; 10×4 Tetris inventory grid with physical item sizes</div>
+                    <div class="pull-quote-rationale">— Inventory management as a spatial puzzle is one of D2’s most beloved secondary systems. Charms provide passive bonuses but occupy space, creating a real tradeoff that drives decisions mid-run. A flat list inventory eliminates this tension.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote>
+          </div>
+      <aside class="caveats-box">
+            <div class="caveats-label">Caveats</div>
+            <ul class="caveats-list">
+              <li>Requires Mac + Apple Developer account for TestFlight distribution — dev build deferred until Mac access</li><li>Pixel art assets not yet sourced — Phase 5 depends on CC0 asset packs (Dungeon Tileset II by 0x72)</li><li>No multiplayer or cloud save — single device only in v1</li>
+            </ul>
+          </aside>
+    </article>
+      </section>
+<section class="domain-chapter" id="chapter-11">
+        <div class="chapter-number">Chapter 11</div>
+        <h2 class="chapter-title">game/persistence</h2>
+        <div class="chapter-meta">2 features</div>
+        <article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Persistent Save / Load — AsyncStorage Serialization</h3>
+        <span class="status-badge" style="color:var(--status-frozen);border-color:var(--status-frozen)44;background:var(--status-frozen)18;">frozen</span>
+      </div>
+      <div class="feature-key-label">feat-2026-050</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">All game state (XP, level, class, shared stash, graveyard, town portal scrolls) lives in Zustand in-memory only — it resets to zero every time the app is restarted. Players lose all progress on app close. This makes the game unshippable — no persistent progress means no retention.</p></div>
+      <div class="feature-section-label">How it was solved</div>
+         <div class="impl-wrap" id="impl-27">
+           <div class="impl-text">
+             <span class="impl-short"><p class="md-p">1. src/services/persistence.ts — SAVE<em>KEY='@d2game</em>save<em>v1', SETTINGS</em>KEY='@d2game<em>settings</em>v1'. SaveData interface: { version:1, xp, level, classId, playerHp, playerMaxHp, mana, maxMana, floor, tier, graveyard, classXp, sharedStash, equipped, equippedByClass?, townPortalScrolls, classesPlayed?, careerStats?: CareerStats (includes tiersCleared: number[] and ascensions: number), bossDefeated? }. Se</p><span class="impl-ellipsis">…</span></span><span class="impl-full" style="display:none;"><p class="md-p">1. src/services/persistence.ts — SAVE<em>KEY='@d2game</em>save<em>v1', SETTINGS</em>KEY='@d2game<em>settings</em>v1'. SaveData interface: { version:1, xp, level, classId, playerHp, playerMaxHp, mana, maxMana, floor, tier, graveyard, classXp, sharedStash, equipped, equippedByClass?, townPortalScrolls, classesPlayed?, careerStats?: CareerStats (includes tiersCleared: number[] and ascensions: number), bossDefeated? }. SettingsData interface: { hapticsEnabled, audioEnabled, onboardingDone, hasSeenFirstBoss?, zoomLevel?: 0|1|2, hasSeenGhostEchoHint?: boolean }. 2. saveGame(data: SaveData): Promise&lt;void&gt; — JSON.stringify to AsyncStorage. 3. migrate(raw: any): SaveData | null — handles versionless saves, adds defaults for all optional fields including careerStats.tiersCleared and careerStats.ascensions. Returns null if version mismatch after migration. 4. loadGame(): Promise&lt;LoadResult&gt; — returns { save: SaveData, corrupted: false } | { save: null, corrupted: false } | { save: null, corrupted: true }. 5. clearSave(): removes SAVE_KEY from AsyncStorage (settings key survives). 6. saveSettings / loadSettings: separate AsyncStorage key so settings survive a save reset. 7. scheduleSave(): debounced 500ms module-level function — uses require() inside callback to break circular import between persistence ↔ stores. Reads gameStore, inventoryStore, gridStore snapshots; calls saveGame(). Called after any persistent state mutation (gainXp, endRun, depositToStash, withdrawFromStash, equipFromStash, unequipToStash, selectClass, ascendRun, etc.). 8. App.tsx hydration: loadGame() on mount → gameStore.hydrate() + inventoryStore.hydrateEquipped() + combatStore townPortalScrolls. Shows LoadingScreen while !isHydrated. 9. settingsStore.loadFromDisk(): called separately on mount, restores all SettingsData fields.</p></span>
+           </div>
+           <button class="read-more-btn" onclick="toggleImpl('impl-27')">Read more ▾</button>
+         </div>
+      <div class="decisions-block">
+            <blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Save only cross-run state — bag is NOT saved</div>
+                    <div class="pull-quote-rationale">— The bag is run-scoped by design. Saving it would mean a crashed run persists its loot state, which undermines the roguelite death-resets-run contract. Only stash, equipped, xp, level, graveyard, and class survive.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Single save slot with version field, no multi-slot in v1</div>
+                    <div class="pull-quote-rationale">— Multi-slot save requires a save slot selection UI before gameplay. For a solo mobile game in v1, one save slot is sufficient and keeps hydration path simple.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; 500ms debounce on persist writes</div>
+                    <div class="pull-quote-rationale">— gainXp can be called multiple times per combat (level-up check). Writing to AsyncStorage on every XP tick would cause excessive I/O. 500ms debounce batches a full combat sequence into one write.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote>
+          </div>
+      <aside class="caveats-box">
+            <div class="caveats-label">Caveats</div>
+            <ul class="caveats-list">
+              <li>No save migration across schema versions — version field exists, migrate() returns null on version mismatch (save wiped)</li><li>No iCloud/backup sync — save lives on device only</li><li>If app crashes mid-write, last 500ms of state changes may be lost</li><li>scheduleSave() uses require() inside callback to avoid circular module dependency — intentional, not a hot-path issue</li>
+            </ul>
+          </aside>
+    </article>
+<article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Save schema migration — version-safe upgrades without wipe</h3>
+        <span class="status-badge" style="color:var(--status-draft);border-color:var(--status-draft)44;background:var(--status-draft)18;">draft</span>
+      </div>
+      <div class="feature-key-label">feat-2026-072</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">When the save schema changes, the current code wipes the entire save rather than migrating. Any schema evolution (new fields, renamed keys, restructured state) silently destroys player progress. A versioned migration system is required before public release.</p></div>
+      
+      
+      
+    </article>
+      </section>
+<section class="domain-chapter" id="chapter-12">
+        <div class="chapter-number">Chapter 12</div>
+        <h2 class="chapter-title">game/maintenance</h2>
+        <div class="chapter-meta">1 feature</div>
+        <article class="feature-article">
+      <div class="feature-headline">
+        <h3 class="feature-title">Code Quality Session 1 — Timeout Leaks, Render Optimizations &amp; Import Cleanup</h3>
+        <span class="status-badge" style="color:var(--status-frozen);border-color:var(--status-frozen)44;background:var(--status-frozen)18;">frozen</span>
+      </div>
+      <div class="feature-key-label">feat-2026-059</div>
+      <div class="feature-section-label">The problem it solves</div>
+         <div class="feature-problem"><p class="md-p">Several screens had subtle but real bugs: nested setTimeout callbacks inside useEffect were not cleaned up on unmount, causing setState-on-unmounted-component warnings and potential ghost state. The bossWarnTimer effect had no cleanup function. Static objects (ECHO<em>WHISPERS, QUALITY</em>RANK) were recreated on every render. The same store was subscribed twice. Imports were out of order. Object.entries was called 4× on the same data per card render. These accumulate into unstable behavior during fast floor transitions and memory pressure on iOS.</p></div>
+      <div class="feature-section-label">How it was solved</div>
+         <div class="impl-wrap" id="impl-7">
+           <div class="impl-text">
+             <span class="impl-short"><p class="md-p">All fixes applied in one session, all TypeScript-clean (tsc --noEmit passes with zero errors):</p>
+<p class="md-p"><strong>Timer leaks fixed:</strong> - Ghost Echo hint effect: <code>let t2; const t1 = setTimeout(() =&gt; { ...; t2 = setTimeout(..., 4000) }, 2000); return () =&gt; { clearTimeout(t1); clearTimeout(t2) }</code> - Echo Whisper effect: same double-ref pattern, 2500ms outer / 6000ms inner - Shrine toast: `const t = setTimeout(..., 22</p><span class="impl-ellipsis">…</span></span><span class="impl-full" style="display:none;"><p class="md-p">All fixes applied in one session, all TypeScript-clean (tsc --noEmit passes with zero errors):</p>
+<p class="md-p"><strong>Timer leaks fixed:</strong> - Ghost Echo hint effect: <code>let t2; const t1 = setTimeout(() =&gt; { ...; t2 = setTimeout(..., 4000) }, 2000); return () =&gt; { clearTimeout(t1); clearTimeout(t2) }</code> - Echo Whisper effect: same double-ref pattern, 2500ms outer / 6000ms inner - Shrine toast: <code>const t = setTimeout(..., 2200); return () =&gt; clearTimeout(t)</code> — added cleanup return path inside the pendingEncounter effect's shrine branch - bossWarnTimer: <code>return () =&gt; { if (bossWarnTimer.current) clearTimeout(bossWarnTimer.current) }</code> added to the gameFloor effect</p>
+<p class="md-p"><strong>Render optimizations:</strong> - ECHO_WHISPERS moved to module scope (before GridScreen function) - QUALITY_RANK moved to module scope (before useGameStore create call) - STAKE_PROGRESS eliminated — activeStkDef derived via <code>({ slayer: ..., scavenger: ..., deepdiver: ... } as const)[activeStake]</code> - applyZoom(z, haptic) boolean-flag smell split into <code>applyZoom(z)</code> + <code>applyZoomWithHaptic(z)</code> — 6 call sites updated - useGridStore() deduplicated — restoreStamina and initFloor destructured from first call, <code>const gridStore = useGridStore()</code> removed - useInventoryStore() deduplicated — <code>const { bag: bagStore, equipped } = useInventoryStore()</code> in one call - buildPlayerStats wrapped in <code>useMemo([floor, level, equipped, classId, ghostCharm])</code> - EntryCard: <code>const statEntries = Object.entries(item.effectiveStats)</code> extracted before JSX — 4 calls → 1</p>
+<p class="md-p"><strong>Import/style fixes:</strong> - 5 GraveyardScreen imports moved from line 76 to file top - SLOT_ICON removed from EquipmentPanel imports - QUALITY_BORDER removed from TetrisGrid imports - isEquipped removed from ItemDetailSheet destructure (prop kept in interface for callers) - graveyard list key={i} → key={entry.item.uid} - Blank line added between hmStyles and formatDate in GraveyardScreen - useMemo added to GridScreen React imports - <code>bun run typecheck</code> (tsc --noEmit) and <code>bun run lint</code> (expo lint) scripts added to package.json</p></span>
+           </div>
+           <button class="read-more-btn" onclick="toggleImpl('impl-7')">Read more ▾</button>
+         </div>
+      <div class="decisions-block">
+            <blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; Both the outer and inner timeouts are tracked by separate let refs (t1, t2) so cleanup always runs clearTimeout on both</div>
+                    <div class="pull-quote-rationale">— clearTimeout(undefined) is a safe no-op in JavaScript, so assigning t2 via let before the outer fires is safe — cleanup never throws even if t1 fires and t2 is never assigned.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; bossWarnTimer cleanup returns clearTimeout on every gameFloor change, not just on unmount</div>
+                    <div class="pull-quote-rationale">— When gameFloor changes, the previous floor&#39;s boss warning timer should be cancelled — the warning is floor-specific. React runs cleanup before the next effect, which is exactly the right timing.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; equipped from useInventoryStore is a stable reference for useMemo — bag ops do not change the equipped reference</div>
+                    <div class="pull-quote-rationale">— inventoryStore addItem/dropItem only set({ bag, magicFind }) — equipped is not spread. Only equipItem/unequipItem create a new equipped object. So the useMemo for buildPlayerStats invalidates only on real equipment changes, not on every bag mutation.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote><blockquote class="pull-quote">
+                    <div class="pull-quote-text">&#10077; applyZoomWithHaptic not memoized despite being captured in PanResponder closure</div>
+                    <div class="pull-quote-rationale">— PanResponder is created once via useRef. applyZoomWithHaptic calls haptics.impactLight() and applyZoom which writes to zoomLevelRef (a ref) — stale closure is not a real problem since the underlying ref is always current. Memoizing would require useCallback and add complexity with no real gain.</div>
+                    <div class="pull-quote-mark">&#10078;</div>
+                  </blockquote>
+          </div>
+      <aside class="caveats-box">
+            <div class="caveats-label">Caveats</div>
+            <ul class="caveats-list">
+              <li>applyZoomWithHaptic captured in a stale PanResponder closure — functionally correct because it writes to a ref, but not memoized</li><li>scrollItems filter (Object.values(bagItems).filter) still recomputes on every inventory mutation — acceptable given bag rarely has &gt;30 items</li><li>classDef CLASSES.find() runs every render — CLASSES has 3 entries, cost is negligible</li>
+            </ul>
+          </aside>
+    </article>
+      </section>
+    
+
+    <!-- Closing / Roadmap -->
+    <section class="domain-chapter closing-chapter" id="chapter-roadmap">
+          <div class="chapter-number">What's next</div>
+          <h2 class="chapter-title" style="color:var(--text-mid);">In progress</h2>
+          <div class="chapter-meta">18 features in draft</div>
+          <div class="roadmap-list">
+            <div class="roadmap-item">
+                    <span class="roadmap-key">feat-2026-073</span>
+                    <span class="roadmap-title">Audio engine — functional sound toggle with actual SFX</span>
+                    <span class="roadmap-problem">The settings screen has an audio on/off toggle but it has no effect — no audio e…</span>
+                  </div><div class="roadmap-item">
+                    <span class="roadmap-key">feat-2026-068</span>
+                    <span class="roadmap-title">Boss improvements — floor 35+ variety, immune telegraph, crash recovery</span>
+                    <span class="roadmap-problem">Three bugs/gaps: (1) Boss pool has only 3 bosses so floors 35+ repeat them, brea…</span>
+                  </div><div class="roadmap-item">
+                    <span class="roadmap-key">feat-2026-066</span>
+                    <span class="roadmap-title">Class-specific loot affinity and starting gear</span>
+                    <span class="roadmap-problem">All classes share an identical loot pool — a Necromancer has the same drop distr…</span>
+                  </div><div class="roadmap-item">
+                    <span class="roadmap-key">feat-2026-070</span>
+                    <span class="roadmap-title">Horadric Cube — recipe book UI and expanded recipes</span>
+                    <span class="roadmap-problem">The cube has 7 recipes discoverable only by trial-and-error — there is no in-gam…</span>
+                  </div><div class="roadmap-item">
+                    <span class="roadmap-key">feat-2026-071</span>
+                    <span class="roadmap-title">DPad long-press turn-skip mechanic</span>
+                    <span class="roadmap-problem">The DPad long-press is wired up but does nothing meaningful in game state — no t…</span>
+                  </div><div class="roadmap-item">
+                    <span class="roadmap-key">feat-2026-074</span>
+                    <span class="roadmap-title">EAS build setup — icons, splash, and first TestFlight submission</span>
+                    <span class="roadmap-problem">App Store prep feature is frozen but actual build artifacts don&#39;t exist: no app …</span>
+                  </div><div class="roadmap-item">
+                    <span class="roadmap-key">feat-2026-064</span>
+                    <span class="roadmap-title">Monster blocking — enemy block chance + UI feedback</span>
+                    <span class="roadmap-problem">Block chance is computed for the player but monsters never block player attacks.…</span>
+                  </div><div class="roadmap-item">
+                    <span class="roadmap-key">feat-2026-063</span>
+                    <span class="roadmap-title">Poison damage implementation + status effect visuals</span>
+                    <span class="roadmap-problem">Poison damage type is defined in the schema but never dealt — no monster or item…</span>
+                  </div><div class="roadmap-item">
+                    <span class="roadmap-key">feat-2026-060</span>
+                    <span class="roadmap-title">Roguelite Persistence — Ghost Echo live + deferred mechanics</span>
+                    <span class="roadmap-problem">feature.json documents Ghost Echo as &quot;UI only — not yet live&quot; but the invokeGhos…</span>
+                  </div><div class="roadmap-item">
+                    <span class="roadmap-key">feat-2026-075</span>
+                    <span class="roadmap-title">Room visual identity — distinct tile themes per room type</span>
+                    <span class="roadmap-problem">All room types (combat, chest, shrine, boss, exit) render with the same floor/wa…</span>
+                  </div><div class="roadmap-item">
+                    <span class="roadmap-key">feat-2026-072</span>
+                    <span class="roadmap-title">Save schema migration — version-safe upgrades without wipe</span>
+                    <span class="roadmap-problem">When the save schema changes, the current code wipes the entire save rather than…</span>
+                  </div><div class="roadmap-item">
+                    <span class="roadmap-key">feat-2026-069</span>
+                    <span class="roadmap-title">Set items, bow mechanics, and deterministic UID</span>
+                    <span class="roadmap-problem">Three gaps: (1) Set items (coordinated multi-piece bonuses) are absent — the hig…</span>
+                  </div><div class="roadmap-item">
+                    <span class="roadmap-key">feat-2026-065</span>
+                    <span class="roadmap-title">Skill combos + cooldown animation</span>
+                    <span class="roadmap-problem">Shadow Step → Backstab combo triggers correctly in the engine but only logs to c…</span>
+                  </div><div class="roadmap-item">
+                    <span class="roadmap-key">feat-2026-077</span>
+                    <span class="roadmap-title">Run stakes — completion tracking in careerStats + bag-full feedback</span>
+                    <span class="roadmap-problem">Two gaps: (1) Stake completions are never recorded in careerStats, so there is n…</span>
+                  </div><div class="roadmap-item">
+                    <span class="roadmap-key">feat-2026-067</span>
+                    <span class="roadmap-title">Stash persistence to disk + size cap</span>
+                    <span class="roadmap-problem">The shared stash lives only in Zustand memory and is wiped on app restart. There…</span>
+                  </div><div class="roadmap-item">
+                    <span class="roadmap-key">feat-2026-076</span>
+                    <span class="roadmap-title">Study bonuses — functional implementation (not flavor text)</span>
+                    <span class="roadmap-problem">The &quot;Study&quot; action in the Graveyard shows a permanent knowledge bonus descriptio…</span>
+                  </div><div class="roadmap-item">
+                    <span class="roadmap-key">feat-2026-062</span>
+                    <span class="roadmap-title">Tier identity — per-tier monster pools and visual themes</span>
+                    <span class="roadmap-problem">All tiers share the same monster pool and floor palette. Tiers feel identical pa…</span>
+                  </div><div class="roadmap-item">
+                    <span class="roadmap-key">feat-2026-061</span>
+                    <span class="roadmap-title">XP from non-combat encounters (chests, shrines, secrets)</span>
+                    <span class="roadmap-problem">XP is only awarded from killing monsters. Chests, shrines, and secret rooms gran…</span>
+                  </div>
+          </div>
+        </section>
+
+  </div>
+</div>
+
+<script>
+(function(){
+  window.toggleImpl = function(id){
+    var wrap = document.getElementById(id);
+    if(!wrap) return;
+    var shortEl = wrap.querySelector('.impl-short');
+    var fullEl = wrap.querySelector('.impl-full');
+    var btn = wrap.querySelector('.read-more-btn');
+    if(!fullEl || !btn) return;
+
+    if(fullEl.style.display === 'none'){
+      // Expand
+      fullEl.style.display = 'inline';
+      if(shortEl) shortEl.style.display = 'none';
+      btn.textContent = 'Read less ▴';
+    } else {
+      // Collapse
+      fullEl.style.display = 'none';
+      if(shortEl) shortEl.style.display = 'inline';
+      btn.textContent = 'Read more ▾';
+    }
+  };
+})();
+</script>
+</body>
+</html>

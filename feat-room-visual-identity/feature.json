@@ -1,0 +1,70 @@
+{
+  "featureKey": "feat-2026-075",
+  "title": "Room visual identity — distinct tile themes per room type",
+  "status": "frozen",
+  "problem": "All room types (combat, chest, shrine, boss, exit) render with the same floor/wall tile colors. Players cannot visually distinguish room types at a glance — the room grammar exists in data but is invisible in the UI. Boss rooms, shrines, and exits should have immediately recognizable visual signatures.",
+  "schemaVersion": 1,
+  "domain": "game/combat",
+  "tags": [
+    "ui",
+    "grid",
+    "rooms",
+    "atmosphere"
+  ],
+  "lineage": {
+    "parent": "feat-2026-055",
+    "spawnReason": "deferred polish: per-room-type visual theming was explicitly cut from the initial room grammar implementation"
+  },
+  "analysis": "Charnel (combat-heavy) and Sanctum (shrine/chest-heavy) rooms were structurally distinct but looked identical on the grid. Players had no visual hint about room atmosphere before stepping in. A subtle floor tint costs nothing render-wise and communicates room type passively.",
+  "implementation": "In src/screens/GridScreen.tsx, updated the bgColor else-branch (plain visible floor tiles not yet encountered and with no encounter type). Added a getRoomTypeAt call to get the room type for the current tile coords, then applied a dark red tint (#100808) for Charnel rooms and a dark purple tint (#07060f) for Sanctum rooms. Standard floor color applies to neutral rooms. Fog-edge bleed (FOG_EDGE_COLOR) still takes priority over the room tint for tiles adjacent to fog.",
+  "decisions": [
+    {
+      "decision": "Room tints are very dark — #100808 red and #07060f purple — barely distinguishable from the base floor color",
+      "rationale": "The hint should be subliminal; a bright red floor would be distracting and feel out of place in a dungeon tile set.",
+      "date": "2026-04-02"
+    },
+    {
+      "decision": "Fog-edge bleed (FOG_EDGE_COLOR) takes priority over room tint",
+      "rationale": "Fog-edge bleed is a visibility aid; overriding it with the room tint would break the existing fog visual.",
+      "date": "2026-04-02"
+    },
+    {
+      "decision": "getRoomTypeAt is called per-tile in render, not cached",
+      "rationale": "getRoomTypeAt is a pure O(rooms) lookup; rooms array is tiny (< 10 elements). Per-tile call is negligible.",
+      "date": "2026-04-02"
+    }
+  ],
+  "successCriteria": "Charnel room floor tiles have a faint red tint vs standard floor tiles. Sanctum room floor tiles have a faint purple tint. Fog-edge tiles still show FOG_EDGE_COLOR. Tile color changes don't affect encounter type overlays (those override bgColor earlier in the chain).",
+  "knownLimitations": [
+    "Tints are very subtle — colorblind players on small screens may not notice them",
+    "Visited (encountered) tiles revert to VISITED_FLOOR color, losing the room tint — by design to avoid visual noise on explored areas"
+  ],
+  "userGuide": "Charnel rooms (monster-heavy) have a faint red floor tint. Sanctum rooms (shrine/chest-heavy) have a faint purple floor tint. These are subtle visual hints — you will feel it more than see it.",
+  "componentFile": "src/screens/GridScreen.tsx",
+  "npmPackages": [],
+  "publicInterface": [],
+  "externalDependencies": [],
+  "lastVerifiedDate": "2026-04-02",
+  "implementationNotes": [
+    "Only unencountered plain floor tiles get the room tint — walls, exits, and visited tiles are unaffected",
+    "getRoomTypeAt is imported from engine/grid; rooms and roomTypes come from useGridStore"
+  ],
+  "codeSnippets": [
+    {
+      "label": "Room tint in bgColor logic",
+      "snippet": "} else {\n  // Room-type floor tints + fog-edge bleed\n  const rt = getRoomTypeAt(rooms, roomTypes, { x: gx, y: gy })\n  const roomFloorColor = rt === RoomType.Charnel\n    ? '#100808'\n    : rt === RoomType.Sanctum\n    ? '#07060f'\n    : TILE_COLORS[TileType.Floor]\n  bgColor = isFogEdge(grid, gx, gy) ? FOG_EDGE_COLOR : roomFloorColor\n}"
+    }
+  ],
+  "statusHistory": [
+    {
+      "from": "draft",
+      "to": "active",
+      "date": "2026-04-02"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-04-02"
+    }
+  ]
+}

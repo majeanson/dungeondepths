@@ -1,0 +1,14 @@
+{"date":"2026-04-02T22:54:29.530Z","field":"analysis","source":"mcp","value_preview":"New careerStats fields (stakesCompleted, deepestFloor, dailyStreak, lastRunDate, floorDeaths, studiedBonuses) were added"}
+{"date":"2026-04-02T22:54:29.530Z","field":"implementation","source":"mcp","value_preview":"Updated the migrate() function in src/services/persistence.ts. In the versionless (v0) branch, added all missing careerS"}
+{"date":"2026-04-02T22:54:29.530Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"All new careerStats fields default to zero/empty rather than being marked optional in the interface\",\"rati"}
+{"date":"2026-04-02T22:54:29.530Z","field":"successCriteria","source":"mcp","value_preview":"Loading a save that lacks stakesCompleted/deepestFloor/dailyStreak yields valid defaults, not undefined. TypeScript comp"}
+{"date":"2026-04-02T22:54:29.530Z","field":"knownLimitations","source":"mcp","value_preview":"[\"If new careerStats fields are added in future, the migration must be updated again — no automatic field defaulting\"]"}
+{"date":"2026-04-02T22:54:29.530Z","field":"tags","source":"mcp","value_preview":"[\"persistence\",\"save\",\"migration\",\"stability\"]"}
+{"date":"2026-04-02T22:54:29.530Z","field":"userGuide","source":"mcp","value_preview":"Save migration is transparent. Old saves load cleanly and are upgraded in memory on first load. No data is lost."}
+{"date":"2026-04-02T22:54:29.530Z","field":"componentFile","source":"mcp","value_preview":"src/services/persistence.ts"}
+{"date":"2026-04-02T22:54:29.530Z","field":"npmPackages","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-02T22:54:29.530Z","field":"publicInterface","source":"mcp","value_preview":"[{\"name\":\"migrate\",\"type\":\"(raw: any) => SaveData | null\",\"description\":\"Internal migration function. Upgrades versionle"}
+{"date":"2026-04-02T22:54:29.530Z","field":"externalDependencies","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-02T22:54:29.530Z","field":"lastVerifiedDate","source":"mcp","value_preview":"2026-04-02"}
+{"date":"2026-04-02T22:54:29.530Z","field":"implementationNotes","source":"mcp","value_preview":"[\"Migration is applied in loadGame() before returning the SaveData to the store\",\"CURRENT_VERSION = 1; future schema cha"}
+{"date":"2026-04-02T22:54:29.530Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"Updated careerStats defaults in migration\",\"snippet\":\"careerStats: {\\n  totalRuns:       raw.careerStats?.tot"}

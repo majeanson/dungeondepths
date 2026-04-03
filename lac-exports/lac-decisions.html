@@ -1,0 +1,2608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D2Game — Decision Log</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:          #12100e;
+  --bg-card:     #1a1714;
+  --bg-hover:    #201d1a;
+  --bg-active:   #251f18;
+  --bg-sidebar:  #0e0c0a;
+  --border:      #2a2420;
+  --border-soft: #221e1b;
+  --text:        #e8ddd4;
+  --text-mid:    #b0a49c;
+  --text-soft:   #7a6a5a;
+  --accent:      #c4a255;
+  --mono:        'Cascadia Code','Fira Code','JetBrains Mono','Consolas',monospace;
+  --sans:        -apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  --status-active:     #4aad72;
+  --status-draft:      #c4a255;
+  --status-frozen:     #5b82cc;
+  --status-deprecated: #cc5b5b;
+}
+
+html, body { height: 100%; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Shell ── */
+.shell { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+/* ── Topbar ── */
+.topbar {
+  flex-shrink: 0;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 18px;
+  background: var(--bg-sidebar);
+  border-bottom: 1px solid var(--border);
+}
+.topbar-logo    { font-family: var(--mono); font-size: 13px; color: var(--accent); letter-spacing: 0.05em; }
+.topbar-sep     { color: var(--border); }
+.topbar-project { font-family: var(--mono); font-size: 12px; color: var(--text-mid); }
+.topbar-count   { margin-left: auto; font-family: var(--mono); font-size: 11px; color: var(--text-soft); }
+
+.sort-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 16px;
+}
+.sort-btn {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-soft);
+  background: none;
+  border: 1px solid var(--border-soft);
+  border-radius: 3px;
+  padding: 3px 9px;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: color 0.15s, border-color 0.15s;
+}
+.sort-btn:hover { color: var(--text-mid); border-color: var(--accent); }
+.sort-btn.active { color: var(--accent); border-color: var(--accent); }
+
+/* ── Stats bar ── */
+.stats-bar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 0 18px;
+  height: 36px;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-soft);
+  flex-wrap: wrap;
+  overflow: hidden;
+}
+
+.stats-item { display: flex; align-items: center; gap: 6px; }
+.stats-value { color: var(--text-mid); font-weight: 600; }
+.stats-sep { margin: 0 12px; color: var(--border); }
+
+/* ── Body row ── */
+.body-row { display: flex; flex: 1; min-height: 0; }
+
+/* ── Sidebar ── */
+.sidebar {
+  width: 272px;
+  flex-shrink: 0;
+  background: var(--bg-sidebar);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.sidebar-search {
+  position: relative;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.sidebar-search input {
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 28px 6px 10px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text);
+  outline: none;
+}
+.sidebar-search input:focus { border-color: var(--accent); }
+.sidebar-search input::placeholder { color: var(--text-soft); }
+
+.search-clear {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-soft);
+  font-size: 14px;
+  cursor: pointer;
+  line-height: 1;
+  display: none;
+  padding: 0;
+}
+.search-clear:hover { color: var(--text-mid); }
+.search-clear.visible { display: block; }
+
+.nav-tree {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 0 24px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.nav-tree::-webkit-scrollbar { width: 4px; }
+.nav-tree::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.nav-group { margin-bottom: 2px; }
+.nav-domain {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px 4px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  cursor: pointer;
+  user-select: none;
+}
+.nav-domain:hover { color: var(--text-mid); }
+.nav-domain-arrow { transition: transform 0.15s; font-size: 8px; }
+.nav-group.collapsed .nav-domain-arrow { transform: rotate(-90deg); }
+.nav-domain-name { flex: 1; }
+.nav-domain-count { font-size: 10px; opacity: 0.6; }
+
+.nav-group-items { overflow: hidden; }
+.nav-group.collapsed .nav-group-items { display: none; }
+
+.nav-item {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 5px 14px 5px 18px;
+  cursor: pointer;
+  user-select: none;
+  border-left: 2px solid transparent;
+  transition: background 0.1s;
+  text-decoration: none;
+}
+.nav-item:hover { background: var(--bg-hover); }
+.nav-item.active {
+  background: var(--bg-active);
+  border-left-color: var(--accent);
+}
+.nav-item-dim { opacity: 0.45; }
+.nav-item-dim:hover { opacity: 0.7; }
+
+.nav-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.nav-item-key {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-soft);
+  flex-shrink: 0;
+}
+.nav-item-title {
+  font-size: 12px;
+  color: var(--text-mid);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+.nav-item:hover .nav-item-title,
+.nav-item.active .nav-item-title { color: var(--text); }
+.nav-item.active .nav-item-key   { color: var(--accent); }
+
+.nav-dec-count {
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--accent);
+  background: rgba(196,162,85,0.1);
+  border: 1px solid rgba(196,162,85,0.25);
+  border-radius: 8px;
+  padding: 0 5px;
+  flex-shrink: 0;
+  line-height: 1.6;
+}
+
+.nav-item.hidden { display: none; }
+.nav-group.hidden { display: none; }
+
+/* ── Content ── */
+.content {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+  padding: 32px 40px 80px;
+}
+.content::-webkit-scrollbar { width: 6px; }
+.content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── Feature section ── */
+.feature-section {
+  max-width: 760px;
+  margin-bottom: 56px;
+}
+.feature-section.hidden { display: none; }
+
+.feature-section-header {
+  margin-bottom: 20px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.feature-section-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.feature-section-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.feature-section-key {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-soft);
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border-soft);
+  border-radius: 3px;
+  padding: 1px 6px;
+  flex-shrink: 0;
+}
+
+.feature-section-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.domain-chip {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--accent);
+  background: rgba(196,162,85,0.08);
+  border: 1px solid rgba(196,162,85,0.25);
+  border-radius: 10px;
+  padding: 1px 9px;
+  letter-spacing: 0.05em;
+}
+
+.status-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 3px;
+  border: 1px solid currentColor;
+  flex-shrink: 0;
+}
+
+.dec-count-badge {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-soft);
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  padding: 1px 8px;
+}
+
+/* ── Decision items ── */
+.dec-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.dec-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 16px 20px;
+}
+
+.dec-title {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.dec-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-soft);
+  background: var(--bg-sidebar);
+  border: 1px solid var(--border-soft);
+  border-radius: 3px;
+  padding: 1px 7px;
+  flex-shrink: 0;
+  line-height: 1.8;
+}
+
+.dec-text {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.dec-field {
+  margin-bottom: 10px;
+}
+
+.dec-field:last-child { margin-bottom: 0; }
+
+.dec-field-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-soft);
+  margin-bottom: 4px;
+}
+
+.dec-field-body {
+  font-size: 13.5px;
+  color: var(--text-mid);
+  line-height: 1.65;
+}
+
+.dec-recommendation {
+  color: var(--accent);
+  font-style: italic;
+}
+
+.dec-field-inline {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.dec-field-inline .dec-field-label {
+  display: inline;
+  margin-bottom: 0;
+}
+
+.dec-field-value {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-mid);
+}
+
+/* ── Search highlight ── */
+mark {
+  background: rgba(196,162,85,0.3);
+  color: var(--text);
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+/* ── Empty content ── */
+.content-empty {
+  max-width: 760px;
+  padding: 80px 0;
+  text-align: center;
+  color: var(--text-soft);
+  font-size: 14px;
+}
+.content-empty strong { color: var(--text-mid); }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <div class="topbar">
+    <span class="topbar-logo">&#9672; lac &middot; decisions</span>
+    <span class="topbar-sep">|</span>
+    <span class="topbar-project">D2Game</span>
+    <span class="topbar-count">98 total decisions</span>
+    <div class="sort-controls">
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text-soft);margin-right:4px;">sort:</span>
+      <button class="sort-btn active" id="sort-domain" data-sort="domain">domain</button>
+      <button class="sort-btn" id="sort-date"   data-sort="date">date</button>
+      <button class="sort-btn" id="sort-key"    data-sort="key">key</button>
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <span class="stats-item"><span class="stats-value">98</span> decisions</span>
+    <span class="stats-sep">&middot;</span>
+    <span class="stats-item"><span class="stats-value">24</span> features with decisions</span>
+    <span class="stats-sep">&middot;</span>
+    <span class="stats-item">most decided: <span class="stats-value">feat-2026-042: 13</span></span>
+    <span class="stats-sep">&middot;</span>
+    <span class="stats-item">top tag: <span class="stats-value">progression</span></span>
+    <span class="stats-sep">&middot;</span>
+    <span class="stats-item">2026-04-01</span>
+  </div>
+
+  <div class="body-row">
+
+    
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-search">
+        <input type="text" id="search-input" placeholder="Search decisions&#8230;" autocomplete="off" spellcheck="false">
+        <button class="search-clear" id="search-clear" aria-label="Clear search">&times;</button>
+      </div>
+      <nav class="nav-tree" id="nav-tree">
+        
+      <div class="nav-group" data-domain="combat">
+        <div class="nav-domain">
+          <span class="nav-domain-arrow">&#9660;</span>
+          <span class="nav-domain-name">combat</span>
+          <span class="nav-domain-count">7</span>
+        </div>
+        <div class="nav-group-items">
+          
+          <a class="nav-item" href="#feat-2026-041" data-key="feat-2026-041"
+             data-title="block chance system" data-domain="combat">
+            <span class="nav-dot" style="background:var(--status-frozen);opacity:1"></span>
+            <span class="nav-item-key">feat-2026-041</span>
+            <span class="nav-item-title">Block Chance System</span>
+            <span class="nav-dec-count">3</span>
+          </a>
+          <a class="nav-item" href="#feat-2026-039" data-key="feat-2026-039"
+             data-title="elemental damage &amp; resistance system" data-domain="combat">
+            <span class="nav-dot" style="background:var(--status-frozen);opacity:1"></span>
+            <span class="nav-item-key">feat-2026-039</span>
+            <span class="nav-item-title">Elemental Damage &amp; Resistance System</span>
+            <span class="nav-dec-count">4</span>
+          </a>
+          <a class="nav-item" href="#feat-2026-040" data-key="feat-2026-040"
+             data-title="attack accuracy &amp; miss chance" data-domain="combat">
+            <span class="nav-dot" style="background:var(--status-frozen);opacity:1"></span>
+            <span class="nav-item-key">feat-2026-040</span>
+            <span class="nav-item-title">Attack Accuracy &amp; Miss Chance</span>
+            <span class="nav-dec-count">3</span>
+          </a>
+          <a class="nav-item nav-item-dim" href="#feat-2026-064" data-key="feat-2026-064"
+             data-title="monster blocking — enemy block chance + ui feedback" data-domain="combat">
+            <span class="nav-dot" style="background:var(--status-draft);opacity:0.35"></span>
+            <span class="nav-item-key">feat-2026-064</span>
+            <span class="nav-item-title">Monster blocking — enemy block chance + UI feedback</span>
+            
+          </a>
+          <a class="nav-item nav-item-dim" href="#feat-2026-063" data-key="feat-2026-063"
+             data-title="poison damage implementation + status effect visuals" data-domain="combat">
+            <span class="nav-dot" style="background:var(--status-draft);opacity:0.35"></span>
+            <span class="nav-item-key">feat-2026-063</span>
+            <span class="nav-item-title">Poison damage implementation + status effect visuals</span>
+            
+          </a>
+          <a class="nav-item nav-item-dim" href="#feat-2026-065" data-key="feat-2026-065"
+             data-title="skill combos + cooldown animation" data-domain="combat">
+            <span class="nav-dot" style="background:var(--status-draft);opacity:0.35"></span>
+            <span class="nav-item-key">feat-2026-065</span>
+            <span class="nav-item-title">Skill combos + cooldown animation</span>
+            
+          </a>
+          <a class="nav-item" href="#feat-2026-042" data-key="feat-2026-042"
+             data-title="active combat skills" data-domain="combat">
+            <span class="nav-dot" style="background:var(--status-frozen);opacity:1"></span>
+            <span class="nav-item-key">feat-2026-042</span>
+            <span class="nav-item-title">Active Combat Skills</span>
+            <span class="nav-dec-count">13</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="nav-group" data-domain="game/combat">
+        <div class="nav-domain">
+          <span class="nav-domain-arrow">&#9660;</span>
+          <span class="nav-domain-name">game/combat</span>
+          <span class="nav-domain-count">4</span>
+        </div>
+        <div class="nav-group-items">
+          
+          <a class="nav-item" href="#feat-2026-045" data-key="feat-2026-045"
+             data-title="boss encounters" data-domain="game/combat">
+            <span class="nav-dot" style="background:var(--status-frozen);opacity:1"></span>
+            <span class="nav-item-key">feat-2026-045</span>
+            <span class="nav-item-title">Boss Encounters</span>
+            <span class="nav-dec-count">3</span>
+          </a>
+          <a class="nav-item nav-item-dim" href="#feat-2026-068" data-key="feat-2026-068"
+             data-title="boss improvements — floor 35+ variety, immune telegraph, crash recovery" data-domain="game/combat">
+            <span class="nav-dot" style="background:var(--status-draft);opacity:0.35"></span>
+            <span class="nav-item-key">feat-2026-068</span>
+            <span class="nav-item-title">Boss improvements — floor 35+ variety, immune telegraph, crash recovery</span>
+            
+          </a>
+          <a class="nav-item" href="#feat-2026-055" data-key="feat-2026-055"
+             data-title="room grammar — charnel &amp; sanctum encounter bias" data-domain="game/combat">
+            <span class="nav-dot" style="background:var(--status-frozen);opacity:1"></span>
+            <span class="nav-item-key">feat-2026-055</span>
+            <span class="nav-item-title">Room Grammar — Charnel &amp; Sanctum Encounter Bias</span>
+            <span class="nav-dec-count">2</span>
+          </a>
+          <a class="nav-item nav-item-dim" href="#feat-2026-075" data-key="feat-2026-075"
+             data-title="room visual identity — distinct tile themes per room type" data-domain="game/combat">
+            <span class="nav-dot" style="background:var(--status-draft);opacity:0.35"></span>
+            <span class="nav-item-key">feat-2026-075</span>
+            <span class="nav-item-title">Room visual identity — distinct tile themes per room type</span>
+            
+          </a>
+        </div>
+      </div>
+
+      <div class="nav-group" data-domain="game/crafting">
+        <div class="nav-domain">
+          <span class="nav-domain-arrow">&#9660;</span>
+          <span class="nav-domain-name">game/crafting</span>
+          <span class="nav-domain-count">2</span>
+        </div>
+        <div class="nav-group-items">
+          
+          <a class="nav-item nav-item-dim" href="#feat-2026-070" data-key="feat-2026-070"
+             data-title="horadric cube — recipe book ui and expanded recipes" data-domain="game/crafting">
+            <span class="nav-dot" style="background:var(--status-draft);opacity:0.35"></span>
+            <span class="nav-item-key">feat-2026-070</span>
+            <span class="nav-item-title">Horadric Cube — recipe book UI and expanded recipes</span>
+            
+          </a>
+          <a class="nav-item" href="#feat-2026-047" data-key="feat-2026-047"
+             data-title="cube crafting system" data-domain="game/crafting">
+            <span class="nav-dot" style="background:var(--status-frozen);opacity:1"></span>
+            <span class="nav-item-key">feat-2026-047</span>
+            <span class="nav-item-title">Cube Crafting System</span>
+            <span class="nav-dec-count">4</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="nav-group" data-domain="game/items">
+        <div class="nav-domain">
+          <span class="nav-domain-arrow">&#9660;</span>
+          <span class="nav-domain-name">game/items</span>
+          <span class="nav-domain-count">2</span>
+        </div>
+        <div class="nav-group-items">
+          
+          <a class="nav-item" href="#feat-2026-046" data-key="feat-2026-046"
+             data-title="item expansion — new bases, uniques &amp; runewords" data-domain="game/items">
+            <span class="nav-dot" style="background:var(--status-frozen);opacity:1"></span>
+            <span class="nav-item-key">feat-2026-046</span>
+            <span class="nav-item-title">Item Expansion — New Bases, Uniques &amp; Runewords</span>
+            <span class="nav-dec-count">3</span>
+          </a>
+          <a class="nav-item nav-item-dim" href="#feat-2026-069" data-key="feat-2026-069"
+             data-title="set items, bow mechanics, and deterministic uid" data-domain="game/items">
+            <span class="nav-dot" style="background:var(--status-draft);opacity:0.35"></span>
+            <span class="nav-item-key">feat-2026-069</span>
+            <span class="nav-item-title">Set items, bow mechanics, and deterministic UID</span>
+            
+          </a>
+        </div>
+      </div>
+
+      <div class="nav-group" data-domain="game/maintenance">
+        <div class="nav-domain">
+          <span class="nav-domain-arrow">&#9660;</span>
+          <span class="nav-domain-name">game/maintenance</span>
+          <span class="nav-domain-count">1</span>
+        </div>
+        <div class="nav-group-items">
+          
+          <a class="nav-item" href="#feat-2026-059" data-key="feat-2026-059"
+             data-title="code quality session 1 — timeout leaks, render optimizations &amp; import cleanup" data-domain="game/maintenance">
+            <span class="nav-dot" style="background:var(--status-frozen);opacity:1"></span>
+            <span class="nav-item-key">feat-2026-059</span>
+            <span class="nav-item-title">Code Quality Session 1 — Timeout Leaks, Render Optimizations &amp; Import Cleanup</span>
+            <span class="nav-dec-count">4</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="nav-group" data-domain="game/mobile">
+        <div class="nav-domain">
+          <span class="nav-domain-arrow">&#9660;</span>
+          <span class="nav-domain-name">game/mobile</span>
+          <span class="nav-domain-count">2</span>
+        </div>
+        <div class="nav-group-items">
+          
+          <a class="nav-item" href="#feat-2026-035" data-key="feat-2026-035"
+             data-title="phase 1 — text ui prototype" data-domain="game/mobile">
+            <span class="nav-dot" style="background:var(--status-frozen);opacity:1"></span>
+            <span class="nav-item-key">feat-2026-035</span>
+            <span class="nav-item-title">Phase 1 — Text UI Prototype</span>
+            <span class="nav-dec-count">2</span>
+          </a>
+          <a class="nav-item" href="#feat-2026-034" data-key="feat-2026-034"
+             data-title="d2game — ios grid rpg" data-domain="game/mobile">
+            <span class="nav-dot" style="background:var(--status-frozen);opacity:1"></span>
+            <span class="nav-item-key">feat-2026-034</span>
+            <span class="nav-item-title">D2Game — iOS Grid RPG</span>
+            <span class="nav-dec-count">5</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="nav-group" data-domain="game/persistence">
+        <div class="nav-domain">
+          <span class="nav-domain-arrow">&#9660;</span>
+          <span class="nav-domain-name">game/persistence</span>
+          <span class="nav-domain-count">2</span>
+        </div>
+        <div class="nav-group-items">
+          
+          <a class="nav-item" href="#feat-2026-050" data-key="feat-2026-050"
+             data-title="persistent save / load — asyncstorage serialization" data-domain="game/persistence">
+            <span class="nav-dot" style="background:var(--status-frozen);opacity:1"></span>
+            <span class="nav-item-key">feat-2026-050</span>
+            <span class="nav-item-title">Persistent Save / Load — AsyncStorage Serialization</span>
+            <span class="nav-dec-count">3</span>
+          </a>
+          <a class="nav-item nav-item-dim" href="#feat-2026-072" data-key="feat-2026-072"
+             data-title="save schema migration — version-safe upgrades without wipe" data-domain="game/persistence">
+            <span class="nav-dot" style="background:var(--status-draft);opacity:0.35"></span>
+            <span class="nav-item-key">feat-2026-072</span>
+            <span class="nav-item-title">Save schema migration — version-safe upgrades without wipe</span>
+            
+          </a>
+        </div>
+      </div>
+
+      <div class="nav-group" data-domain="game/progression">
+        <div class="nav-domain">
+          <span class="nav-domain-arrow">&#9660;</span>
+          <span class="nav-domain-name">game/progression</span>
+          <span class="nav-domain-count">4</span>
+        </div>
+        <div class="nav-group-items">
+          
+          <a class="nav-item nav-item-dim" href="#feat-2026-066" data-key="feat-2026-066"
+             data-title="class-specific loot affinity and starting gear" data-domain="game/progression">
+            <span class="nav-dot" style="background:var(--status-draft);opacity:0.35"></span>
+            <span class="nav-item-key">feat-2026-066</span>
+            <span class="nav-item-title">Class-specific loot affinity and starting gear</span>
+            
+          </a>
+          <a class="nav-item" href="#feat-2026-043" data-key="feat-2026-043"
+             data-title="class system — warrior / rogue / sorcerer" data-domain="game/progression">
+            <span class="nav-dot" style="background:var(--status-frozen);opacity:1"></span>
+            <span class="nav-item-key">feat-2026-043</span>
+            <span class="nav-item-title">Class System — Warrior / Rogue / Sorcerer</span>
+            <span class="nav-dec-count">5</span>
+          </a>
+          <a class="nav-item" href="#feat-2026-058" data-key="feat-2026-058"
+             data-title="run stakes — pre-run intent with bonus drop" data-domain="game/progression">
+            <span class="nav-dot" style="background:var(--status-frozen);opacity:1"></span>
+            <span class="nav-item-key">feat-2026-058</span>
+            <span class="nav-item-title">Run Stakes — Pre-Run Intent with Bonus Drop</span>
+            <span class="nav-dec-count">3</span>
+          </a>
+          <a class="nav-item nav-item-dim" href="#feat-2026-077" data-key="feat-2026-077"
+             data-title="run stakes — completion tracking in careerstats + bag-full feedback" data-domain="game/progression">
+            <span class="nav-dot" style="background:var(--status-draft);opacity:0.35"></span>
+            <span class="nav-item-key">feat-2026-077</span>
+            <span class="nav-item-title">Run stakes — completion tracking in careerStats + bag-full feedback</span>
+            
+          </a>
+        </div>
+      </div>
+
+      <div class="nav-group" data-domain="game/ui">
+        <div class="nav-domain">
+          <span class="nav-domain-arrow">&#9660;</span>
+          <span class="nav-domain-name">game/ui</span>
+          <span class="nav-domain-count">5</span>
+        </div>
+        <div class="nav-group-items">
+          
+          <a class="nav-item nav-item-dim" href="#feat-2026-073" data-key="feat-2026-073"
+             data-title="audio engine — functional sound toggle with actual sfx" data-domain="game/ui">
+            <span class="nav-dot" style="background:var(--status-draft);opacity:0.35"></span>
+            <span class="nav-item-key">feat-2026-073</span>
+            <span class="nav-item-title">Audio engine — functional sound toggle with actual SFX</span>
+            
+          </a>
+          <a class="nav-item" href="#feat-2026-051" data-key="feat-2026-051"
+             data-title="settings screen" data-domain="game/ui">
+            <span class="nav-dot" style="background:var(--status-frozen);opacity:1"></span>
+            <span class="nav-item-key">feat-2026-051</span>
+            <span class="nav-item-title">Settings Screen</span>
+            <span class="nav-dec-count">3</span>
+          </a>
+          <a class="nav-item" href="#feat-2026-044" data-key="feat-2026-044"
+             data-title="shared stash &amp; town screen" data-domain="game/ui">
+            <span class="nav-dot" style="background:var(--status-frozen);opacity:1"></span>
+            <span class="nav-item-key">feat-2026-044</span>
+            <span class="nav-item-title">Shared Stash &amp; Town Screen</span>
+            <span class="nav-dec-count">5</span>
+          </a>
+          <a class="nav-item nav-item-dim" href="#feat-2026-067" data-key="feat-2026-067"
+             data-title="stash persistence to disk + size cap" data-domain="game/ui">
+            <span class="nav-dot" style="background:var(--status-draft);opacity:0.35"></span>
+            <span class="nav-item-key">feat-2026-067</span>
+            <span class="nav-item-title">Stash persistence to disk + size cap</span>
+            
+          </a>
+          <a class="nav-item" href="#feat-2026-049" data-key="feat-2026-049"
+             data-title="ui polish phase 2 — visual hierarchy &amp; screen consistency" data-domain="game/ui">
+            <span class="nav-dot" style="background:var(--status-frozen);opacity:1"></span>
+            <span class="nav-item-key">feat-2026-049</span>
+            <span class="nav-item-title">UI Polish Phase 2 — Visual Hierarchy &amp; Screen Consistency</span>
+            <span class="nav-dec-count">4</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="nav-group" data-domain="game/ux">
+        <div class="nav-domain">
+          <span class="nav-domain-arrow">&#9660;</span>
+          <span class="nav-domain-name">game/ux</span>
+          <span class="nav-domain-count">2</span>
+        </div>
+        <div class="nav-group-items">
+          
+          <a class="nav-item nav-item-dim" href="#feat-2026-071" data-key="feat-2026-071"
+             data-title="dpad long-press turn-skip mechanic" data-domain="game/ux">
+            <span class="nav-dot" style="background:var(--status-draft);opacity:0.35"></span>
+            <span class="nav-item-key">feat-2026-071</span>
+            <span class="nav-item-title">DPad long-press turn-skip mechanic</span>
+            
+          </a>
+          <a class="nav-item" href="#feat-2026-048" data-key="feat-2026-048"
+             data-title="game feel — haptics, animations &amp; visual feedback" data-domain="game/ux">
+            <span class="nav-dot" style="background:var(--status-frozen);opacity:1"></span>
+            <span class="nav-item-key">feat-2026-048</span>
+            <span class="nav-item-title">Game Feel — Haptics, Animations &amp; Visual Feedback</span>
+            <span class="nav-dec-count">6</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="nav-group" data-domain="ops/distribution">
+        <div class="nav-domain">
+          <span class="nav-domain-arrow">&#9660;</span>
+          <span class="nav-domain-name">ops/distribution</span>
+          <span class="nav-domain-count">2</span>
+        </div>
+        <div class="nav-group-items">
+          
+          <a class="nav-item" href="#feat-2026-052" data-key="feat-2026-052"
+             data-title="app store preparation" data-domain="ops/distribution">
+            <span class="nav-dot" style="background:var(--status-frozen);opacity:1"></span>
+            <span class="nav-item-key">feat-2026-052</span>
+            <span class="nav-item-title">App Store Preparation</span>
+            <span class="nav-dec-count">2</span>
+          </a>
+          <a class="nav-item nav-item-dim" href="#feat-2026-074" data-key="feat-2026-074"
+             data-title="eas build setup — icons, splash, and first testflight submission" data-domain="ops/distribution">
+            <span class="nav-dot" style="background:var(--status-draft);opacity:0.35"></span>
+            <span class="nav-item-key">feat-2026-074</span>
+            <span class="nav-item-title">EAS build setup — icons, splash, and first TestFlight submission</span>
+            
+          </a>
+        </div>
+      </div>
+
+      <div class="nav-group" data-domain="progression">
+        <div class="nav-domain">
+          <span class="nav-domain-arrow">&#9660;</span>
+          <span class="nav-domain-name">progression</span>
+          <span class="nav-domain-count">9</span>
+        </div>
+        <div class="nav-group-items">
+          
+          <a class="nav-item" href="#feat-2026-056" data-key="feat-2026-056"
+             data-title="death screen depth — epitaph, echo gift &amp; floor comparison" data-domain="progression">
+            <span class="nav-dot" style="background:var(--status-frozen);opacity:1"></span>
+            <span class="nav-item-key">feat-2026-056</span>
+            <span class="nav-item-title">Death Screen Depth — Epitaph, Echo Gift &amp; Floor Comparison</span>
+            <span class="nav-dec-count">2</span>
+          </a>
+          <a class="nav-item" href="#feat-2026-038" data-key="feat-2026-038"
+             data-title="infinite difficulty tiers" data-domain="progression">
+            <span class="nav-dot" style="background:var(--status-frozen);opacity:1"></span>
+            <span class="nav-item-key">feat-2026-038</span>
+            <span class="nav-item-title">Infinite Difficulty Tiers</span>
+            <span class="nav-dec-count">6</span>
+          </a>
+          <a class="nav-item" href="#feat-2026-036" data-key="feat-2026-036"
+             data-title="roguelite persistence &amp; graveyard" data-domain="progression">
+            <span class="nav-dot" style="background:var(--status-frozen);opacity:1"></span>
+            <span class="nav-item-key">feat-2026-036</span>
+            <span class="nav-item-title">Roguelite Persistence &amp; Graveyard</span>
+            <span class="nav-dec-count">6</span>
+          </a>
+          <a class="nav-item nav-item-dim" href="#feat-2026-060" data-key="feat-2026-060"
+             data-title="roguelite persistence — ghost echo live + deferred mechanics" data-domain="progression">
+            <span class="nav-dot" style="background:var(--status-draft);opacity:0.35"></span>
+            <span class="nav-item-key">feat-2026-060</span>
+            <span class="nav-item-title">Roguelite Persistence — Ghost Echo live + deferred mechanics</span>
+            
+          </a>
+          <a class="nav-item" href="#feat-2026-057" data-key="feat-2026-057"
+             data-title="run meta layer — heatmap, echo whisper &amp; graveyard study" data-domain="progression">
+            <span class="nav-dot" style="background:var(--status-frozen);opacity:1"></span>
+            <span class="nav-item-key">feat-2026-057</span>
+            <span class="nav-item-title">Run Meta Layer — Heatmap, Echo Whisper &amp; Graveyard Study</span>
+            <span class="nav-dec-count">3</span>
+          </a>
+          <a class="nav-item nav-item-dim" href="#feat-2026-076" data-key="feat-2026-076"
+             data-title="study bonuses — functional implementation (not flavor text)" data-domain="progression">
+            <span class="nav-dot" style="background:var(--status-draft);opacity:0.35"></span>
+            <span class="nav-item-key">feat-2026-076</span>
+            <span class="nav-item-title">Study bonuses — functional implementation (not flavor text)</span>
+            
+          </a>
+          <a class="nav-item nav-item-dim" href="#feat-2026-062" data-key="feat-2026-062"
+             data-title="tier identity — per-tier monster pools and visual themes" data-domain="progression">
+            <span class="nav-dot" style="background:var(--status-draft);opacity:0.35"></span>
+            <span class="nav-item-key">feat-2026-062</span>
+            <span class="nav-item-title">Tier identity — per-tier monster pools and visual themes</span>
+            
+          </a>
+          <a class="nav-item" href="#feat-2026-037" data-key="feat-2026-037"
+             data-title="xp &amp; persistent leveling" data-domain="progression">
+            <span class="nav-dot" style="background:var(--status-frozen);opacity:1"></span>
+            <span class="nav-item-key">feat-2026-037</span>
+            <span class="nav-item-title">XP &amp; Persistent Leveling</span>
+            <span class="nav-dec-count">4</span>
+          </a>
+          <a class="nav-item nav-item-dim" href="#feat-2026-061" data-key="feat-2026-061"
+             data-title="xp from non-combat encounters (chests, shrines, secrets)" data-domain="progression">
+            <span class="nav-dot" style="background:var(--status-draft);opacity:0.35"></span>
+            <span class="nav-item-key">feat-2026-061</span>
+            <span class="nav-item-title">XP from non-combat encounters (chests, shrines, secrets)</span>
+            
+          </a>
+        </div>
+      </div>
+      </nav>
+    </aside>
+
+    <main class="content" id="content">
+      
+      <section class="feature-section" id="feat-2026-052"
+               data-domain="ops/distribution"
+               data-key="feat-2026-052"
+               data-date="2026-03-29">
+        <header class="feature-section-header">
+          <div class="feature-section-title-row">
+            <h2 class="feature-section-title">App Store Preparation</h2>
+            <code class="feature-section-key">feat-2026-052</code>
+          </div>
+          <div class="feature-section-meta">
+            <span class="domain-chip">ops/distribution</span>
+            <span class="status-badge"
+              style="color:var(--status-frozen);background:rgba(91,130,204,0.12);border-color:var(--status-frozen)40">
+              frozen
+            </span>
+            <span class="dec-count-badge">2 decisions</span>
+          </div>
+        </header>
+        <div class="dec-list">
+          
+          <div class="dec-item" data-index="0">
+            <h4 class="dec-title">
+              <span class="dec-num">1</span>
+              <span class="dec-text">Bundle ID: com.majeanson.dungeondepths</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Follows reverse-domain convention using the developer's npm username (majeanson). 'dungeondepths' is the app's public name.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>com.anonymous.d2game — the Expo default, cannot submit</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-29</span></div>
+          </div>
+
+          <div class="dec-item" data-index="1">
+            <h4 class="dec-title">
+              <span class="dec-num">2</span>
+              <span class="dec-text">Privacy policy hosted externally, not in-app</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">App Store requires a URL to a privacy policy. An in-app page doesn't satisfy this requirement — it must be a publicly accessible web URL.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>In-app privacy page — doesn't satisfy App Store URL requirement</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-29</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="feature-section" id="feat-2026-041"
+               data-domain="combat"
+               data-key="feat-2026-041"
+               data-date="2026-03-28">
+        <header class="feature-section-header">
+          <div class="feature-section-title-row">
+            <h2 class="feature-section-title">Block Chance System</h2>
+            <code class="feature-section-key">feat-2026-041</code>
+          </div>
+          <div class="feature-section-meta">
+            <span class="domain-chip">combat</span>
+            <span class="status-badge"
+              style="color:var(--status-frozen);background:rgba(91,130,204,0.12);border-color:var(--status-frozen)40">
+              frozen
+            </span>
+            <span class="dec-count-badge">3 decisions</span>
+          </div>
+        </header>
+        <div class="dec-list">
+          
+          <div class="dec-item" data-index="0">
+            <h4 class="dec-title">
+              <span class="dec-num">1</span>
+              <span class="dec-text">Block resolves after the miss check — you can only block attacks that land</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Keeps the two systems independent and readable. Miss = attacker failed. Block = defender succeeded. Sequential resolution avoids double-negation confusion in log.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Block rolls before miss check</li><li>Combined evasion+block single roll</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+
+          <div class="dec-item" data-index="1">
+            <h4 class="dec-title">
+              <span class="dec-num">2</span>
+              <span class="dec-text">Passive 10% base block when any offhand is equipped, even without blockChance stat</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Makes the offhand slot feel defensively meaningful even for non-block builds. Holding anything in your off-hand is slightly protective.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Block only from explicit blockChance stat</li><li>Offhand grants 0% base, all block from affix</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+
+          <div class="dec-item" data-index="2">
+            <h4 class="dec-title">
+              <span class="dec-num">3</span>
+              <span class="dec-text">Block cap at 75% — elemental damage unblockable</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">75% physical block cap matches D2. Elemental bypass distinguishes enchanted monster threat profile and ensures resist gear remains relevant even for shield builds.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>100% cap</li><li>Block applies to elemental at 50% effectiveness</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="feature-section" id="feat-2026-045"
+               data-domain="game/combat"
+               data-key="feat-2026-045"
+               data-date="2026-03-29">
+        <header class="feature-section-header">
+          <div class="feature-section-title-row">
+            <h2 class="feature-section-title">Boss Encounters</h2>
+            <code class="feature-section-key">feat-2026-045</code>
+          </div>
+          <div class="feature-section-meta">
+            <span class="domain-chip">game/combat</span>
+            <span class="status-badge"
+              style="color:var(--status-frozen);background:rgba(91,130,204,0.12);border-color:var(--status-frozen)40">
+              frozen
+            </span>
+            <span class="dec-count-badge">3 decisions</span>
+          </div>
+        </header>
+        <div class="dec-list">
+          
+          <div class="dec-item" data-index="0">
+            <h4 class="dec-title">
+              <span class="dec-num">1</span>
+              <span class="dec-text">Boss spawns every 5 floors, not randomly</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Predictable milestones let players prepare (use town portal, equip best gear). Random boss floors would feel punishing with no agency.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Random boss among floors 3-7, 8-12 etc — less predictable, less satisfying</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-29</span></div>
+          </div>
+
+          <div class="dec-item" data-index="1">
+            <h4 class="dec-title">
+              <span class="dec-num">2</span>
+              <span class="dec-text">Enrage triggers at round 5, not a HP threshold</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Round-based enrage punishes turtling (using potions indefinitely) without being unfair to low-damage builds. HP threshold enrage is invisible and frustrating.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>50% HP enrage — invisible to player until it happens</li><li>No enrage — boss is just a big HP bar</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-29</span></div>
+          </div>
+
+          <div class="dec-item" data-index="2">
+            <h4 class="dec-title">
+              <span class="dec-num">3</span>
+              <span class="dec-text">Cannot flee from boss encounters</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Boss is a commitment. Fleeing would trivialize the milestone. Players who aren't ready should use a town portal scroll before entering the boss room.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Allow flee with heavy penalty — dilutes the stakes</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-29</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="feature-section" id="feat-2026-043"
+               data-domain="game/progression"
+               data-key="feat-2026-043"
+               data-date="2026-04-01">
+        <header class="feature-section-header">
+          <div class="feature-section-title-row">
+            <h2 class="feature-section-title">Class System — Warrior / Rogue / Sorcerer</h2>
+            <code class="feature-section-key">feat-2026-043</code>
+          </div>
+          <div class="feature-section-meta">
+            <span class="domain-chip">game/progression</span>
+            <span class="status-badge"
+              style="color:var(--status-frozen);background:rgba(91,130,204,0.12);border-color:var(--status-frozen)40">
+              frozen
+            </span>
+            <span class="dec-count-badge">5 decisions</span>
+          </div>
+        </header>
+        <div class="dec-list">
+          
+          <div class="dec-item" data-index="0">
+            <h4 class="dec-title">
+              <span class="dec-num">1</span>
+              <span class="dec-text">Three classes: Warrior (tank), Rogue (burst/evasion), Sorcerer (elemental scaling)</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Classic D2-inspired trinity. Covers the three playstyle archetypes (durability, speed, power) without overlap.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-29</span></div>
+          </div>
+
+          <div class="dec-item" data-index="1">
+            <h4 class="dec-title">
+              <span class="dec-num">2</span>
+              <span class="dec-text">Class selected at run start, persists for the run only — no persistent class across runs</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Roguelite design: each run is a fresh identity. Cross-run class persistence would reduce variety.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-29</span></div>
+          </div>
+
+          <div class="dec-item" data-index="2">
+            <h4 class="dec-title">
+              <span class="dec-num">3</span>
+              <span class="dec-text">Each class has a fixed skillIds array defining available skills</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Deterministic skill lists per class make balance tractable and skill grid layout predictable.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-29</span></div>
+          </div>
+
+          <div class="dec-item" data-index="3">
+            <h4 class="dec-title">
+              <span class="dec-num">4</span>
+              <span class="dec-text">BMAD S3: sorcerer skillIds updated to include spark as first entry (L0 starter) — fills 3x2 skill grid with 6 skills</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Sorcerer previously had 5 skills leaving a null placeholder. Spark fills the grid and provides a usable offensive option from floor 1.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+
+          <div class="dec-item" data-index="4">
+            <h4 class="dec-title">
+              <span class="dec-num">5</span>
+              <span class="dec-text">BMAD S3: class descriptions revised to be more evocative — Warrior armored juggernaut, Rogue swift assassin, Sorcerer arcane caster</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Original descriptions were functional but flat. More evocative copy communicates playstyle identity to a new player at the class select screen.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="feature-section" id="feat-2026-059"
+               data-domain="game/maintenance"
+               data-key="feat-2026-059"
+               data-date="2026-04-01">
+        <header class="feature-section-header">
+          <div class="feature-section-title-row">
+            <h2 class="feature-section-title">Code Quality Session 1 — Timeout Leaks, Render Optimizations &amp; Import Cleanup</h2>
+            <code class="feature-section-key">feat-2026-059</code>
+          </div>
+          <div class="feature-section-meta">
+            <span class="domain-chip">game/maintenance</span>
+            <span class="status-badge"
+              style="color:var(--status-frozen);background:rgba(91,130,204,0.12);border-color:var(--status-frozen)40">
+              frozen
+            </span>
+            <span class="dec-count-badge">4 decisions</span>
+          </div>
+        </header>
+        <div class="dec-list">
+          
+          <div class="dec-item" data-index="0">
+            <h4 class="dec-title">
+              <span class="dec-num">1</span>
+              <span class="dec-text">Both the outer and inner timeouts are tracked by separate let refs (t1, t2) so cleanup always runs clearTimeout on both</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">clearTimeout(undefined) is a safe no-op in JavaScript, so assigning t2 via let before the outer fires is safe — cleanup never throws even if t1 fires and t2 is never assigned.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+
+          <div class="dec-item" data-index="1">
+            <h4 class="dec-title">
+              <span class="dec-num">2</span>
+              <span class="dec-text">bossWarnTimer cleanup returns clearTimeout on every gameFloor change, not just on unmount</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">When gameFloor changes, the previous floor's boss warning timer should be cancelled — the warning is floor-specific. React runs cleanup before the next effect, which is exactly the right timing.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+
+          <div class="dec-item" data-index="2">
+            <h4 class="dec-title">
+              <span class="dec-num">3</span>
+              <span class="dec-text">equipped from useInventoryStore is a stable reference for useMemo — bag ops do not change the equipped reference</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">inventoryStore addItem/dropItem only set({ bag, magicFind }) — equipped is not spread. Only equipItem/unequipItem create a new equipped object. So the useMemo for buildPlayerStats invalidates only on real equipment changes, not on every bag mutation.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+
+          <div class="dec-item" data-index="3">
+            <h4 class="dec-title">
+              <span class="dec-num">4</span>
+              <span class="dec-text">applyZoomWithHaptic not memoized despite being captured in PanResponder closure</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">PanResponder is created once via useRef. applyZoomWithHaptic calls haptics.impactLight() and applyZoom which writes to zoomLevelRef (a ref) — stale closure is not a real problem since the underlying ref is always current. Memoizing would require useCallback and add complexity with no real gain.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="feature-section" id="feat-2026-047"
+               data-domain="game/crafting"
+               data-key="feat-2026-047"
+               data-date="2026-04-01">
+        <header class="feature-section-header">
+          <div class="feature-section-title-row">
+            <h2 class="feature-section-title">Cube Crafting System</h2>
+            <code class="feature-section-key">feat-2026-047</code>
+          </div>
+          <div class="feature-section-meta">
+            <span class="domain-chip">game/crafting</span>
+            <span class="status-badge"
+              style="color:var(--status-frozen);background:rgba(91,130,204,0.12);border-color:var(--status-frozen)40">
+              frozen
+            </span>
+            <span class="dec-count-badge">4 decisions</span>
+          </div>
+        </header>
+        <div class="dec-list">
+          
+          <div class="dec-item" data-index="0">
+            <h4 class="dec-title">
+              <span class="dec-num">1</span>
+              <span class="dec-text">Crafting uses a Horadric Cube metaphor — select recipe then select items from bag</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Recipe-first flow prevents players from randomly selecting items hoping for a match; they choose intent then gather ingredients.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-29</span></div>
+          </div>
+
+          <div class="dec-item" data-index="1">
+            <h4 class="dec-title">
+              <span class="dec-num">2</span>
+              <span class="dec-text">matchesRecipeInputs validates exact ingredient requirements before enabling transmute button</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Hard gate on the button prevents wasted transmutes; the function validates both count and type constraints in one pass.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-29</span></div>
+          </div>
+
+          <div class="dec-item" data-index="2">
+            <h4 class="dec-title">
+              <span class="dec-num">3</span>
+              <span class="dec-text">Atomic operation — result item added first, inputs consumed only if bag has space</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Prevents a full-bag scenario from eating inputs without producing output; player never loses items to a space error.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-29</span></div>
+          </div>
+
+          <div class="dec-item" data-index="3">
+            <h4 class="dec-title">
+              <span class="dec-num">4</span>
+              <span class="dec-text">BMAD S3: countMatchedInputs added alongside matchesRecipeInputs — shows N/M partial progress hint during ingredient selection</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Without partial feedback, players had no signal whether they were on the right track while selecting ingredients; N/M shows progress without revealing the full recipe.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="feature-section" id="feat-2026-056"
+               data-domain="progression"
+               data-key="feat-2026-056"
+               data-date="2026-04-01">
+        <header class="feature-section-header">
+          <div class="feature-section-title-row">
+            <h2 class="feature-section-title">Death Screen Depth — Epitaph, Echo Gift &amp; Floor Comparison</h2>
+            <code class="feature-section-key">feat-2026-056</code>
+          </div>
+          <div class="feature-section-meta">
+            <span class="domain-chip">progression</span>
+            <span class="status-badge"
+              style="color:var(--status-frozen);background:rgba(91,130,204,0.12);border-color:var(--status-frozen)40">
+              frozen
+            </span>
+            <span class="dec-count-badge">2 decisions</span>
+          </div>
+        </header>
+        <div class="dec-list">
+          
+          <div class="dec-item" data-index="0">
+            <h4 class="dec-title">
+              <span class="dec-num">1</span>
+              <span class="dec-text">Epitaph generated from existing run data — no new tracked state</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">All inputs (killedBy, floor, tier, runKills, runItemsFound, item quality/sockets) were already available on EndScreen. Adding new tracking fields would require save migration and would duplicate data already captured by careerStats.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Store epitaph string in gameStore — unnecessary serialization overhead</li><li>Procedural sentence templates with more variables — higher variance but harder to guarantee quality</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+
+          <div class="dec-item" data-index="1">
+            <h4 class="dec-title">
+              <span class="dec-num">2</span>
+              <span class="dec-text">Echo gift uses invokeGhostEcho(0) — no new store action</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">invokeGhostEcho already idempotently checks for existing ghostCharm and resolves the most recent graveyard entry at index 0. The death screen adds the ghost echo gift by calling the same action that GraveyardScreen uses, so no duplicate state path exists.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>New setGhostCharm action — redundant, invokeGhostEcho already handles the guard</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="feature-section" id="feat-2026-039"
+               data-domain="combat"
+               data-key="feat-2026-039"
+               data-date="2026-03-28">
+        <header class="feature-section-header">
+          <div class="feature-section-title-row">
+            <h2 class="feature-section-title">Elemental Damage &amp; Resistance System</h2>
+            <code class="feature-section-key">feat-2026-039</code>
+          </div>
+          <div class="feature-section-meta">
+            <span class="domain-chip">combat</span>
+            <span class="status-badge"
+              style="color:var(--status-frozen);background:rgba(91,130,204,0.12);border-color:var(--status-frozen)40">
+              frozen
+            </span>
+            <span class="dec-count-badge">4 decisions</span>
+          </div>
+        </header>
+        <div class="dec-list">
+          
+          <div class="dec-item" data-index="0">
+            <h4 class="dec-title">
+              <span class="dec-num">1</span>
+              <span class="dec-text">Elemental damage is additive on top of physical, never replaces it</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">A fire ring should always add value. If elemental replaced physical, low-physical builds would be punished for stacking resist gear.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Elemental damage replaces physical for that hit</li><li>Separate elemental attack action</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+
+          <div class="dec-item" data-index="1">
+            <h4 class="dec-title">
+              <span class="dec-num">2</span>
+              <span class="dec-text">Resist cap at 75%, same as Diablo 2</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Prevents full immunity builds that trivialize enchanted monsters. 75% is a well-tested ceiling that still makes resist gear feel powerful.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>100% resist cap (full immunity possible)</li><li>50% cap (resist gear less valuable)</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+
+          <div class="dec-item" data-index="2">
+            <h4 class="dec-title">
+              <span class="dec-num">3</span>
+              <span class="dec-text">Status effects last exactly 1 round — chilled, burning, lightning bypass</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Simple and readable. Multi-round tracking adds complexity without meaningful strategic depth at this game's combat scale (3-6 rounds typical).</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Multi-round DoT stacks</li><li>Permanent until cured with a potion</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+
+          <div class="dec-item" data-index="3">
+            <h4 class="dec-title">
+              <span class="dec-num">4</span>
+              <span class="dec-text">Block (offhand) only stops physical damage, not elemental</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Gives enchanted monsters a distinct threat profile — a shield build is not invincible against a Fire Enchanted monster, creating target prioritization.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Block stops all damage types</li><li>Separate elemental resist equipment slot</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="feature-section" id="feat-2026-048"
+               data-domain="game/ux"
+               data-key="feat-2026-048"
+               data-date="2026-04-01">
+        <header class="feature-section-header">
+          <div class="feature-section-title-row">
+            <h2 class="feature-section-title">Game Feel — Haptics, Animations &amp; Visual Feedback</h2>
+            <code class="feature-section-key">feat-2026-048</code>
+          </div>
+          <div class="feature-section-meta">
+            <span class="domain-chip">game/ux</span>
+            <span class="status-badge"
+              style="color:var(--status-frozen);background:rgba(91,130,204,0.12);border-color:var(--status-frozen)40">
+              frozen
+            </span>
+            <span class="dec-count-badge">6 decisions</span>
+          </div>
+        </header>
+        <div class="dec-list">
+          
+          <div class="dec-item" data-index="0">
+            <h4 class="dec-title">
+              <span class="dec-num">1</span>
+              <span class="dec-text">Haptics via expo-haptics with silent fallback for devices without support</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">expo-haptics is already in the Expo SDK; the try/catch silent fallback pattern means haptics degrade gracefully on simulators and older devices.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-29</span></div>
+          </div>
+
+          <div class="dec-item" data-index="1">
+            <h4 class="dec-title">
+              <span class="dec-num">2</span>
+              <span class="dec-text">Log entry types drive color — crit gold, xp teal, scroll purple, victory green, levelUp gold, heal green, enraged orange</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Typed log entries decouple color from content string parsing; adding a new event type only requires adding to the union.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-29</span></div>
+          </div>
+
+          <div class="dec-item" data-index="2">
+            <h4 class="dec-title">
+              <span class="dec-num">3</span>
+              <span class="dec-text">BMAD S3: tier background tints — TIER_BG map with 5 subtle hues per tier applied to gridArea background</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Subtle tints signal depth tier change without being distracting; pure black for all tiers made every tier feel identical.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+
+          <div class="dec-item" data-index="3">
+            <h4 class="dec-title">
+              <span class="dec-num">4</span>
+              <span class="dec-text">BMAD S3: per-item quality loot log in handleVictory — star unique, diamond rare, diamond magic, dot common — each with typed log color</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Previously all loot dropped as a single summary line. Per-item lines with quality prefixes let players see at a glance what they found without leaving the combat log.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+
+          <div class="dec-item" data-index="4">
+            <h4 class="dec-title">
+              <span class="dec-num">5</span>
+              <span class="dec-text">BMAD S3: monster affix names resolved from MONSTER_AFFIXES map in combat-start log at enraged type</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Raw affix IDs like fireEnchanted were logged previously. Human-readable names from MONSTER_AFFIXES make the log immediately legible.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+
+          <div class="dec-item" data-index="5">
+            <h4 class="dec-title">
+              <span class="dec-num">6</span>
+              <span class="dec-text">BMAD S3: flee button label changed to stays/blocked to clarify that fleeing keeps the player on the current floor</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Players assumed flee meant game over or retreat to town. The label stays makes clear the cost is staying on the floor, not losing progress.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="feature-section" id="feat-2026-040"
+               data-domain="combat"
+               data-key="feat-2026-040"
+               data-date="2026-03-28">
+        <header class="feature-section-header">
+          <div class="feature-section-title-row">
+            <h2 class="feature-section-title">Attack Accuracy &amp; Miss Chance</h2>
+            <code class="feature-section-key">feat-2026-040</code>
+          </div>
+          <div class="feature-section-meta">
+            <span class="domain-chip">combat</span>
+            <span class="status-badge"
+              style="color:var(--status-frozen);background:rgba(91,130,204,0.12);border-color:var(--status-frozen)40">
+              frozen
+            </span>
+            <span class="dec-count-badge">3 decisions</span>
+          </div>
+        </header>
+        <div class="dec-list">
+          
+          <div class="dec-item" data-index="0">
+            <h4 class="dec-title">
+              <span class="dec-num">1</span>
+              <span class="dec-text">Hit chance range clamped 20%-95% for both player and monsters</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Never feels completely impossible (20% floor) and always has some uncertainty (95% ceiling). Removing all misses or all hits breaks tension.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Uncapped (0-100% possible)</li><li>Fixed 85% base with no dexterity modifier</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+
+          <div class="dec-item" data-index="1">
+            <h4 class="dec-title">
+              <span class="dec-num">2</span>
+              <span class="dec-text">Dexterity drives both offensive accuracy and defensive dodge</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Makes dexterity a dual-purpose stat — relevant for fast/evasive builds AND precision/critical builds. One stat, two payoffs.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Separate accuracy and dodge stats</li><li>Dexterity only affects crit chance (current behavior)</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+
+          <div class="dec-item" data-index="2">
+            <h4 class="dec-title">
+              <span class="dec-num">3</span>
+              <span class="dec-text">Monster speed drives evasion — fast monsters are harder to hit</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">speed is already a MonsterDef field and affects turn order. Reusing it for evasion gives it combat meaning without new monster data.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Separate monster evasion stat in MonsterDef</li><li>All monsters have same evasion regardless of type</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="feature-section" id="feat-2026-038"
+               data-domain="progression"
+               data-key="feat-2026-038"
+               data-date="2026-03-31">
+        <header class="feature-section-header">
+          <div class="feature-section-title-row">
+            <h2 class="feature-section-title">Infinite Difficulty Tiers</h2>
+            <code class="feature-section-key">feat-2026-038</code>
+          </div>
+          <div class="feature-section-meta">
+            <span class="domain-chip">progression</span>
+            <span class="status-badge"
+              style="color:var(--status-frozen);background:rgba(91,130,204,0.12);border-color:var(--status-frozen)40">
+              frozen
+            </span>
+            <span class="dec-count-badge">6 decisions</span>
+          </div>
+        </header>
+        <div class="dec-list">
+          
+          <div class="dec-item" data-index="0">
+            <h4 class="dec-title">
+              <span class="dec-num">1</span>
+              <span class="dec-text">Infinite numeric tiers instead of named Normal/Nightmare/Hell</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">No hard ceiling means the designer can always introduce harder content. Named tiers imply finality; numbers imply an open ladder.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>3-tier D2 model (Normal/Nightmare/Hell)</li><li>Prestige system that resets gear on tier unlock</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+
+          <div class="dec-item" data-index="1">
+            <h4 class="dec-title">
+              <span class="dec-num">2</span>
+              <span class="dec-text">Tier persists across deaths; floor resets to 1 on death within a tier</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Death is a floor-level setback, not a tier-level setback. Losing a tier would feel too punishing given the graveyard sacrifice also occurs.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Death drops you one tier</li><li>Death resets both tier and floor</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+
+          <div class="dec-item" data-index="2">
+            <h4 class="dec-title">
+              <span class="dec-num">3</span>
+              <span class="dec-text">Monster multiplier: HP = 1 + (tier-1)*0.5, damage = 1 + (tier-1)*0.35</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Additive scaling prevents absurd numbers at high tiers while keeping each tier noticeably harder. Tier 5 monsters have 3x HP — challenging but not impossible with tier-appropriate gear.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Exponential multiplier (doubles each tier)</li><li>Only damage scales, not HP</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+
+          <div class="dec-item" data-index="3">
+            <h4 class="dec-title">
+              <span class="dec-num">4</span>
+              <span class="dec-text">Loot MF bonus: (tier-1)*20 added to magicFind for all loot rolls</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Ensures higher tiers are always more rewarding in quality, not just harder. The gear treadmill needs a carrot, not just a stick.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Flat loot table per tier (new item pool)</li><li>No loot quality boost — only difficulty increases</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+
+          <div class="dec-item" data-index="4">
+            <h4 class="dec-title">
+              <span class="dec-num">5</span>
+              <span class="dec-text">Track first-time tier clears in careerStats.tiersCleared: number[]</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Allows the TierClearOverlay to distinguish a first-time clear from a repeat. First clears get a special '✦ FIRST CLEAR ✦' eyebrow for recognition without permanently changing the flow.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Boolean flag per tier in a map</li><li>Always show first-clear banner (no tracking)</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-31</span></div>
+          </div>
+
+          <div class="dec-item" data-index="5">
+            <h4 class="dec-title">
+              <span class="dec-num">6</span>
+              <span class="dec-text">Ascension mechanic: ASCEND button on victory screen pre-loads Ghost Echo from last graveyard entry</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Ascension is a deliberate prestige-style restart that keeps tier progress, increments an ascension counter, and rewards the player with a Ghost Echo head-start — making the loop feel rewarding rather than punitive.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Ascension just restarts with no bonus</li><li>Ascension drops one tier</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-31</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="feature-section" id="feat-2026-046"
+               data-domain="game/items"
+               data-key="feat-2026-046"
+               data-date="2026-03-29">
+        <header class="feature-section-header">
+          <div class="feature-section-title-row">
+            <h2 class="feature-section-title">Item Expansion — New Bases, Uniques &amp; Runewords</h2>
+            <code class="feature-section-key">feat-2026-046</code>
+          </div>
+          <div class="feature-section-meta">
+            <span class="domain-chip">game/items</span>
+            <span class="status-badge"
+              style="color:var(--status-frozen);background:rgba(91,130,204,0.12);border-color:var(--status-frozen)40">
+              frozen
+            </span>
+            <span class="dec-count-badge">3 decisions</span>
+          </div>
+        </header>
+        <div class="dec-list">
+          
+          <div class="dec-item" data-index="0">
+            <h4 class="dec-title">
+              <span class="dec-num">1</span>
+              <span class="dec-text">Belt is a new equipment slot, not stored in bag</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Belts in D2 provided utility and are a meaningful equip slot. Adding it as an equip slot (not a bag-only item) gives players another progression axis.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Belt as charm-like passive in bag — doesn't feel like gear</li><li>Skip belts entirely — misses a natural slot</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-29</span></div>
+          </div>
+
+          <div class="dec-item" data-index="1">
+            <h4 class="dec-title">
+              <span class="dec-num">2</span>
+              <span class="dec-text">15 new uniques, all with 2–3 distinctive stats rather than many small bonuses</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">D2's best uniques are remembered for 1-2 defining properties. Goldwrap = MF. Stone of Jordan = mana/spellPower. Each unique should have an identity that creates a build around it.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Many stats at low values — forgettable, hard to build around</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-29</span></div>
+          </div>
+
+          <div class="dec-item" data-index="2">
+            <h4 class="dec-title">
+              <span class="dec-num">3</span>
+              <span class="dec-text">Runewords target specific slots (e.g. Leaf→staff only)</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Slot restrictions create meaningful crafting decisions. 'Save my Tal rune for a staff' is interesting. Unrestricted runewords reduce choice.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Any runeword in any socketed base — trivializes socket planning</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-29</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="feature-section" id="feat-2026-035"
+               data-domain="game/mobile"
+               data-key="feat-2026-035"
+               data-date="2026-03-28">
+        <header class="feature-section-header">
+          <div class="feature-section-title-row">
+            <h2 class="feature-section-title">Phase 1 — Text UI Prototype</h2>
+            <code class="feature-section-key">feat-2026-035</code>
+          </div>
+          <div class="feature-section-meta">
+            <span class="domain-chip">game/mobile</span>
+            <span class="status-badge"
+              style="color:var(--status-frozen);background:rgba(91,130,204,0.12);border-color:var(--status-frozen)40">
+              frozen
+            </span>
+            <span class="dec-count-badge">2 decisions</span>
+          </div>
+        </header>
+        <div class="dec-list">
+          
+          <div class="dec-item" data-index="0">
+            <h4 class="dec-title">
+              <span class="dec-num">1</span>
+              <span class="dec-text">React state machine (screen enum) instead of react-navigation for Phase 1</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">react-navigation adds ~2MB and requires native linking. For a prototype validating fun, a simple currentScreen state switch is faster to implement and debug. Can migrate to react-navigation in Phase 3 when screens multiply.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>react-navigation — correct long-term but heavy for a prototype</li><li>expo-router — even heavier, file-based routing overkill for 4 screens</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+
+          <div class="dec-item" data-index="1">
+            <h4 class="dec-title">
+              <span class="dec-num">2</span>
+              <span class="dec-text">Grid rendered as View cells (not Skia) in Phase 1</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Skia adds native build complexity. For a text prototype, RN View cells are sufficient to validate movement feel and encounter triggers. Skia canvas is Phase 5 (polish). The engine grid logic is completely decoupled from rendering so the swap is a UI-only change.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Skia from day 1 — correct for production but slows down prototype iteration</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="feature-section" id="feat-2026-036"
+               data-domain="progression"
+               data-key="feat-2026-036"
+               data-date="2026-04-01">
+        <header class="feature-section-header">
+          <div class="feature-section-title-row">
+            <h2 class="feature-section-title">Roguelite Persistence &amp; Graveyard</h2>
+            <code class="feature-section-key">feat-2026-036</code>
+          </div>
+          <div class="feature-section-meta">
+            <span class="domain-chip">progression</span>
+            <span class="status-badge"
+              style="color:var(--status-frozen);background:rgba(91,130,204,0.12);border-color:var(--status-frozen)40">
+              frozen
+            </span>
+            <span class="dec-count-badge">6 decisions</span>
+          </div>
+        </header>
+        <div class="dec-list">
+          
+          <div class="dec-item" data-index="0">
+            <h4 class="dec-title">
+              <span class="dec-num">1</span>
+              <span class="dec-text">Career stats persisted across runs via AsyncStorage (save/load in persistence.ts)</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Career stats are cross-run motivators — they must survive app restarts to have meaning.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+
+          <div class="dec-item" data-index="1">
+            <h4 class="dec-title">
+              <span class="dec-num">2</span>
+              <span class="dec-text">Graveyard stores items lost on death for Ghost Echo mechanic (UI only — mechanic not yet live)</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Graveyard data structure is ready; the Ghost Echo activation mechanic is deferred until the core loop is stable.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+
+          <div class="dec-item" data-index="2">
+            <h4 class="dec-title">
+              <span class="dec-num">3</span>
+              <span class="dec-text">BMAD S3: dailyStreak + lastRunDate added to CareerStats — ISO date comparison in endRun</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Daily streak incentivises return visits; ISO YYYY-MM-DD string comparison is simple and timezone-stable for the common case.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+
+          <div class="dec-item" data-index="3">
+            <h4 class="dec-title">
+              <span class="dec-num">4</span>
+              <span class="dec-text">BMAD S3: streak resets to 1 on a missed day, increments if played on consecutive days, shown as fire emoji on MainMenu when streak is 2 or more</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Threshold of 2 avoids showing the streak indicator on day 1 of a new streak where it carries no meaning.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+
+          <div class="dec-item" data-index="4">
+            <h4 class="dec-title">
+              <span class="dec-num">5</span>
+              <span class="dec-text">BMAD S3: runKills and runItemsFound track per-run stats, reset on startRun, shown in EndScreen run summary card</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Per-run stats give players a sense of accomplishment even on a losing run; reset on startRun ensures no carry-over.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+
+          <div class="dec-item" data-index="5">
+            <h4 class="dec-title">
+              <span class="dec-num">6</span>
+              <span class="dec-text">BMAD S3: lastStandUsed boolean added to GameState — single death-defiance per run, survives at 1 HP, fires in both attackAction and skillAction defeat paths</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Single-use keeps it rare and meaningful. Covering both defeat paths (attack and skill) ensures no edge case skips it.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="feature-section" id="feat-2026-055"
+               data-domain="game/combat"
+               data-key="feat-2026-055"
+               data-date="2026-04-01">
+        <header class="feature-section-header">
+          <div class="feature-section-title-row">
+            <h2 class="feature-section-title">Room Grammar — Charnel &amp; Sanctum Encounter Bias</h2>
+            <code class="feature-section-key">feat-2026-055</code>
+          </div>
+          <div class="feature-section-meta">
+            <span class="domain-chip">game/combat</span>
+            <span class="status-badge"
+              style="color:var(--status-frozen);background:rgba(91,130,204,0.12);border-color:var(--status-frozen)40">
+              frozen
+            </span>
+            <span class="dec-count-badge">2 decisions</span>
+          </div>
+        </header>
+        <div class="dec-list">
+          
+          <div class="dec-item" data-index="0">
+            <h4 class="dec-title">
+              <span class="dec-num">1</span>
+              <span class="dec-text">Classify rooms by geometry (aspect ratio + area) rather than random assignment</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Seeded generation means room shapes are deterministic — classifying by geometry makes the grammar consistent and learnable. A Charnel room is always narrow; the player's visual read of the corridor predicts the encounter type.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Random per-room type tag — breaks the visual grammar and makes the dungeon unreadable</li><li>Hand-placed special rooms — requires non-BSP generation and loses the procedural seed guarantee</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+
+          <div class="dec-item" data-index="1">
+            <h4 class="dec-title">
+              <span class="dec-num">2</span>
+              <span class="dec-text">Bias encounter weights, not override them — room type adjusts probabilities, not outcomes</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">A Charnel room that guarantees an elite every step would feel oppressive and exploit-prone. Biasing weights preserves variance and the seeded PRNG's run-reproducibility while still making the room type meaningful.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Hard override (Charnel always spawns elite) — predictable to the point of feeling scripted</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="feature-section" id="feat-2026-057"
+               data-domain="progression"
+               data-key="feat-2026-057"
+               data-date="2026-04-01">
+        <header class="feature-section-header">
+          <div class="feature-section-title-row">
+            <h2 class="feature-section-title">Run Meta Layer — Heatmap, Echo Whisper &amp; Graveyard Study</h2>
+            <code class="feature-section-key">feat-2026-057</code>
+          </div>
+          <div class="feature-section-meta">
+            <span class="domain-chip">progression</span>
+            <span class="status-badge"
+              style="color:var(--status-frozen);background:rgba(91,130,204,0.12);border-color:var(--status-frozen)40">
+              frozen
+            </span>
+            <span class="dec-count-badge">3 decisions</span>
+          </div>
+        </header>
+        <div class="dec-list">
+          
+          <div class="dec-item" data-index="0">
+            <h4 class="dec-title">
+              <span class="dec-num">1</span>
+              <span class="dec-text">Graveyard Study is irreversible — studying an entry permanently marks it and prevents echo invocation</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">The value of the study mechanic comes from the decision: echo (temporary floor power) vs. knowledge (permanent record). If study were reversible the choice would have no weight. The sacrifice framing mirrors the graveyard's existing death-penalty philosophy.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Study as a copy (keep entry + gain bonus) — removes the tension entirely</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+
+          <div class="dec-item" data-index="1">
+            <h4 class="dec-title">
+              <span class="dec-num">2</span>
+              <span class="dec-text">Study bonuses are flavor-only in v1 — descriptions shown in Graveyard, no mechanical effect</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Mechanical effects (e.g. extended fog radius, auto-identification) require changes across multiple engine files and need balance testing. Shipping flavor bonuses first validates the core decision mechanic without risking balance. Effects can be layered in v2 once the careerStats.studiedBonuses[] array is populated with real player data.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Ship 1-2 mechanical bonuses with flavor — increases scope and bug surface in a pre-App Store window</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+
+          <div class="dec-item" data-index="2">
+            <h4 class="dec-title">
+              <span class="dec-num">3</span>
+              <span class="dec-text">Echo Whisper fires once per run, on floor 1 only, with a 2.5s delay</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Firing on floor 1 gives the whisper context — the player just invoked the echo and is about to explore. The 2.5s delay ensures the player has settled into the grid view before the text appears. Once-per-run prevents the whisper from becoming intrusive noise across floors.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Fire on every floor with echo active — too frequent, loses the 'mentor speaks rarely' atmosphere</li><li>Fire immediately on mount — competes with existing mount effects (legend hint, ghost echo hint)</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="feature-section" id="feat-2026-058"
+               data-domain="game/progression"
+               data-key="feat-2026-058"
+               data-date="2026-04-01">
+        <header class="feature-section-header">
+          <div class="feature-section-title-row">
+            <h2 class="feature-section-title">Run Stakes — Pre-Run Intent with Bonus Drop</h2>
+            <code class="feature-section-key">feat-2026-058</code>
+          </div>
+          <div class="feature-section-meta">
+            <span class="domain-chip">game/progression</span>
+            <span class="status-badge"
+              style="color:var(--status-frozen);background:rgba(91,130,204,0.12);border-color:var(--status-frozen)40">
+              frozen
+            </span>
+            <span class="dec-count-badge">3 decisions</span>
+          </div>
+        </header>
+        <div class="dec-list">
+          
+          <div class="dec-item" data-index="0">
+            <h4 class="dec-title">
+              <span class="dec-num">1</span>
+              <span class="dec-text">activeStake persists across runs — not reset by startRun</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">The stake represents the player's declared hunt style, not a per-run commitment. A player who always wants to slay should not have to re-select every run. stakeClaimed resets each run, so the reward mechanic still triggers once per completion.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+
+          <div class="dec-item" data-index="1">
+            <h4 class="dec-title">
+              <span class="dec-num">2</span>
+              <span class="dec-text">35% bonus drop probability — not guaranteed</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">A guaranteed drop would make stakes feel like a farming mechanic — players would optimise for the fastest completable stake rather than their preferred playstyle. 35% is frequent enough to feel meaningful but rare enough to stay exciting. The RNG is seeded from (seed ^ constant ^ floor) to maintain run reproducibility.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>100% drop — trivially farmable</li><li>10% drop — feels unrewarding, players stop caring about claims</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+
+          <div class="dec-item" data-index="2">
+            <h4 class="dec-title">
+              <span class="dec-num">3</span>
+              <span class="dec-text">Stake bonus item delivered directly to bag — no new loot screen</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Opening a loot screen mid-run for a single item would break the movement flow and require wiring a new loot entry point. Directly calling inventoryStore.addItem() with a toast notification delivers the reward without interrupting the game loop.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>New 'stake loot' screen — higher friction, requires additional state routing</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="feature-section" id="feat-2026-050"
+               data-domain="game/persistence"
+               data-key="feat-2026-050"
+               data-date="2026-03-29">
+        <header class="feature-section-header">
+          <div class="feature-section-title-row">
+            <h2 class="feature-section-title">Persistent Save / Load — AsyncStorage Serialization</h2>
+            <code class="feature-section-key">feat-2026-050</code>
+          </div>
+          <div class="feature-section-meta">
+            <span class="domain-chip">game/persistence</span>
+            <span class="status-badge"
+              style="color:var(--status-frozen);background:rgba(91,130,204,0.12);border-color:var(--status-frozen)40">
+              frozen
+            </span>
+            <span class="dec-count-badge">3 decisions</span>
+          </div>
+        </header>
+        <div class="dec-list">
+          
+          <div class="dec-item" data-index="0">
+            <h4 class="dec-title">
+              <span class="dec-num">1</span>
+              <span class="dec-text">Save only cross-run state — bag is NOT saved</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">The bag is run-scoped by design. Saving it would mean a crashed run persists its loot state, which undermines the roguelite death-resets-run contract. Only stash, equipped, xp, level, graveyard, and class survive.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Save everything including bag — breaks roguelite death loop</li><li>Save nothing — already the broken current state</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-29</span></div>
+          </div>
+
+          <div class="dec-item" data-index="1">
+            <h4 class="dec-title">
+              <span class="dec-num">2</span>
+              <span class="dec-text">Single save slot with version field, no multi-slot in v1</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Multi-slot save requires a save slot selection UI before gameplay. For a solo mobile game in v1, one save slot is sufficient and keeps hydration path simple.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>3 save slots — good for future, unnecessary complexity now</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-29</span></div>
+          </div>
+
+          <div class="dec-item" data-index="2">
+            <h4 class="dec-title">
+              <span class="dec-num">3</span>
+              <span class="dec-text">500ms debounce on persist writes</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">gainXp can be called multiple times per combat (level-up check). Writing to AsyncStorage on every XP tick would cause excessive I/O. 500ms debounce batches a full combat sequence into one write.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Write on every state change — too frequent</li><li>Write only on app backgrounding — risk of loss on crash</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-29</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="feature-section" id="feat-2026-051"
+               data-domain="game/ui"
+               data-key="feat-2026-051"
+               data-date="2026-04-01">
+        <header class="feature-section-header">
+          <div class="feature-section-title-row">
+            <h2 class="feature-section-title">Settings Screen</h2>
+            <code class="feature-section-key">feat-2026-051</code>
+          </div>
+          <div class="feature-section-meta">
+            <span class="domain-chip">game/ui</span>
+            <span class="status-badge"
+              style="color:var(--status-frozen);background:rgba(91,130,204,0.12);border-color:var(--status-frozen)40">
+              frozen
+            </span>
+            <span class="dec-count-badge">3 decisions</span>
+          </div>
+        </header>
+        <div class="dec-list">
+          
+          <div class="dec-item" data-index="0">
+            <h4 class="dec-title">
+              <span class="dec-num">1</span>
+              <span class="dec-text">Settings persisted via AsyncStorage in persistence.ts (SettingsData interface)</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Settings are user preferences that must survive app restarts; AsyncStorage is the correct persistence layer for this game.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-29</span></div>
+          </div>
+
+          <div class="dec-item" data-index="1">
+            <h4 class="dec-title">
+              <span class="dec-num">2</span>
+              <span class="dec-text">settingsStore exposes individual toggles and markX actions</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Granular actions are easier to call from UI components than a generic setField action; each action also triggers saveSettings automatically.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-29</span></div>
+          </div>
+
+          <div class="dec-item" data-index="2">
+            <h4 class="dec-title">
+              <span class="dec-num">3</span>
+              <span class="dec-text">BMAD S3: hasSeenCodexHint boolean added — tracks whether player dismissed the Codex first-open hint; markCodexHintSeen action; persisted in SettingsData</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">One-time hints should be persisted so they never re-appear after dismissal even across app restarts.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="feature-section" id="feat-2026-044"
+               data-domain="game/ui"
+               data-key="feat-2026-044"
+               data-date="2026-03-29">
+        <header class="feature-section-header">
+          <div class="feature-section-title-row">
+            <h2 class="feature-section-title">Shared Stash &amp; Town Screen</h2>
+            <code class="feature-section-key">feat-2026-044</code>
+          </div>
+          <div class="feature-section-meta">
+            <span class="domain-chip">game/ui</span>
+            <span class="status-badge"
+              style="color:var(--status-frozen);background:rgba(91,130,204,0.12);border-color:var(--status-frozen)40">
+              frozen
+            </span>
+            <span class="dec-count-badge">5 decisions</span>
+          </div>
+        </header>
+        <div class="dec-list">
+          
+          <div class="dec-item" data-index="0">
+            <h4 class="dec-title">
+              <span class="dec-num">1</span>
+              <span class="dec-text">Stash is accessible only in town (TownScreen), not from dungeon loot screen</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Dungeon stashing broke the intended flow: pick up items → manage in town. Keeping stash town-only creates a deliberate decision loop: survive the floor → return to town → deposit keepers → start next run.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Stash accessible anywhere — removes the town trip incentive</li><li>Stash accessible from inventory screen (in-run) — still breaks the intent</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-29</span></div>
+          </div>
+
+          <div class="dec-item" data-index="1">
+            <h4 class="dec-title">
+              <span class="dec-num">2</span>
+              <span class="dec-text">Visiting town from the dungeon requires a Town Portal Scroll (rare consumable) — no scroll, no town</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">A potion cost was too cheap — players have 4 potions per run and would visit town freely. Scrolls are gated by drop luck: you only get them from chests (always) and elite/rare kills (10-20% chance). This makes each town visit a deliberate, rare event rather than a habit. Inspired directly by Diablo 2's Town Portal scroll mechanic.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Potion cost — too available, doesn't create real scarcity</li><li>HP cost (25% max) — always possible, doesn't reward smart play</li><li>Town only accessible between floors — too restrictive, blocks emergency use</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-29</span></div>
+          </div>
+
+          <div class="dec-item" data-index="2">
+            <h4 class="dec-title">
+              <span class="dec-num">3</span>
+              <span class="dec-text">TownScreen combines character sheet + stash management in a tabbed UI</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Players need both views in sequence: see current stats, see what's in stash, decide what to equip. A combined screen reduces navigation friction. Two tabs (EQUIPPED / STASH) keep it scannable.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Separate CharacterScreen and StashScreen — extra navigation step</li><li>Stash as a modal overlay on the main menu</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-29</span></div>
+          </div>
+
+          <div class="dec-item" data-index="3">
+            <h4 class="dec-title">
+              <span class="dec-num">4</span>
+              <span class="dec-text">Equipping from stash displaces the current item back to stash (not to bag)</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Bag space is limited (20 slots). Stash is the intended storage layer. Sending the displaced item to the bag would fill it up during normal stash management. Stash-to-stash swaps keep the bag free for dungeon pickups.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Displaced item goes to bag — can overflow bag unintentionally</li><li>Must manually unequip before equipping a new stash item</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-29</span></div>
+          </div>
+
+          <div class="dec-item" data-index="4">
+            <h4 class="dec-title">
+              <span class="dec-num">5</span>
+              <span class="dec-text">Shared stash is a flat Item[] in gameStore (Zustand), not a separate store or SQLite</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">The stash is logically global game state (like graveyard, xp, tier). Zustand keeps all persistent state co-located. SQLite is reserved for future full save-slot implementation. A flat array is sufficient for v1 — no size cap enforced.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>inventoryStore: add stash section — confusing with run-scoped bag</li><li>Separate stashStore — unnecessary split for co-located persistent state</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-29</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="feature-section" id="feat-2026-042"
+               data-domain="combat"
+               data-key="feat-2026-042"
+               data-date="2026-04-01">
+        <header class="feature-section-header">
+          <div class="feature-section-title-row">
+            <h2 class="feature-section-title">Active Combat Skills</h2>
+            <code class="feature-section-key">feat-2026-042</code>
+          </div>
+          <div class="feature-section-meta">
+            <span class="domain-chip">combat</span>
+            <span class="status-badge"
+              style="color:var(--status-frozen);background:rgba(91,130,204,0.12);border-color:var(--status-frozen)40">
+              frozen
+            </span>
+            <span class="dec-count-badge">13 decisions</span>
+          </div>
+        </header>
+        <div class="dec-list">
+          
+          <div class="dec-item" data-index="0">
+            <h4 class="dec-title">
+              <span class="dec-num">1</span>
+              <span class="dec-text">Skill system uses a union SkillId type for compile-time exhaustiveness</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">TypeScript exhaustiveness ensures every SkillId is handled in switch statements; adding a new skill without handling it is a compile error.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+
+          <div class="dec-item" data-index="1">
+            <h4 class="dec-title">
+              <span class="dec-num">2</span>
+              <span class="dec-text">Skills defined in src/data/skills.ts as SkillDef objects with classId, levelRequired, manaCost, description</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Centralised skill table makes balancing and adding skills straightforward; no logic lives in the data file.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+
+          <div class="dec-item" data-index="2">
+            <h4 class="dec-title">
+              <span class="dec-num">3</span>
+              <span class="dec-text">Skill execution dispatched through src/engine/skills/*.ts per class</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Keeps combat engine logic separate from data definitions; each class file is independently testable.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+
+          <div class="dec-item" data-index="3">
+            <h4 class="dec-title">
+              <span class="dec-num">4</span>
+              <span class="dec-text">StatusCounters tracks per-round buff durations and cooldowns in combatStore</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Buff durations and cooldowns are round-scoped state — owned by combatStore alongside the round counter so they tick in sync.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+
+          <div class="dec-item" data-index="4">
+            <h4 class="dec-title">
+              <span class="dec-num">5</span>
+              <span class="dec-text">BMAD S3: spark added as sorcerer L0 offensive — 1x lightning spell power, 8 mana, fills 3x2 grid</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Sorcerer had 5 skills leaving a null placeholder in the grid. Spark fills it and gives sorcerer an offensive starter that makes the opening floor viable before fireball.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+
+          <div class="dec-item" data-index="5">
+            <h4 class="dec-title">
+              <span class="dec-num">6</span>
+              <span class="dec-text">BMAD S3: iron_skin and smoke_bomb given cooldownRounds:3 — prevents back-to-back defensive cycling</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Without cooldowns, a player could loop iron_skin/smoke_bomb every round indefinitely, removing all risk from combat.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+
+          <div class="dec-item" data-index="6">
+            <h4 class="dec-title">
+              <span class="dec-num">7</span>
+              <span class="dec-text">BMAD S3: cooldown coexists with buff window — 2-round buff, 3-round cooldown = 1 dead round after buff expires</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Cooldown is longer than buff so there is always a gap, but not so long that defensive skills feel unavailable.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+
+          <div class="dec-item" data-index="7">
+            <h4 class="dec-title">
+              <span class="dec-num">8</span>
+              <span class="dec-text">BMAD S3: whirlwind mana cost reduced 28 to 18</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">28 mana blocked early warrior use of their signature skill — 18 makes it available earlier without being free.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+
+          <div class="dec-item" data-index="8">
+            <h4 class="dec-title">
+              <span class="dec-num">9</span>
+              <span class="dec-text">BMAD S3: meditate reworked to mana-only — initial +30 on cast plus 30/round for 2 rounds = 90 total, no HP heal</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Meditate was doing both HP and mana, making it a dominant skill with no trade-off. Mana-only creates a clear sorcerer resource management identity.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+
+          <div class="dec-item" data-index="9">
+            <h4 class="dec-title">
+              <span class="dec-num">10</span>
+              <span class="dec-text">BMAD S3: shadow_step to backstab combo tracked via lastSkillUsed in CombatState, logs SHADOW CRIT at crit type (visual only for now)</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Establishes the combo infrastructure and visual feedback; mechanical damage bonus deferred until balance is validated.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+
+          <div class="dec-item" data-index="10">
+            <h4 class="dec-title">
+              <span class="dec-num">11</span>
+              <span class="dec-text">Balance pass: Spark gets spellVarianceFlat:12 — rolls spellPower to spellPower+12 instead of flat spellPower</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Simulation showed Spark dealt 8 DPS at floor 1 vs basic attack's 12.1, making it a mana-wasting downgrade. Adding 0–12 flat bonus lifts the floor-1 average to ~14, making Spark viable from turn 1 while naturally scaling less at deep floors where spellPower dominates anyway.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+
+          <div class="dec-item" data-index="11">
+            <h4 class="dec-title">
+              <span class="dec-num">12</span>
+              <span class="dec-text">Balance pass: Whirlwind second hit is now guaranteed (removed !isMiss guard)</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Old Whirlwind only triggered the second hit if the first landed, making it strictly worse than Power Strike in expected DPS (45.6 vs 50.6) at higher mana cost (18 vs 12). After fix, both deal ~equal DPS (~51), making Whirlwind the 'burst ceiling' choice when mana is plentiful vs Power Strike's mana-efficiency role. Both skills now have a clear identity.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+
+          <div class="dec-item" data-index="12">
+            <h4 class="dec-title">
+              <span class="dec-num">13</span>
+              <span class="dec-text">Balance pass: Rapid Strike gets bonusHitChance:30 — 30% chance to trigger a 4th hit at 70% damage</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Rapid Strike had no situation where it beat Backstab. Adding a 30% proc for a 4th hit gives Rapid Strike a burst ceiling (280% vs Backstab's guaranteed 300%) and a high-variance identity. The proc adds ~10% average damage, keeping Backstab the reliable mana-efficient choice while Rapid Strike becomes the 'lucky spike' option vs high-HP targets.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="feature-section" id="feat-2026-049"
+               data-domain="game/ui"
+               data-key="feat-2026-049"
+               data-date="2026-04-01">
+        <header class="feature-section-header">
+          <div class="feature-section-title-row">
+            <h2 class="feature-section-title">UI Polish Phase 2 — Visual Hierarchy &amp; Screen Consistency</h2>
+            <code class="feature-section-key">feat-2026-049</code>
+          </div>
+          <div class="feature-section-meta">
+            <span class="domain-chip">game/ui</span>
+            <span class="status-badge"
+              style="color:var(--status-frozen);background:rgba(91,130,204,0.12);border-color:var(--status-frozen)40">
+              frozen
+            </span>
+            <span class="dec-count-badge">4 decisions</span>
+          </div>
+        </header>
+        <div class="dec-list">
+          
+          <div class="dec-item" data-index="0">
+            <h4 class="dec-title">
+              <span class="dec-num">1</span>
+              <span class="dec-text">Visual polish pass 2 targets InventoryScreen, CombatScreen, GridScreen consistency</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">These three screens are the most frequently visited; consistency here has the highest player impact.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-29</span></div>
+          </div>
+
+          <div class="dec-item" data-index="1">
+            <h4 class="dec-title">
+              <span class="dec-num">2</span>
+              <span class="dec-text">BMAD S3: MF (magic find) stat line added to InventoryScreen between vitals and skills strip — shows LVL N and MF N% in gold</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Magic find is an invisible stat that drives loot decisions; surfacing it in the inventory gives players actionable build feedback.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+
+          <div class="dec-item" data-index="2">
+            <h4 class="dec-title">
+              <span class="dec-num">3</span>
+              <span class="dec-text">BMAD S3: DPad center converted from non-interactive View to TouchableOpacity with onLongPress (400ms) — accepts onWait prop</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Long-press is a discoverable interaction pattern that avoids cluttering the grid UI with an explicit wait button.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+
+          <div class="dec-item" data-index="3">
+            <h4 class="dec-title">
+              <span class="dec-num">4</span>
+              <span class="dec-text">BMAD S3: potion heal in InventoryScreen reads effectiveStats.heal (floor-scaled) instead of hardcoded 30 — both handleBagEquip and handleSheetUse updated</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Floor-scaled potions were implemented in loot.ts but InventoryScreen was still applying a flat 30 HP heal, breaking the floor scaling.</p></div>
+            
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-04-01</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="feature-section" id="feat-2026-037"
+               data-domain="progression"
+               data-key="feat-2026-037"
+               data-date="2026-03-28">
+        <header class="feature-section-header">
+          <div class="feature-section-title-row">
+            <h2 class="feature-section-title">XP &amp; Persistent Leveling</h2>
+            <code class="feature-section-key">feat-2026-037</code>
+          </div>
+          <div class="feature-section-meta">
+            <span class="domain-chip">progression</span>
+            <span class="status-badge"
+              style="color:var(--status-frozen);background:rgba(91,130,204,0.12);border-color:var(--status-frozen)40">
+              frozen
+            </span>
+            <span class="dec-count-badge">4 decisions</span>
+          </div>
+        </header>
+        <div class="dec-list">
+          
+          <div class="dec-item" data-index="0">
+            <h4 class="dec-title">
+              <span class="dec-num">1</span>
+              <span class="dec-text">XP and level persist across deaths, never reset</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Level is the intended long-term power-creep layer that survives death. Resetting level on death would make it indistinguishable from a floor-based stat.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Level resets on death like floor progress</li><li>Partial XP loss on death (Dark Souls style)</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+
+          <div class="dec-item" data-index="1">
+            <h4 class="dec-title">
+              <span class="dec-num">2</span>
+              <span class="dec-text">Level curve: total XP for level N = N*(N+1)/2 * 100</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Triangular number curve naturally slows progression without a hard cap. Level 10 costs 5500 XP total, level 20 costs 21000 — meaningful grind without being infinite.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Flat 500 XP per level</li><li>Exponential doubling curve</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+
+          <div class="dec-item" data-index="2">
+            <h4 class="dec-title">
+              <span class="dec-num">3</span>
+              <span class="dec-text">Auto-distribute stat bonuses per level, no manual allocation in v1</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Keeps UI simple. Manual allocation is a future feature that can be layered on the same XP system without breaking changes.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Manual point allocation screen on level-up</li><li>Choose one of three random bonuses on level-up</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+
+          <div class="dec-item" data-index="3">
+            <h4 class="dec-title">
+              <span class="dec-num">4</span>
+              <span class="dec-text">Bonuses: +5 maxHp/level, +1 damage/level, +1 defense/level, +2% critChance every 5 levels</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Roughly matches what a good Magic item gives per level. Player feels like they are always getting stronger but gear still matters more at any specific tier.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Only HP bonus to keep combat unchanged</li><li>Percentage bonuses that scale more aggressively</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="feature-section" id="feat-2026-034"
+               data-domain="game/mobile"
+               data-key="feat-2026-034"
+               data-date="2026-03-28">
+        <header class="feature-section-header">
+          <div class="feature-section-title-row">
+            <h2 class="feature-section-title">D2Game — iOS Grid RPG</h2>
+            <code class="feature-section-key">feat-2026-034</code>
+          </div>
+          <div class="feature-section-meta">
+            <span class="domain-chip">game/mobile</span>
+            <span class="status-badge"
+              style="color:var(--status-frozen);background:rgba(91,130,204,0.12);border-color:var(--status-frozen)40">
+              frozen
+            </span>
+            <span class="dec-count-badge">5 decisions</span>
+          </div>
+        </header>
+        <div class="dec-list">
+          
+          <div class="dec-item" data-index="0">
+            <h4 class="dec-title">
+              <span class="dec-num">1</span>
+              <span class="dec-text">Seeded PRNG (mulberry32) for all randomness</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Every run must be reproducible from a seed. This enables deterministic bun tests, bug reproduction via seed+steps, and future daily-challenge mode. Non-seeded Math.random() would make tests flaky.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Math.random() — not seedable, untestable</li><li>xoshiro128 — slightly better distribution but mulberry32 is simpler and sufficient</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+
+          <div class="dec-item" data-index="1">
+            <h4 class="dec-title">
+              <span class="dec-num">2</span>
+              <span class="dec-text">Engine-first development: all game logic written and bun-tested before any UI screen exists</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Game systems (loot, combat, grid) are pure data transformations. Keeping them React-free means they can be tested headless, simulated at scale (10k items, 1000 combats), and iterated without a device. UI that depends on untested engine code leads to hard-to-debug emergent bugs.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Build UI first, engine emerges from component state — common in game jams, hard to test</li><li>Unity/Godot — built-in test frameworks but abandons RN expertise</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+
+          <div class="dec-item" data-index="2">
+            <h4 class="dec-title">
+              <span class="dec-num">3</span>
+              <span class="dec-text">Combat as a fast gate (3–6 rounds, numbers-only UI)</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Playtesting Diablo 2 and similar games shows the dopamine comes from the drop, not the fight. Combat complexity competes for design budget with loot and inventory. Keeping combat to a transaction screen (&lt;5s) lets players do more runs and see more loot.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Turn-based tactics with positioning — fun but requires 10× more design work</li><li>Real-time action combat — incompatible with a grid-step model</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+
+          <div class="dec-item" data-index="3">
+            <h4 class="dec-title">
+              <span class="dec-num">4</span>
+              <span class="dec-text">Normal (white) items are valuable via the socket/runeword system</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">D2’s most memorable items are runewords built into white bases. If white items are junk, players stop picking them up and loot excitement drops by 50%. Every white drop with sockets must show a tooltip flag: ‘Runeword candidate (N sockets)’.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Only magic+ items are interesting — simpler but loses D2 DNA</li><li>Crafting system — too complex for v1</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+
+          <div class="dec-item" data-index="4">
+            <h4 class="dec-title">
+              <span class="dec-num">5</span>
+              <span class="dec-text">10×4 Tetris inventory grid with physical item sizes</span>
+            </h4>
+            <div class="dec-field"><span class="dec-field-label">Rationale</span><p class="dec-field-body">Inventory management as a spatial puzzle is one of D2’s most beloved secondary systems. Charms provide passive bonuses but occupy space, creating a real tradeoff that drives decisions mid-run. A flat list inventory eliminates this tension.</p></div>
+            <div class="dec-field"><span class="dec-field-label">Alternatives considered</span><ul class="dec-alts"><li>Flat list with item count limit — simpler but no spatial tension</li><li>Unlimited stash — removes one of the core decision loops</li></ul></div>
+            <div class="dec-field dec-field-inline"><span class="dec-field-label">Date</span><span class="dec-field-value">2026-03-28</span></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+  </div>
+</div>
+
+<script>
+(function() {
+  // ── Helpers ──
+  function esc(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // ── Data ──
+  var DATA = [{"key":"feat-2026-052","title":"App Store Preparation","domain":"ops/distribution","status":"frozen","decs":[{"decision":"Bundle ID: com.majeanson.dungeondepths","rationale":"Follows reverse-domain convention using the developer's npm username (majeanson). 'dungeondepths' is the app's public name.","alternativesConsidered":["com.anonymous.d2game — the Expo default, cannot submit"],"date":"2026-03-29"},{"decision":"Privacy policy hosted externally, not in-app","rationale":"App Store requires a URL to a privacy policy. An in-app page doesn't satisfy this requirement — it must be a publicly accessible web URL.","alternativesConsidered":["In-app privacy page — doesn't satisfy App Store URL requirement"],"date":"2026-03-29"}]},{"key":"feat-2026-041","title":"Block Chance System","domain":"combat","status":"frozen","decs":[{"decision":"Block resolves after the miss check — you can only block attacks that land","rationale":"Keeps the two systems independent and readable. Miss = attacker failed. Block = defender succeeded. Sequential resolution avoids double-negation confusion in log.","alternativesConsidered":["Block rolls before miss check","Combined evasion+block single roll"],"date":"2026-03-28"},{"decision":"Passive 10% base block when any offhand is equipped, even without blockChance stat","rationale":"Makes the offhand slot feel defensively meaningful even for non-block builds. Holding anything in your off-hand is slightly protective.","alternativesConsidered":["Block only from explicit blockChance stat","Offhand grants 0% base, all block from affix"],"date":"2026-03-28"},{"decision":"Block cap at 75% — elemental damage unblockable","rationale":"75% physical block cap matches D2. Elemental bypass distinguishes enchanted monster threat profile and ensures resist gear remains relevant even for shield builds.","alternativesConsidered":["100% cap","Block applies to elemental at 50% effectiveness"],"date":"2026-03-28"}]},{"key":"feat-2026-045","title":"Boss Encounters","domain":"game/combat","status":"frozen","decs":[{"decision":"Boss spawns every 5 floors, not randomly","rationale":"Predictable milestones let players prepare (use town portal, equip best gear). Random boss floors would feel punishing with no agency.","alternativesConsidered":["Random boss among floors 3-7, 8-12 etc — less predictable, less satisfying"],"date":"2026-03-29"},{"decision":"Enrage triggers at round 5, not a HP threshold","rationale":"Round-based enrage punishes turtling (using potions indefinitely) without being unfair to low-damage builds. HP threshold enrage is invisible and frustrating.","alternativesConsidered":["50% HP enrage — invisible to player until it happens","No enrage — boss is just a big HP bar"],"date":"2026-03-29"},{"decision":"Cannot flee from boss encounters","rationale":"Boss is a commitment. Fleeing would trivialize the milestone. Players who aren't ready should use a town portal scroll before entering the boss room.","alternativesConsidered":["Allow flee with heavy penalty — dilutes the stakes"],"date":"2026-03-29"}]},{"key":"feat-2026-043","title":"Class System — Warrior / Rogue / Sorcerer","domain":"game/progression","status":"frozen","decs":[{"decision":"Three classes: Warrior (tank), Rogue (burst/evasion), Sorcerer (elemental scaling)","rationale":"Classic D2-inspired trinity. Covers the three playstyle archetypes (durability, speed, power) without overlap.","alternativesConsidered":[],"date":"2026-03-29"},{"decision":"Class selected at run start, persists for the run only — no persistent class across runs","rationale":"Roguelite design: each run is a fresh identity. Cross-run class persistence would reduce variety.","alternativesConsidered":[],"date":"2026-03-29"},{"decision":"Each class has a fixed skillIds array defining available skills","rationale":"Deterministic skill lists per class make balance tractable and skill grid layout predictable.","alternativesConsidered":[],"date":"2026-03-29"},{"decision":"BMAD S3: sorcerer skillIds updated to include spark as first entry (L0 starter) — fills 3x2 skill grid with 6 skills","rationale":"Sorcerer previously had 5 skills leaving a null placeholder. Spark fills the grid and provides a usable offensive option from floor 1.","alternativesConsidered":[],"date":"2026-04-01"},{"decision":"BMAD S3: class descriptions revised to be more evocative — Warrior armored juggernaut, Rogue swift assassin, Sorcerer arcane caster","rationale":"Original descriptions were functional but flat. More evocative copy communicates playstyle identity to a new player at the class select screen.","alternativesConsidered":[],"date":"2026-04-01"}]},{"key":"feat-2026-059","title":"Code Quality Session 1 — Timeout Leaks, Render Optimizations & Import Cleanup","domain":"game/maintenance","status":"frozen","decs":[{"decision":"Both the outer and inner timeouts are tracked by separate let refs (t1, t2) so cleanup always runs clearTimeout on both","rationale":"clearTimeout(undefined) is a safe no-op in JavaScript, so assigning t2 via let before the outer fires is safe — cleanup never throws even if t1 fires and t2 is never assigned.","alternativesConsidered":[],"date":"2026-04-01"},{"decision":"bossWarnTimer cleanup returns clearTimeout on every gameFloor change, not just on unmount","rationale":"When gameFloor changes, the previous floor's boss warning timer should be cancelled — the warning is floor-specific. React runs cleanup before the next effect, which is exactly the right timing.","alternativesConsidered":[],"date":"2026-04-01"},{"decision":"equipped from useInventoryStore is a stable reference for useMemo — bag ops do not change the equipped reference","rationale":"inventoryStore addItem/dropItem only set({ bag, magicFind }) — equipped is not spread. Only equipItem/unequipItem create a new equipped object. So the useMemo for buildPlayerStats invalidates only on real equipment changes, not on every bag mutation.","alternativesConsidered":[],"date":"2026-04-01"},{"decision":"applyZoomWithHaptic not memoized despite being captured in PanResponder closure","rationale":"PanResponder is created once via useRef. applyZoomWithHaptic calls haptics.impactLight() and applyZoom which writes to zoomLevelRef (a ref) — stale closure is not a real problem since the underlying ref is always current. Memoizing would require useCallback and add complexity with no real gain.","alternativesConsidered":[],"date":"2026-04-01"}]},{"key":"feat-2026-047","title":"Cube Crafting System","domain":"game/crafting","status":"frozen","decs":[{"decision":"Crafting uses a Horadric Cube metaphor — select recipe then select items from bag","rationale":"Recipe-first flow prevents players from randomly selecting items hoping for a match; they choose intent then gather ingredients.","alternativesConsidered":[],"date":"2026-03-29"},{"decision":"matchesRecipeInputs validates exact ingredient requirements before enabling transmute button","rationale":"Hard gate on the button prevents wasted transmutes; the function validates both count and type constraints in one pass.","alternativesConsidered":[],"date":"2026-03-29"},{"decision":"Atomic operation — result item added first, inputs consumed only if bag has space","rationale":"Prevents a full-bag scenario from eating inputs without producing output; player never loses items to a space error.","alternativesConsidered":[],"date":"2026-03-29"},{"decision":"BMAD S3: countMatchedInputs added alongside matchesRecipeInputs — shows N/M partial progress hint during ingredient selection","rationale":"Without partial feedback, players had no signal whether they were on the right track while selecting ingredients; N/M shows progress without revealing the full recipe.","alternativesConsidered":[],"date":"2026-04-01"}]},{"key":"feat-2026-056","title":"Death Screen Depth — Epitaph, Echo Gift & Floor Comparison","domain":"progression","status":"frozen","decs":[{"decision":"Epitaph generated from existing run data — no new tracked state","rationale":"All inputs (killedBy, floor, tier, runKills, runItemsFound, item quality/sockets) were already available on EndScreen. Adding new tracking fields would require save migration and would duplicate data already captured by careerStats.","alternativesConsidered":["Store epitaph string in gameStore — unnecessary serialization overhead","Procedural sentence templates with more variables — higher variance but harder to guarantee quality"],"date":"2026-04-01"},{"decision":"Echo gift uses invokeGhostEcho(0) — no new store action","rationale":"invokeGhostEcho already idempotently checks for existing ghostCharm and resolves the most recent graveyard entry at index 0. The death screen adds the ghost echo gift by calling the same action that GraveyardScreen uses, so no duplicate state path exists.","alternativesConsidered":["New setGhostCharm action — redundant, invokeGhostEcho already handles the guard"],"date":"2026-04-01"}]},{"key":"feat-2026-039","title":"Elemental Damage & Resistance System","domain":"combat","status":"frozen","decs":[{"decision":"Elemental damage is additive on top of physical, never replaces it","rationale":"A fire ring should always add value. If elemental replaced physical, low-physical builds would be punished for stacking resist gear.","alternativesConsidered":["Elemental damage replaces physical for that hit","Separate elemental attack action"],"date":"2026-03-28"},{"decision":"Resist cap at 75%, same as Diablo 2","rationale":"Prevents full immunity builds that trivialize enchanted monsters. 75% is a well-tested ceiling that still makes resist gear feel powerful.","alternativesConsidered":["100% resist cap (full immunity possible)","50% cap (resist gear less valuable)"],"date":"2026-03-28"},{"decision":"Status effects last exactly 1 round — chilled, burning, lightning bypass","rationale":"Simple and readable. Multi-round tracking adds complexity without meaningful strategic depth at this game's combat scale (3-6 rounds typical).","alternativesConsidered":["Multi-round DoT stacks","Permanent until cured with a potion"],"date":"2026-03-28"},{"decision":"Block (offhand) only stops physical damage, not elemental","rationale":"Gives enchanted monsters a distinct threat profile — a shield build is not invincible against a Fire Enchanted monster, creating target prioritization.","alternativesConsidered":["Block stops all damage types","Separate elemental resist equipment slot"],"date":"2026-03-28"}]},{"key":"feat-2026-048","title":"Game Feel — Haptics, Animations & Visual Feedback","domain":"game/ux","status":"frozen","decs":[{"decision":"Haptics via expo-haptics with silent fallback for devices without support","rationale":"expo-haptics is already in the Expo SDK; the try/catch silent fallback pattern means haptics degrade gracefully on simulators and older devices.","alternativesConsidered":[],"date":"2026-03-29"},{"decision":"Log entry types drive color — crit gold, xp teal, scroll purple, victory green, levelUp gold, heal green, enraged orange","rationale":"Typed log entries decouple color from content string parsing; adding a new event type only requires adding to the union.","alternativesConsidered":[],"date":"2026-03-29"},{"decision":"BMAD S3: tier background tints — TIER_BG map with 5 subtle hues per tier applied to gridArea background","rationale":"Subtle tints signal depth tier change without being distracting; pure black for all tiers made every tier feel identical.","alternativesConsidered":[],"date":"2026-04-01"},{"decision":"BMAD S3: per-item quality loot log in handleVictory — star unique, diamond rare, diamond magic, dot common — each with typed log color","rationale":"Previously all loot dropped as a single summary line. Per-item lines with quality prefixes let players see at a glance what they found without leaving the combat log.","alternativesConsidered":[],"date":"2026-04-01"},{"decision":"BMAD S3: monster affix names resolved from MONSTER_AFFIXES map in combat-start log at enraged type","rationale":"Raw affix IDs like fireEnchanted were logged previously. Human-readable names from MONSTER_AFFIXES make the log immediately legible.","alternativesConsidered":[],"date":"2026-04-01"},{"decision":"BMAD S3: flee button label changed to stays/blocked to clarify that fleeing keeps the player on the current floor","rationale":"Players assumed flee meant game over or retreat to town. The label stays makes clear the cost is staying on the floor, not losing progress.","alternativesConsidered":[],"date":"2026-04-01"}]},{"key":"feat-2026-040","title":"Attack Accuracy & Miss Chance","domain":"combat","status":"frozen","decs":[{"decision":"Hit chance range clamped 20%-95% for both player and monsters","rationale":"Never feels completely impossible (20% floor) and always has some uncertainty (95% ceiling). Removing all misses or all hits breaks tension.","alternativesConsidered":["Uncapped (0-100% possible)","Fixed 85% base with no dexterity modifier"],"date":"2026-03-28"},{"decision":"Dexterity drives both offensive accuracy and defensive dodge","rationale":"Makes dexterity a dual-purpose stat — relevant for fast/evasive builds AND precision/critical builds. One stat, two payoffs.","alternativesConsidered":["Separate accuracy and dodge stats","Dexterity only affects crit chance (current behavior)"],"date":"2026-03-28"},{"decision":"Monster speed drives evasion — fast monsters are harder to hit","rationale":"speed is already a MonsterDef field and affects turn order. Reusing it for evasion gives it combat meaning without new monster data.","alternativesConsidered":["Separate monster evasion stat in MonsterDef","All monsters have same evasion regardless of type"],"date":"2026-03-28"}]},{"key":"feat-2026-038","title":"Infinite Difficulty Tiers","domain":"progression","status":"frozen","decs":[{"decision":"Infinite numeric tiers instead of named Normal/Nightmare/Hell","rationale":"No hard ceiling means the designer can always introduce harder content. Named tiers imply finality; numbers imply an open ladder.","alternativesConsidered":["3-tier D2 model (Normal/Nightmare/Hell)","Prestige system that resets gear on tier unlock"],"date":"2026-03-28"},{"decision":"Tier persists across deaths; floor resets to 1 on death within a tier","rationale":"Death is a floor-level setback, not a tier-level setback. Losing a tier would feel too punishing given the graveyard sacrifice also occurs.","alternativesConsidered":["Death drops you one tier","Death resets both tier and floor"],"date":"2026-03-28"},{"decision":"Monster multiplier: HP = 1 + (tier-1)*0.5, damage = 1 + (tier-1)*0.35","rationale":"Additive scaling prevents absurd numbers at high tiers while keeping each tier noticeably harder. Tier 5 monsters have 3x HP — challenging but not impossible with tier-appropriate gear.","alternativesConsidered":["Exponential multiplier (doubles each tier)","Only damage scales, not HP"],"date":"2026-03-28"},{"decision":"Loot MF bonus: (tier-1)*20 added to magicFind for all loot rolls","rationale":"Ensures higher tiers are always more rewarding in quality, not just harder. The gear treadmill needs a carrot, not just a stick.","alternativesConsidered":["Flat loot table per tier (new item pool)","No loot quality boost — only difficulty increases"],"date":"2026-03-28"},{"decision":"Track first-time tier clears in careerStats.tiersCleared: number[]","rationale":"Allows the TierClearOverlay to distinguish a first-time clear from a repeat. First clears get a special '✦ FIRST CLEAR ✦' eyebrow for recognition without permanently changing the flow.","alternativesConsidered":["Boolean flag per tier in a map","Always show first-clear banner (no tracking)"],"date":"2026-03-31"},{"decision":"Ascension mechanic: ASCEND button on victory screen pre-loads Ghost Echo from last graveyard entry","rationale":"Ascension is a deliberate prestige-style restart that keeps tier progress, increments an ascension counter, and rewards the player with a Ghost Echo head-start — making the loop feel rewarding rather than punitive.","alternativesConsidered":["Ascension just restarts with no bonus","Ascension drops one tier"],"date":"2026-03-31"}]},{"key":"feat-2026-046","title":"Item Expansion — New Bases, Uniques & Runewords","domain":"game/items","status":"frozen","decs":[{"decision":"Belt is a new equipment slot, not stored in bag","rationale":"Belts in D2 provided utility and are a meaningful equip slot. Adding it as an equip slot (not a bag-only item) gives players another progression axis.","alternativesConsidered":["Belt as charm-like passive in bag — doesn't feel like gear","Skip belts entirely — misses a natural slot"],"date":"2026-03-29"},{"decision":"15 new uniques, all with 2–3 distinctive stats rather than many small bonuses","rationale":"D2's best uniques are remembered for 1-2 defining properties. Goldwrap = MF. Stone of Jordan = mana/spellPower. Each unique should have an identity that creates a build around it.","alternativesConsidered":["Many stats at low values — forgettable, hard to build around"],"date":"2026-03-29"},{"decision":"Runewords target specific slots (e.g. Leaf→staff only)","rationale":"Slot restrictions create meaningful crafting decisions. 'Save my Tal rune for a staff' is interesting. Unrestricted runewords reduce choice.","alternativesConsidered":["Any runeword in any socketed base — trivializes socket planning"],"date":"2026-03-29"}]},{"key":"feat-2026-035","title":"Phase 1 — Text UI Prototype","domain":"game/mobile","status":"frozen","decs":[{"decision":"React state machine (screen enum) instead of react-navigation for Phase 1","rationale":"react-navigation adds ~2MB and requires native linking. For a prototype validating fun, a simple currentScreen state switch is faster to implement and debug. Can migrate to react-navigation in Phase 3 when screens multiply.","alternativesConsidered":["react-navigation — correct long-term but heavy for a prototype","expo-router — even heavier, file-based routing overkill for 4 screens"],"date":"2026-03-28"},{"decision":"Grid rendered as View cells (not Skia) in Phase 1","rationale":"Skia adds native build complexity. For a text prototype, RN View cells are sufficient to validate movement feel and encounter triggers. Skia canvas is Phase 5 (polish). The engine grid logic is completely decoupled from rendering so the swap is a UI-only change.","alternativesConsidered":["Skia from day 1 — correct for production but slows down prototype iteration"],"date":"2026-03-28"}]},{"key":"feat-2026-036","title":"Roguelite Persistence & Graveyard","domain":"progression","status":"frozen","decs":[{"decision":"Career stats persisted across runs via AsyncStorage (save/load in persistence.ts)","rationale":"Career stats are cross-run motivators — they must survive app restarts to have meaning.","alternativesConsidered":[],"date":"2026-03-28"},{"decision":"Graveyard stores items lost on death for Ghost Echo mechanic (UI only — mechanic not yet live)","rationale":"Graveyard data structure is ready; the Ghost Echo activation mechanic is deferred until the core loop is stable.","alternativesConsidered":[],"date":"2026-03-28"},{"decision":"BMAD S3: dailyStreak + lastRunDate added to CareerStats — ISO date comparison in endRun","rationale":"Daily streak incentivises return visits; ISO YYYY-MM-DD string comparison is simple and timezone-stable for the common case.","alternativesConsidered":[],"date":"2026-04-01"},{"decision":"BMAD S3: streak resets to 1 on a missed day, increments if played on consecutive days, shown as fire emoji on MainMenu when streak is 2 or more","rationale":"Threshold of 2 avoids showing the streak indicator on day 1 of a new streak where it carries no meaning.","alternativesConsidered":[],"date":"2026-04-01"},{"decision":"BMAD S3: runKills and runItemsFound track per-run stats, reset on startRun, shown in EndScreen run summary card","rationale":"Per-run stats give players a sense of accomplishment even on a losing run; reset on startRun ensures no carry-over.","alternativesConsidered":[],"date":"2026-04-01"},{"decision":"BMAD S3: lastStandUsed boolean added to GameState — single death-defiance per run, survives at 1 HP, fires in both attackAction and skillAction defeat paths","rationale":"Single-use keeps it rare and meaningful. Covering both defeat paths (attack and skill) ensures no edge case skips it.","alternativesConsidered":[],"date":"2026-04-01"}]},{"key":"feat-2026-055","title":"Room Grammar — Charnel & Sanctum Encounter Bias","domain":"game/combat","status":"frozen","decs":[{"decision":"Classify rooms by geometry (aspect ratio + area) rather than random assignment","rationale":"Seeded generation means room shapes are deterministic — classifying by geometry makes the grammar consistent and learnable. A Charnel room is always narrow; the player's visual read of the corridor predicts the encounter type.","alternativesConsidered":["Random per-room type tag — breaks the visual grammar and makes the dungeon unreadable","Hand-placed special rooms — requires non-BSP generation and loses the procedural seed guarantee"],"date":"2026-04-01"},{"decision":"Bias encounter weights, not override them — room type adjusts probabilities, not outcomes","rationale":"A Charnel room that guarantees an elite every step would feel oppressive and exploit-prone. Biasing weights preserves variance and the seeded PRNG's run-reproducibility while still making the room type meaningful.","alternativesConsidered":["Hard override (Charnel always spawns elite) — predictable to the point of feeling scripted"],"date":"2026-04-01"}]},{"key":"feat-2026-057","title":"Run Meta Layer — Heatmap, Echo Whisper & Graveyard Study","domain":"progression","status":"frozen","decs":[{"decision":"Graveyard Study is irreversible — studying an entry permanently marks it and prevents echo invocation","rationale":"The value of the study mechanic comes from the decision: echo (temporary floor power) vs. knowledge (permanent record). If study were reversible the choice would have no weight. The sacrifice framing mirrors the graveyard's existing death-penalty philosophy.","alternativesConsidered":["Study as a copy (keep entry + gain bonus) — removes the tension entirely"],"date":"2026-04-01"},{"decision":"Study bonuses are flavor-only in v1 — descriptions shown in Graveyard, no mechanical effect","rationale":"Mechanical effects (e.g. extended fog radius, auto-identification) require changes across multiple engine files and need balance testing. Shipping flavor bonuses first validates the core decision mechanic without risking balance. Effects can be layered in v2 once the careerStats.studiedBonuses[] array is populated with real player data.","alternativesConsidered":["Ship 1-2 mechanical bonuses with flavor — increases scope and bug surface in a pre-App Store window"],"date":"2026-04-01"},{"decision":"Echo Whisper fires once per run, on floor 1 only, with a 2.5s delay","rationale":"Firing on floor 1 gives the whisper context — the player just invoked the echo and is about to explore. The 2.5s delay ensures the player has settled into the grid view before the text appears. Once-per-run prevents the whisper from becoming intrusive noise across floors.","alternativesConsidered":["Fire on every floor with echo active — too frequent, loses the 'mentor speaks rarely' atmosphere","Fire immediately on mount — competes with existing mount effects (legend hint, ghost echo hint)"],"date":"2026-04-01"}]},{"key":"feat-2026-058","title":"Run Stakes — Pre-Run Intent with Bonus Drop","domain":"game/progression","status":"frozen","decs":[{"decision":"activeStake persists across runs — not reset by startRun","rationale":"The stake represents the player's declared hunt style, not a per-run commitment. A player who always wants to slay should not have to re-select every run. stakeClaimed resets each run, so the reward mechanic still triggers once per completion.","alternativesConsidered":[],"date":"2026-04-01"},{"decision":"35% bonus drop probability — not guaranteed","rationale":"A guaranteed drop would make stakes feel like a farming mechanic — players would optimise for the fastest completable stake rather than their preferred playstyle. 35% is frequent enough to feel meaningful but rare enough to stay exciting. The RNG is seeded from (seed ^ constant ^ floor) to maintain run reproducibility.","alternativesConsidered":["100% drop — trivially farmable","10% drop — feels unrewarding, players stop caring about claims"],"date":"2026-04-01"},{"decision":"Stake bonus item delivered directly to bag — no new loot screen","rationale":"Opening a loot screen mid-run for a single item would break the movement flow and require wiring a new loot entry point. Directly calling inventoryStore.addItem() with a toast notification delivers the reward without interrupting the game loop.","alternativesConsidered":["New 'stake loot' screen — higher friction, requires additional state routing"],"date":"2026-04-01"}]},{"key":"feat-2026-050","title":"Persistent Save / Load — AsyncStorage Serialization","domain":"game/persistence","status":"frozen","decs":[{"decision":"Save only cross-run state — bag is NOT saved","rationale":"The bag is run-scoped by design. Saving it would mean a crashed run persists its loot state, which undermines the roguelite death-resets-run contract. Only stash, equipped, xp, level, graveyard, and class survive.","alternativesConsidered":["Save everything including bag — breaks roguelite death loop","Save nothing — already the broken current state"],"date":"2026-03-29"},{"decision":"Single save slot with version field, no multi-slot in v1","rationale":"Multi-slot save requires a save slot selection UI before gameplay. For a solo mobile game in v1, one save slot is sufficient and keeps hydration path simple.","alternativesConsidered":["3 save slots — good for future, unnecessary complexity now"],"date":"2026-03-29"},{"decision":"500ms debounce on persist writes","rationale":"gainXp can be called multiple times per combat (level-up check). Writing to AsyncStorage on every XP tick would cause excessive I/O. 500ms debounce batches a full combat sequence into one write.","alternativesConsidered":["Write on every state change — too frequent","Write only on app backgrounding — risk of loss on crash"],"date":"2026-03-29"}]},{"key":"feat-2026-051","title":"Settings Screen","domain":"game/ui","status":"frozen","decs":[{"decision":"Settings persisted via AsyncStorage in persistence.ts (SettingsData interface)","rationale":"Settings are user preferences that must survive app restarts; AsyncStorage is the correct persistence layer for this game.","alternativesConsidered":[],"date":"2026-03-29"},{"decision":"settingsStore exposes individual toggles and markX actions","rationale":"Granular actions are easier to call from UI components than a generic setField action; each action also triggers saveSettings automatically.","alternativesConsidered":[],"date":"2026-03-29"},{"decision":"BMAD S3: hasSeenCodexHint boolean added — tracks whether player dismissed the Codex first-open hint; markCodexHintSeen action; persisted in SettingsData","rationale":"One-time hints should be persisted so they never re-appear after dismissal even across app restarts.","alternativesConsidered":[],"date":"2026-04-01"}]},{"key":"feat-2026-044","title":"Shared Stash & Town Screen","domain":"game/ui","status":"frozen","decs":[{"decision":"Stash is accessible only in town (TownScreen), not from dungeon loot screen","rationale":"Dungeon stashing broke the intended flow: pick up items → manage in town. Keeping stash town-only creates a deliberate decision loop: survive the floor → return to town → deposit keepers → start next run.","alternativesConsidered":["Stash accessible anywhere — removes the town trip incentive","Stash accessible from inventory screen (in-run) — still breaks the intent"],"date":"2026-03-29"},{"decision":"Visiting town from the dungeon requires a Town Portal Scroll (rare consumable) — no scroll, no town","rationale":"A potion cost was too cheap — players have 4 potions per run and would visit town freely. Scrolls are gated by drop luck: you only get them from chests (always) and elite/rare kills (10-20% chance). This makes each town visit a deliberate, rare event rather than a habit. Inspired directly by Diablo 2's Town Portal scroll mechanic.","alternativesConsidered":["Potion cost — too available, doesn't create real scarcity","HP cost (25% max) — always possible, doesn't reward smart play","Town only accessible between floors — too restrictive, blocks emergency use"],"date":"2026-03-29"},{"decision":"TownScreen combines character sheet + stash management in a tabbed UI","rationale":"Players need both views in sequence: see current stats, see what's in stash, decide what to equip. A combined screen reduces navigation friction. Two tabs (EQUIPPED / STASH) keep it scannable.","alternativesConsidered":["Separate CharacterScreen and StashScreen — extra navigation step","Stash as a modal overlay on the main menu"],"date":"2026-03-29"},{"decision":"Equipping from stash displaces the current item back to stash (not to bag)","rationale":"Bag space is limited (20 slots). Stash is the intended storage layer. Sending the displaced item to the bag would fill it up during normal stash management. Stash-to-stash swaps keep the bag free for dungeon pickups.","alternativesConsidered":["Displaced item goes to bag — can overflow bag unintentionally","Must manually unequip before equipping a new stash item"],"date":"2026-03-29"},{"decision":"Shared stash is a flat Item[] in gameStore (Zustand), not a separate store or SQLite","rationale":"The stash is logically global game state (like graveyard, xp, tier). Zustand keeps all persistent state co-located. SQLite is reserved for future full save-slot implementation. A flat array is sufficient for v1 — no size cap enforced.","alternativesConsidered":["inventoryStore: add stash section — confusing with run-scoped bag","Separate stashStore — unnecessary split for co-located persistent state"],"date":"2026-03-29"}]},{"key":"feat-2026-042","title":"Active Combat Skills","domain":"combat","status":"frozen","decs":[{"decision":"Skill system uses a union SkillId type for compile-time exhaustiveness","rationale":"TypeScript exhaustiveness ensures every SkillId is handled in switch statements; adding a new skill without handling it is a compile error.","alternativesConsidered":[],"date":"2026-03-28"},{"decision":"Skills defined in src/data/skills.ts as SkillDef objects with classId, levelRequired, manaCost, description","rationale":"Centralised skill table makes balancing and adding skills straightforward; no logic lives in the data file.","alternativesConsidered":[],"date":"2026-03-28"},{"decision":"Skill execution dispatched through src/engine/skills/*.ts per class","rationale":"Keeps combat engine logic separate from data definitions; each class file is independently testable.","alternativesConsidered":[],"date":"2026-03-28"},{"decision":"StatusCounters tracks per-round buff durations and cooldowns in combatStore","rationale":"Buff durations and cooldowns are round-scoped state — owned by combatStore alongside the round counter so they tick in sync.","alternativesConsidered":[],"date":"2026-03-28"},{"decision":"BMAD S3: spark added as sorcerer L0 offensive — 1x lightning spell power, 8 mana, fills 3x2 grid","rationale":"Sorcerer had 5 skills leaving a null placeholder in the grid. Spark fills it and gives sorcerer an offensive starter that makes the opening floor viable before fireball.","alternativesConsidered":[],"date":"2026-04-01"},{"decision":"BMAD S3: iron_skin and smoke_bomb given cooldownRounds:3 — prevents back-to-back defensive cycling","rationale":"Without cooldowns, a player could loop iron_skin/smoke_bomb every round indefinitely, removing all risk from combat.","alternativesConsidered":[],"date":"2026-04-01"},{"decision":"BMAD S3: cooldown coexists with buff window — 2-round buff, 3-round cooldown = 1 dead round after buff expires","rationale":"Cooldown is longer than buff so there is always a gap, but not so long that defensive skills feel unavailable.","alternativesConsidered":[],"date":"2026-04-01"},{"decision":"BMAD S3: whirlwind mana cost reduced 28 to 18","rationale":"28 mana blocked early warrior use of their signature skill — 18 makes it available earlier without being free.","alternativesConsidered":[],"date":"2026-04-01"},{"decision":"BMAD S3: meditate reworked to mana-only — initial +30 on cast plus 30/round for 2 rounds = 90 total, no HP heal","rationale":"Meditate was doing both HP and mana, making it a dominant skill with no trade-off. Mana-only creates a clear sorcerer resource management identity.","alternativesConsidered":[],"date":"2026-04-01"},{"decision":"BMAD S3: shadow_step to backstab combo tracked via lastSkillUsed in CombatState, logs SHADOW CRIT at crit type (visual only for now)","rationale":"Establishes the combo infrastructure and visual feedback; mechanical damage bonus deferred until balance is validated.","alternativesConsidered":[],"date":"2026-04-01"},{"decision":"Balance pass: Spark gets spellVarianceFlat:12 — rolls spellPower to spellPower+12 instead of flat spellPower","rationale":"Simulation showed Spark dealt 8 DPS at floor 1 vs basic attack's 12.1, making it a mana-wasting downgrade. Adding 0–12 flat bonus lifts the floor-1 average to ~14, making Spark viable from turn 1 while naturally scaling less at deep floors where spellPower dominates anyway.","alternativesConsidered":[],"date":"2026-04-01"},{"decision":"Balance pass: Whirlwind second hit is now guaranteed (removed !isMiss guard)","rationale":"Old Whirlwind only triggered the second hit if the first landed, making it strictly worse than Power Strike in expected DPS (45.6 vs 50.6) at higher mana cost (18 vs 12). After fix, both deal ~equal DPS (~51), making Whirlwind the 'burst ceiling' choice when mana is plentiful vs Power Strike's mana-efficiency role. Both skills now have a clear identity.","alternativesConsidered":[],"date":"2026-04-01"},{"decision":"Balance pass: Rapid Strike gets bonusHitChance:30 — 30% chance to trigger a 4th hit at 70% damage","rationale":"Rapid Strike had no situation where it beat Backstab. Adding a 30% proc for a 4th hit gives Rapid Strike a burst ceiling (280% vs Backstab's guaranteed 300%) and a high-variance identity. The proc adds ~10% average damage, keeping Backstab the reliable mana-efficient choice while Rapid Strike becomes the 'lucky spike' option vs high-HP targets.","alternativesConsidered":[],"date":"2026-04-01"}]},{"key":"feat-2026-049","title":"UI Polish Phase 2 — Visual Hierarchy & Screen Consistency","domain":"game/ui","status":"frozen","decs":[{"decision":"Visual polish pass 2 targets InventoryScreen, CombatScreen, GridScreen consistency","rationale":"These three screens are the most frequently visited; consistency here has the highest player impact.","alternativesConsidered":[],"date":"2026-03-29"},{"decision":"BMAD S3: MF (magic find) stat line added to InventoryScreen between vitals and skills strip — shows LVL N and MF N% in gold","rationale":"Magic find is an invisible stat that drives loot decisions; surfacing it in the inventory gives players actionable build feedback.","alternativesConsidered":[],"date":"2026-04-01"},{"decision":"BMAD S3: DPad center converted from non-interactive View to TouchableOpacity with onLongPress (400ms) — accepts onWait prop","rationale":"Long-press is a discoverable interaction pattern that avoids cluttering the grid UI with an explicit wait button.","alternativesConsidered":[],"date":"2026-04-01"},{"decision":"BMAD S3: potion heal in InventoryScreen reads effectiveStats.heal (floor-scaled) instead of hardcoded 30 — both handleBagEquip and handleSheetUse updated","rationale":"Floor-scaled potions were implemented in loot.ts but InventoryScreen was still applying a flat 30 HP heal, breaking the floor scaling.","alternativesConsidered":[],"date":"2026-04-01"}]},{"key":"feat-2026-037","title":"XP & Persistent Leveling","domain":"progression","status":"frozen","decs":[{"decision":"XP and level persist across deaths, never reset","rationale":"Level is the intended long-term power-creep layer that survives death. Resetting level on death would make it indistinguishable from a floor-based stat.","alternativesConsidered":["Level resets on death like floor progress","Partial XP loss on death (Dark Souls style)"],"date":"2026-03-28"},{"decision":"Level curve: total XP for level N = N*(N+1)/2 * 100","rationale":"Triangular number curve naturally slows progression without a hard cap. Level 10 costs 5500 XP total, level 20 costs 21000 — meaningful grind without being infinite.","alternativesConsidered":["Flat 500 XP per level","Exponential doubling curve"],"date":"2026-03-28"},{"decision":"Auto-distribute stat bonuses per level, no manual allocation in v1","rationale":"Keeps UI simple. Manual allocation is a future feature that can be layered on the same XP system without breaking changes.","alternativesConsidered":["Manual point allocation screen on level-up","Choose one of three random bonuses on level-up"],"date":"2026-03-28"},{"decision":"Bonuses: +5 maxHp/level, +1 damage/level, +1 defense/level, +2% critChance every 5 levels","rationale":"Roughly matches what a good Magic item gives per level. Player feels like they are always getting stronger but gear still matters more at any specific tier.","alternativesConsidered":["Only HP bonus to keep combat unchanged","Percentage bonuses that scale more aggressively"],"date":"2026-03-28"}]},{"key":"feat-2026-034","title":"D2Game — iOS Grid RPG","domain":"game/mobile","status":"frozen","decs":[{"decision":"Seeded PRNG (mulberry32) for all randomness","rationale":"Every run must be reproducible from a seed. This enables deterministic bun tests, bug reproduction via seed+steps, and future daily-challenge mode. Non-seeded Math.random() would make tests flaky.","alternativesConsidered":["Math.random() — not seedable, untestable","xoshiro128 — slightly better distribution but mulberry32 is simpler and sufficient"],"date":"2026-03-28"},{"decision":"Engine-first development: all game logic written and bun-tested before any UI screen exists","rationale":"Game systems (loot, combat, grid) are pure data transformations. Keeping them React-free means they can be tested headless, simulated at scale (10k items, 1000 combats), and iterated without a device. UI that depends on untested engine code leads to hard-to-debug emergent bugs.","alternativesConsidered":["Build UI first, engine emerges from component state — common in game jams, hard to test","Unity/Godot — built-in test frameworks but abandons RN expertise"],"date":"2026-03-28"},{"decision":"Combat as a fast gate (3–6 rounds, numbers-only UI)","rationale":"Playtesting Diablo 2 and similar games shows the dopamine comes from the drop, not the fight. Combat complexity competes for design budget with loot and inventory. Keeping combat to a transaction screen (<5s) lets players do more runs and see more loot.","alternativesConsidered":["Turn-based tactics with positioning — fun but requires 10× more design work","Real-time action combat — incompatible with a grid-step model"],"date":"2026-03-28"},{"decision":"Normal (white) items are valuable via the socket/runeword system","rationale":"D2’s most memorable items are runewords built into white bases. If white items are junk, players stop picking them up and loot excitement drops by 50%. Every white drop with sockets must show a tooltip flag: ‘Runeword candidate (N sockets)’.","alternativesConsidered":["Only magic+ items are interesting — simpler but loses D2 DNA","Crafting system — too complex for v1"],"date":"2026-03-28"},{"decision":"10×4 Tetris inventory grid with physical item sizes","rationale":"Inventory management as a spatial puzzle is one of D2’s most beloved secondary systems. Charms provide passive bonuses but occupy space, creating a real tradeoff that drives decisions mid-run. A flat list inventory eliminates this tension.","alternativesConsidered":["Flat list with item count limit — simpler but no spatial tension","Unlimited stash — removes one of the core decision loops"],"date":"2026-03-28"}]}];
+
+  // ── DOM refs ──
+  var searchInput  = document.getElementById('search-input');
+  var searchClear  = document.getElementById('search-clear');
+  var navTree      = document.getElementById('nav-tree');
+  var content      = document.getElementById('content');
+  var sortButtons  = document.querySelectorAll('.sort-btn');
+
+  // ── Sidebar collapse ──
+  navTree.addEventListener('click', function(e) {
+    var domain = e.target.closest('.nav-domain');
+    if (domain) {
+      var group = domain.closest('.nav-group');
+      if (group) group.classList.toggle('collapsed');
+    }
+  });
+
+  // ── Active nav item on scroll ──
+  var sections = Array.from(content.querySelectorAll('.feature-section'));
+  var navItems = Array.from(navTree.querySelectorAll('.nav-item'));
+
+  function updateActive() {
+    var scrollTop = content.scrollTop;
+    var best = null;
+    for (var i = sections.length - 1; i >= 0; i--) {
+      if (sections[i].offsetTop <= scrollTop + 100) { best = sections[i]; break; }
+    }
+    navItems.forEach(function(el) { el.classList.remove('active'); });
+    if (best) {
+      var key = best.id;
+      var match = navTree.querySelector('.nav-item[data-key="' + key + '"]');
+      if (match) match.classList.add('active');
+    }
+  }
+
+  content.addEventListener('scroll', updateActive, { passive: true });
+
+  // ── Search ──
+  function escRegex(s) {
+    var SPECIALS = '\\.+*?^${}()|[' + ']';
+    return s.split('').map(function(c) { return SPECIALS.indexOf(c) >= 0 ? '\\' + c : c; }).join('');
+  }
+
+  function highlightText(node, rx) {
+    // Only process text nodes directly inside elements — skip script/style
+    if (node.nodeType === 3) {
+      var text = node.nodeValue;
+      if (rx.test(text)) {
+        var span = document.createElement('span');
+        span.innerHTML = text.replace(rx, function(m) {
+          return '<mark>' + esc(m) + '</mark>';
+        });
+        node.parentNode.replaceChild(span, node);
+      }
+      return;
+    }
+    if (node.nodeType === 1 && node.tagName !== 'SCRIPT' && node.tagName !== 'STYLE') {
+      Array.from(node.childNodes).forEach(function(c) { highlightText(c, rx); });
+    }
+  }
+
+  function clearHighlights() {
+    content.querySelectorAll('mark').forEach(function(m) {
+      var parent = m.parentNode;
+      parent.replaceChild(document.createTextNode(m.textContent), m);
+      parent.normalize();
+    });
+  }
+
+  var lastQuery = '';
+
+  function applySearch(query) {
+    var q = query.trim().toLowerCase();
+    lastQuery = q;
+    clearHighlights();
+
+    searchClear.classList.toggle('visible', q.length > 0);
+
+    var navGroups = navTree.querySelectorAll('.nav-group');
+
+    if (!q) {
+      // Show everything
+      navItems.forEach(function(el) { el.classList.remove('hidden'); });
+      navGroups.forEach(function(el) { el.classList.remove('hidden'); });
+      sections.forEach(function(el) { el.classList.remove('hidden'); });
+      return;
+    }
+
+    var rx = new RegExp('(' + escRegex(q) + ')', 'gi');
+
+    // Filter sections
+    sections.forEach(function(sec) {
+      var key    = (sec.getAttribute('data-key') || '').toLowerCase();
+      var domain = (sec.getAttribute('data-domain') || '').toLowerCase();
+      var text   = (sec.textContent || '').toLowerCase();
+      var match  = key.includes(q) || domain.includes(q) || text.includes(q);
+      sec.classList.toggle('hidden', !match);
+      if (match) highlightText(sec, rx);
+    });
+
+    // Filter sidebar items
+    navGroups.forEach(function(group) {
+      var items = group.querySelectorAll('.nav-item');
+      var anyVisible = false;
+      items.forEach(function(item) {
+        var ikey   = (item.getAttribute('data-key') || '').toLowerCase();
+        var ititle = (item.getAttribute('data-title') || '').toLowerCase();
+        var idomain = (item.getAttribute('data-domain') || '').toLowerCase();
+        var show = ikey.includes(q) || ititle.includes(q) || idomain.includes(q);
+        item.classList.toggle('hidden', !show);
+        if (show) anyVisible = true;
+      });
+      group.classList.toggle('hidden', !anyVisible);
+    });
+  }
+
+  searchInput.addEventListener('input', function() {
+    applySearch(searchInput.value);
+  });
+
+  searchClear.addEventListener('click', function() {
+    searchInput.value = '';
+    applySearch('');
+    searchInput.focus();
+  });
+
+  // ── Sort ──
+  var currentSort = 'domain';
+
+  function sortSections(mode) {
+    var parent = content;
+    var secs = Array.from(content.querySelectorAll('.feature-section'));
+
+    secs.sort(function(a, b) {
+      if (mode === 'domain') {
+        var da = a.getAttribute('data-domain') || '';
+        var db = b.getAttribute('data-domain') || '';
+        if (da !== db) return da.localeCompare(db);
+        return (a.getAttribute('data-key') || '').localeCompare(b.getAttribute('data-key') || '');
+      }
+      if (mode === 'date') {
+        var dateA = a.getAttribute('data-date') || '';
+        var dateB = b.getAttribute('data-date') || '';
+        // Most recent first — reverse compare
+        if (dateB !== dateA) return dateB.localeCompare(dateA);
+        return (a.getAttribute('data-key') || '').localeCompare(b.getAttribute('data-key') || '');
+      }
+      if (mode === 'key') {
+        return (a.getAttribute('data-key') || '').localeCompare(b.getAttribute('data-key') || '');
+      }
+      return 0;
+    });
+
+    secs.forEach(function(s) { parent.appendChild(s); });
+  }
+
+  sortButtons.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var mode = btn.getAttribute('data-sort');
+      if (mode === currentSort) return;
+      currentSort = mode;
+      sortButtons.forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      sortSections(mode);
+      if (lastQuery) applySearch(lastQuery);
+    });
+  });
+
+})();
+</script>
+
+</body>
+</html>
