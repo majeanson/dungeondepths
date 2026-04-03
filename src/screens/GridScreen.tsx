@@ -20,17 +20,18 @@ import { CLASSES } from '../data/classes'
 import { useHaptics } from '../hooks/useHaptics'
 import { useSettingsStore } from '../store/settingsStore'
 import { COLORS } from '../theme'
+import { difficultyLabel } from '../utils/tierName'
 
 const SCREEN_W = Dimensions.get('window').width
 const SCREEN_H = Dimensions.get('window').height
 
-// Subtle per-tier tints — darkened background hue to convey progression depth
+// Subtle per-tier tints — T1=neutral, T2=blue (Nightmare), T3+=red (Hell), deeper tiers shift hue
 const TIER_BG: Record<number, string> = {
   1: '#0d0d0f',
-  2: '#0d100d',
+  2: '#0d0d10',
   3: '#100d0d',
-  4: '#0d0d10',
-  5: '#10100d',
+  4: '#110d0d',
+  5: '#120d0d',
 }
 
 // ── Zoom levels — cell size in pixels ────────────────────────────────────────
@@ -586,7 +587,7 @@ export function GridScreen() {
         {/* Floor / tier watermark */}
         <View style={styles.floorLabel} pointerEvents="none">
           <Text style={styles.floorLabelText}>
-            {bossFloor ? '☠ ' : ''}FLOOR {gameFloor} · TIER {tier}
+            {bossFloor ? '☠ ' : ''}FLOOR {gameFloor} · {difficultyLabel(tier) ?? `TIER ${tier}`}
           </Text>
         </View>
 

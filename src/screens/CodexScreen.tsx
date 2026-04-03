@@ -533,23 +533,27 @@ export function CodexScreen() {
             <NoteCard>
               <Text style={styles.noteBody}>
                 Clear floor 10 to advance to the next tier. Tier persists across deaths. No tier ceiling.
-                {'\n\n'}A gold <Text style={{ color: COLORS.gold }}>TIER CLEAR</Text> overlay appears before you descend, showing the new scaling.
+                {'\n\n'}A <Text style={{ color: COLORS.gold }}>TIER CLEAR</Text> overlay appears before you descend, showing the new scaling. Normal has no label — Nightmare shows in blue, Hell in red.
               </Text>
               <View style={styles.table}>
                 <View style={[styles.tableRow, styles.tableHeader]}>
                   <Text style={[styles.tableCell, styles.tableCellHdr]}>Tier</Text>
+                  <Text style={[styles.tableCell, styles.tableCellHdr]}>Difficulty</Text>
                   <Text style={[styles.tableCell, styles.tableCellHdr, { color: COLORS.red }]}>HP ×</Text>
                   <Text style={[styles.tableCell, styles.tableCellHdr, { color: COLORS.runewordColor }]}>DMG ×</Text>
                   <Text style={[styles.tableCell, styles.tableCellHdr, { color: COLORS.gold }]}>MF+</Text>
                 </View>
-                {TIER_ROWS.map(row => (
+                {TIER_ROWS.map(row => {
+                  const tierColor = row.label === 'NIGHTMARE' ? COLORS.blue : row.label === 'HELL' ? COLORS.red : COLORS.textSecondary
+                  return (
                   <View key={row.tier} style={styles.tableRow}>
-                    <Text style={[styles.tableCell, { color: COLORS.textSecondary }]}>T{row.tier}</Text>
+                    <Text style={[styles.tableCell, { color: tierColor }]}>T{row.tier}</Text>
+                    <Text style={[styles.tableCell, { color: tierColor, fontSize: 8 }]}>{row.label}</Text>
                     <Text style={[styles.tableCell, { color: COLORS.red }]}>{row.hp}×</Text>
                     <Text style={[styles.tableCell, { color: COLORS.runewordColor }]}>{row.dmg}×</Text>
                     <Text style={[styles.tableCell, { color: COLORS.gold }]}>{row.mfBonus === 0 ? '—' : `+${row.mfBonus}`}</Text>
                   </View>
-                ))}
+                )})}
               </View>
             </NoteCard>
 

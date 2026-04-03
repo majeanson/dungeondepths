@@ -205,9 +205,11 @@ export const XP_ROWS = Array.from({ length: 12 }, (_, i) => i + 1).map(lvl => ({
   hpBonus: lvl * 5,
 }))
 
+// Values match applyTierScaling in monsters.ts: T2=NM (2.5×HP/1.80×DMG), T3+=Hell (3.1×HP/2.0×DMG)
 export const TIER_ROWS = [1, 2, 3, 4, 5, 8, 10].map(t => ({
   tier:    t,
-  hp:      (1 + Math.min(t - 1, 10) * 0.40).toFixed(1),
-  dmg:     (1 + Math.min(t - 1, 10) * 0.28).toFixed(2),
+  label:   t === 1 ? 'NORMAL' : t === 2 ? 'NIGHTMARE' : 'HELL',
+  hp:      t === 1 ? '1.0' : t === 2 ? '2.5' : '3.1',
+  dmg:     t === 1 ? '1.00' : t === 2 ? '1.80' : '2.00',
   mfBonus: (t - 1) * 20,
 }))

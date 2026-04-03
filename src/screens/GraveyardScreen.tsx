@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useGameStore, type GraveyardEntry } from '../store/gameStore'
 import { getItemColor } from '../utils/itemDisplay'
+import { difficultyLabel } from '../utils/tierName'
 import { COLORS } from '../theme'
 import { CLASSES } from '../data/classes'
 import { EmptyState } from '../components/EmptyState'
@@ -115,7 +116,7 @@ function EntryCard({ entry, canInvoke, isActive, onInvoke, onStudy }: {
             </View>
           )}
         </View>
-        <Text style={styles.meta}>T{entry.tier}·F{entry.floor}  ·  LVL {entry.level}  ·  {formatDate(entry.lostAt)}</Text>
+        <Text style={styles.meta}>T{entry.tier}·F{entry.floor}  ·  {difficultyLabel(entry.tier) ?? 'NORMAL'}  ·  LVL {entry.level}  ·  {formatDate(entry.lostAt)}</Text>
         {entry.killedBy && (
           <Text style={styles.killedBy}>claimed by {entry.killedBy}</Text>
         )}
