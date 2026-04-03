@@ -11,6 +11,7 @@ import type { EquipSlot } from '../engine/inventory'
 
 const SAVE_KEY     = '@d2game_save_v1'
 const SETTINGS_KEY = '@d2game_settings_v1'
+const MID_RUN_KEY  = '@d2game_midrun_v1'
 
 export interface SaveData {
   version:           1
@@ -144,6 +145,65 @@ export async function clearSave(): Promise<void> {
     await AsyncStorage.removeItem(SAVE_KEY)
   } catch (e) {
     console.warn('[persistence] clearSave failed:', e)
+  }
+}
+
+// ── Mid-run save ──────────────────────────────────────────────────────────────
+
+/**
+ * Snapshot of the in-progress floor state needed to resume exactly where you left off.
+ * Tile types are regenerated deterministically from seed; only fog + encountered are stored.
+ */
+export interface MidRunData {
+  absFloor:    number               // gs.floor — absolute floor for display + gameStore
+  localFloor:  number               // grid.floor (1-10) — used to regenerate the grid
+  seed:        number               // grid.seed
+  tier:        number               // gs.tier — for display in RESUME banner
+  classId:     string | null
+  playerPos:   { x: number; y: number }
+  fog:         number[]             // flat GRID_W*GRID_H array of FogState values
+  encountered: boolean[]            // flat GRID_W*GRID_H array
+  stamina:     number
+  hpPotions:   number              // potion counts at time of camp
+  manaPotions: number
+  stPotions:   number
+}
+
+// In-memory cache — populated during bootstrap so ClassSelectScreen can sync-read it
+let _cachedMidRun: MidRunData | null = null
+
+export function getCachedMidRun(): MidRunData | null {
+  return _cachedMidRun
+}
+
+export async function saveMidRun(data: MidRunData): Promise<void> {
+  try {
+    _cachedMidRun = data
+    await AsyncStorage.setItem(MID_RUN_KEY, JSON.stringify(data))
+  } catch (e) {
+    console.warn('[persistence] saveMidRun failed:', e)
+  }
+}
+
+export async function loadMidRun(): Promise<MidRunData | null> {
+  try {
+    const raw = await AsyncStorage.getItem(MID_RUN_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as MidRunData
+    _cachedMidRun = parsed
+    return parsed
+  } catch (e) {
+    console.warn('[persistence] loadMidRun failed:', e)
+    return null
+  }
+}
+
+export async function clearMidRun(): Promise<void> {
+  try {
+    _cachedMidRun = null
+    await AsyncStorage.removeItem(MID_RUN_KEY)
+  } catch (e) {
+    console.warn('[persistence] clearMidRun failed:', e)
   }
 }
 

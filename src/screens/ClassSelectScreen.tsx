@@ -9,6 +9,9 @@ import { useGameStore, STAKE_DEFS, PACT_DEFS, type StakeId, type PactId } from '
 import { xpToNextLevel } from '../engine/stats'
 import { useGridStore } from '../store/gridStore'
 import { useCombatStore } from '../store/combatStore'
+import { getCachedMidRun } from '../services/persistence'
+import { generateHpPotion, generateManaPotion, generateStaminaPotion } from '../engine/loot'
+import { useInventoryStore } from '../store/inventoryStore'
 import { CLASSES, type ClassId } from '../data/classes'
 import { getSkillsForClass } from '../data/skills'
 import { difficultyLabel, difficultyColor } from '../utils/tierName'
@@ -37,8 +40,8 @@ const CLASS_STATS: Record<ClassId, { hp: number; mana: number; damage: number; d
 
 export function ClassSelectScreen() {
   const insets = useSafeAreaInsets()
-  const { classId: savedClassId, selectClass, startRun, level, xp, setScreen, runStarted, classXp, activeStake, setStake, activePact, setPact, careerStats } = useGameStore()
-  const { initFloor } = useGridStore()
+  const { classId: savedClassId, selectClass, startRun, resumeRun, level, xp, setScreen, runStarted, classXp, activeStake, setStake, activePact, setPact, careerStats } = useGameStore()
+  const { initFloor, restoreMidRunState } = useGridStore()
   const { refillPotions } = useCombatStore()
 
   // Pre-select the previously played class so returning players don't have to re-tap
@@ -49,6 +52,27 @@ export function ClassSelectScreen() {
   const fadeIn = useFadeTransition(350)
 
   const selectedDef = selected ? CLASSES.find(c => c.id === selected) : null
+
+  // Mid-run resume: check if a saved mid-floor snapshot exists for the selected class
+  const midRun = getCachedMidRun()
+  const hasMidRun = midRun !== null && midRun.classId === selected
+
+  function handleResume() {
+    if (!midRun || !selected) return
+    // Restore grid state (fog, position, stamina)
+    restoreMidRunState(midRun)
+    // Restore potions from the camp snapshot
+    const inv = useInventoryStore.getState()
+    const potionIds = new Set(['hp_potion', 'mana_potion', 'stamina_potion'])
+    for (const item of Object.values(inv.bag.items) as import('../engine/loot').Item[]) {
+      if (potionIds.has(item.baseId)) inv.dropItem(item.uid)
+    }
+    for (let i = 0; i < midRun.hpPotions;   i++) inv.addItem(generateHpPotion())
+    for (let i = 0; i < midRun.manaPotions; i++) inv.addItem(generateManaPotion())
+    for (let i = 0; i < midRun.stPotions;   i++) inv.addItem(generateStaminaPotion())
+    // Resume the run (sets runStarted=true, screen='grid')
+    resumeRun()
+  }
 
   // Waypoints: absolute floor checkpoints available for run entry.
   // A waypoint at absFloor N is unlocked if deepestFloorByClass[class] >= N.
@@ -268,6 +292,16 @@ export function ClassSelectScreen() {
       {/* ── Sticky footer — only visible when a class is chosen ──────────── */}
       {selected && selectedDef && (
         <View style={styles.footer}>
+          {/* ── Resume saved run ─────────────────────────────────────── */}
+          {hasMidRun && midRun && (
+            <TouchableOpacity style={styles.resumeBtn} onPress={handleResume}>
+              <Text style={styles.resumeBtnText}>⛺  RESUME SAVED RUN</Text>
+              <Text style={styles.resumeBtnSub}>
+                Floor {midRun.absFloor} · {difficultyLabel(midRun.tier) ?? 'NORMAL'} · {midRun.hpPotions + midRun.manaPotions + midRun.stPotions} potions
+              </Text>
+            </TouchableOpacity>
+          )}
+
           {/* ── Stake picker ──────────────────────────────────────────── */}
           <View style={styles.stakeRow}>
             <Text style={styles.stakeLabel}>HUNT</Text>
@@ -804,6 +838,26 @@ const styles = StyleSheet.create({
     fontSize: 9,
     letterSpacing: 0.3,
     fontStyle: 'italic',
+  },
+  resumeBtn: {
+    borderWidth: 1,
+    borderColor: COLORS.gold + '88',
+    backgroundColor: COLORS.goldDim,
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+    gap: 3,
+  },
+  resumeBtnText: {
+    color: COLORS.gold,
+    fontSize: 13,
+    fontWeight: '800',
+    letterSpacing: 2,
+  },
+  resumeBtnSub: {
+    color: COLORS.gold + '88',
+    fontSize: 9,
+    letterSpacing: 1,
   },
   descendBtn: {
     backgroundColor: COLORS.redDim,

@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import type { Item } from '../engine/loot'
 import { rollLoot, generateStartingItems } from '../engine/loot'
 import { type ClassId } from '../data/classes'
-import { scheduleSave } from '../services/persistence'
+import { scheduleSave, clearMidRun } from '../services/persistence'
 import { makeRng } from '../engine/rng'
 import {
   maxHpForFloor,
@@ -175,6 +175,7 @@ export interface GameState {
   hydrate:            (data: import('../services/persistence').SaveData) => void
   selectClass:        (id: ClassId) => void
   startRun:           (seed?: number, startFloor?: number) => void
+  resumeRun:          () => void
   setScreen:          (screen: GameScreen) => void
   nextFloor:          () => void
   endRun:             (won: boolean, killedBy?: string) => void
@@ -341,7 +342,12 @@ export const useGameStore = create<GameState>((set, get) => ({
       const inv   = useInventoryStore.getState()
       for (const item of items) inv.addItem(item)
     }
+    clearMidRun()
     scheduleSave()
+  },
+
+  resumeRun: () => {
+    set({ runStarted: true, screen: 'grid' })
   },
 
   setScreen: (screen) => set({ screen }),
@@ -487,6 +493,7 @@ export const useGameStore = create<GameState>((set, get) => ({
             careerStats:   updatedCareerStats,
           }
         })
+        clearMidRun()
         scheduleSave()
         return
       }
@@ -498,6 +505,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       })
     }
     set({ screen: won ? 'victory' : 'gameover', runStarted: false, lastSacrifice: null, careerStats: updatedCareerStats })
+    clearMidRun()
     scheduleSave()
   },
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { View, Text, TouchableOpacity, StyleSheet, StatusBar, Dimensions, Animated, Alert } from 'react-native'
+import { View, Text, TouchableOpacity, StyleSheet, StatusBar, Dimensions, Animated, Alert, AppState } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 // Disable system font scaling globally — fixed game layouts require stable text sizes
@@ -23,7 +23,8 @@ import { TownScreen } from './src/screens/TownScreen'
 import { SettingsScreen } from './src/screens/SettingsScreen'
 import { CLASSES } from './src/data/classes'
 import { useCombatStore } from './src/store/combatStore'
-import { loadGame, clearSave, type LoadResult } from './src/services/persistence'
+import { loadGame, clearSave, loadMidRun, saveMidRun, type LoadResult } from './src/services/persistence'
+import { GRID_W, GRID_H } from './src/engine/grid'
 import { XpBar } from './src/components/XpBar'
 import { LoadingScreen } from './src/components/LoadingScreen'
 import { FirstRunOverlay } from './src/components/FirstRunOverlay'
@@ -418,9 +419,48 @@ export default function App() {
         }
       }
 
+      // Populate in-memory mid-run cache (used by ClassSelectScreen for sync reads)
+      await loadMidRun()
+
       setLoading(false)
     }
     bootstrap()
+  }, [])
+
+  // Auto-save mid-run state whenever the app backgrounds
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (nextState) => {
+      if (nextState !== 'background') return
+      const gs   = useGameStore.getState()
+      const grid = useGridStore.getState()
+      if (!gs.runStarted || !gs.classId) return
+      const fogFlat: number[]  = []
+      const encFlat: boolean[] = []
+      for (let y = 0; y < GRID_H; y++) {
+        for (let x = 0; x < GRID_W; x++) {
+          const tile = grid.grid[y]?.[x]
+          fogFlat.push(tile ? tile.fog : 0)
+          encFlat.push(tile ? tile.encountered : false)
+        }
+      }
+      const inv = useInventoryStore.getState()
+      const bagItems = Object.values(inv.bag.items) as { baseId: string }[]
+      saveMidRun({
+        absFloor:    gs.floor,
+        localFloor:  grid.floor,
+        seed:        grid.seed,
+        tier:        gs.tier,
+        classId:     gs.classId,
+        playerPos:   grid.playerPos,
+        fog:         fogFlat,
+        encountered: encFlat,
+        stamina:     grid.stamina,
+        hpPotions:   bagItems.filter(i => i.baseId === 'hp_potion').length,
+        manaPotions: bagItems.filter(i => i.baseId === 'mana_potion').length,
+        stPotions:   bagItems.filter(i => i.baseId === 'stamina_potion').length,
+      })
+    })
+    return () => sub.remove()
   }, [])
 
   if (loading) return <LoadingScreen />

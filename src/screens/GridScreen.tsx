@@ -13,6 +13,7 @@ import { LegendOverlay } from '../components/LegendOverlay'
 import { TierClearOverlay } from '../components/TierClearOverlay'
 import { EncounterSplash, type EncounterSplashData } from '../components/EncounterSplash'
 import { FogState, TileType, RoomType, GRID_W, GRID_H, getRoomTypeAt } from '../engine/grid'
+import { saveMidRun } from '../services/persistence'
 import { EncounterType, rollEncounter, floorPacingWeights, isBossFloor } from '../engine/encounter'
 import { makeRng } from '../engine/rng'
 import { rollLoot } from '../engine/loot'
@@ -391,6 +392,40 @@ export function GridScreen() {
     setScreen('town')
   }
 
+  function handleCamp() {
+    const gs   = useGameStore.getState()
+    const grid = useGridStore.getState()
+    const inv  = useInventoryStore.getState()
+    const fogFlat: number[]  = []
+    const encFlat: boolean[] = []
+    for (let y = 0; y < GRID_H; y++) {
+      for (let x = 0; x < GRID_W; x++) {
+        const tile = grid.grid[y]?.[x]
+        fogFlat.push(tile ? tile.fog : 0)
+        encFlat.push(tile ? tile.encountered : false)
+      }
+    }
+    const bagItems = Object.values(inv.bag.items) as { baseId: string }[]
+    saveMidRun({
+      absFloor:    gs.floor,
+      localFloor:  grid.floor,
+      seed:        grid.seed,
+      tier:        gs.tier,
+      classId:     gs.classId,
+      playerPos:   grid.playerPos,
+      fog:         fogFlat,
+      encountered: encFlat,
+      stamina:     grid.stamina,
+      hpPotions:   bagItems.filter(i => i.baseId === 'hp_potion').length,
+      manaPotions: bagItems.filter(i => i.baseId === 'mana_potion').length,
+      stPotions:   bagItems.filter(i => i.baseId === 'stamina_potion').length,
+    })
+    haptics.impactLight()
+    if (restToastTimer.current) clearTimeout(restToastTimer.current)
+    setRestToast('⛺  Progress saved — safe to close')
+    restToastTimer.current = setTimeout(() => setRestToast(null), 2500)
+  }
+
   function applyZoom(z: ZoomLevel) { setZoomLevel(z); zoomLevelRef.current = z; persistZoom(z) }
   function applyZoomWithHaptic(z: ZoomLevel) { applyZoom(z); haptics.impactLight() }
   function zoomIn()  { if (zoomLevelRef.current < 2) applyZoom((zoomLevelRef.current + 1) as ZoomLevel) }
@@ -743,6 +778,11 @@ export function GridScreen() {
             <Text style={[styles.actionBtnSub, townPortalScrolls === 0 && styles.btnTextDisabled]}>
               {townPortalScrolls > 0 ? `📜 ×${townPortalScrolls}` : '📜 ×0'}
             </Text>
+          </TouchableOpacity>
+
+          {/* Camp — save mid-run progress */}
+          <TouchableOpacity style={styles.campBtn} onPress={handleCamp}>
+            <Text style={styles.campBtnText}>CAMP</Text>
           </TouchableOpacity>
 
           {/* Bag + Legend row */}
@@ -1161,6 +1201,21 @@ const styles = StyleSheet.create({
     fontSize: 7,
     letterSpacing: 0.5,
     textAlign: 'center',
+  },
+  campBtn: {
+    backgroundColor: COLORS.surface,
+    borderWidth: 1,
+    borderColor: COLORS.border2,
+    borderRadius: 6,
+    paddingVertical: 7,
+    paddingHorizontal: 12,
+    alignItems: 'center',
+  },
+  campBtnText: {
+    color: COLORS.textDim,
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 1.5,
   },
   miniRow: {
     flexDirection: 'row',

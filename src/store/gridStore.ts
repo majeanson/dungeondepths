@@ -40,6 +40,7 @@ export interface GridState {
   drainStamina:   (amount: number) => void
   markBossDefeated: () => void
   cancelExit: () => void
+  restoreMidRunState: (data: import('../services/persistence').MidRunData) => void
 }
 
 function tierForEncounter(type: EncounterType): EncounterTier {
@@ -168,4 +169,32 @@ export const useGridStore = create<GridState>((set, get) => ({
   },
 
   cancelExit: () => set({ reachedExit: false }),
+
+  restoreMidRunState: (data) => {
+    const rng = makeRng(data.seed + data.localFloor * 999983)
+    const { grid: baseGrid, rooms, roomTypes } = generateFloor(data.seed + data.localFloor, rng)
+    const freshGrid: Grid = baseGrid.map(row => row.map(t => ({ ...t })))
+    // Patch per-tile fog and encountered from saved snapshot
+    for (let y = 0; y < GRID_H; y++) {
+      for (let x = 0; x < GRID_W; x++) {
+        const idx = y * GRID_W + x
+        if (freshGrid[y]?.[x]) {
+          freshGrid[y][x].fog         = data.fog[idx] as FogState
+          freshGrid[y][x].encountered = data.encountered[idx]
+        }
+      }
+    }
+    set({
+      grid:             freshGrid,
+      playerPos:        data.playerPos,
+      floor:            data.localFloor,
+      seed:             data.seed,
+      stamina:          data.stamina,
+      pendingEncounter: null,
+      reachedExit:      false,
+      bossDefeated:     false,
+      rooms,
+      roomTypes,
+    })
+  },
 }))

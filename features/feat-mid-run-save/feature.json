@@ -1,0 +1,132 @@
+{
+  "featureKey": "feat-2026-081",
+  "title": "Mid-run save — camp to preserve floor position",
+  "status": "frozen",
+  "problem": "The game has no way to pause a run mid-floor. Closing the app kills all exploration progress — fog of war, player position, stamina, and potion count reset. Players who need to stop mid-dungeon lose everything explored on that floor, which discourages longer sessions.",
+  "schemaVersion": 1,
+  "domain": "game/persistence",
+  "tags": ["persistence", "ux", "session", "grid", "accessibility"],
+  "lineage": {
+    "parent": "feat-2026-034",
+    "spawnReason": "session continuity: players need a safe way to stop mid-floor without losing explored progress"
+  },
+  "analysis": "The main SaveData already persists cross-run state (floor, tier, HP, XP, equipped). What it does not persist is in-session grid state: player position, fog-of-war per tile, which tiles have spawned encounters, and current stamina. These are stored in gridStore (Zustand, in-memory only). The mid-run save creates a separate AsyncStorage key (@d2game_midrun_v1) containing a MidRunData snapshot. Grid tile types are regenerated deterministically from seed, so only fog (FogState per tile) and encountered (boolean per tile) need to be stored. At 50×50 = 2500 tiles each, the snapshot is ~5KB. On resume, initFloor regenerates the base grid from seed, then fog/encountered are patched from the snapshot before playerPos and stamina are restored. Two save triggers: explicit CAMP button on the grid (user-initiated) and automatic AppState background listener (app backgrounded). Resume is available via a gold RESUME banner in ClassSelectScreen when a mid-run save exists for the selected class.",
+  "implementation": "src/services/persistence.ts: MidRunData interface {absFloor, localFloor, seed, tier, classId, playerPos, fog: number[], encountered: boolean[], stamina, hpPotions, manaPotions, stPotions}. saveMidRun/loadMidRun/clearMidRun async functions + _cachedMidRun module variable + getCachedMidRun() for sync reads. loadMidRun() populates cache on bootstrap. src/store/gridStore.ts: restoreMidRunState(data) action — regenerates base grid via generateFloor(seed+localFloor), patches fog/encountered per tile, sets playerPos+stamina. src/store/gameStore.ts: resumeRun() action sets {runStarted:true, screen:'grid'}. clearMidRun() called in startRun() and endRun() to invalidate stale saves on new run or death. App.tsx: AppState.addEventListener('change') triggers saveMidRun snapshot on 'background' when runStarted && classId set. loadMidRun() called in bootstrap after loadGame(). src/screens/GridScreen.tsx: CAMP button in right panel → handleCamp() builds fog/encountered arrays, saves MidRunData, shows toast. src/screens/ClassSelectScreen.tsx: getCachedMidRun() checked on render; gold RESUME banner shown when midRun.classId === selected; handleResume() calls restoreMidRunState + restores potions from snapshot counts + calls resumeRun().",
+  "decisions": [
+    {
+      "decision": "Separate AsyncStorage key for mid-run (@d2game_midrun_v1) rather than embedding in SaveData",
+      "rationale": "SaveData is version-locked and migration-gated. Mid-run saves are ephemeral checkpoints — stale data should be ignored or cleared without corrupting the main save. Separate key allows clearMidRun() to wipe the checkpoint without touching cross-run progression.",
+      "alternativesConsidered": [
+        "Embed midRun field in SaveData — couples ephemeral and persistent data, complicates migration",
+        "Keep in-memory only — useless across app kills, which is the primary use case"
+      ],
+      "recommendation": "Separate key. clearMidRun() called on death and new-run start to prevent stale resume.",
+      "date": "2026-04-03"
+    },
+    {
+      "decision": "Store fog and encountered as flat arrays (number[], boolean[]) not Grid[][]]",
+      "rationale": "Tile types are regenerated deterministically from seed — storing them wastes space and risks divergence if monster data changes. Flat arrays are compact (2500 entries each), JSON-serializable, and indexed by y*GRID_W+x for O(1) patch on restore.",
+      "alternativesConsidered": [
+        "Store full Grid[][] — 3× size, redundant tile types, migration risk",
+        "Run-length encoding — premature; 5KB is negligible for AsyncStorage"
+      ],
+      "recommendation": "Flat arrays. Patch loop runs in <1ms on device.",
+      "date": "2026-04-03"
+    },
+    {
+      "decision": "Potion counts saved in MidRunData and restored on resume",
+      "rationale": "Potions are bag items in inventoryStore (run-scoped, not persisted in SaveData). On fresh app start after kill, the bag is empty. Without saving potion counts, RESUME would silently give the player 0 potions — or refillPotions() would give them a full set, which is a meaningful exploit (die, close app, resume with full potions). Saving and restoring exact counts at camp time is both correct and cheat-resistant.",
+      "alternativesConsidered": [
+        "Call refillPotions() on resume — grants free potions, breaks economy",
+        "Resume with 0 potions — punishes saving, discourages the feature"
+      ],
+      "recommendation": "Save hpPotions, manaPotions, stPotions counts. Restore by clearing existing potions and adding the saved count back via generateHpPotion() etc.",
+      "date": "2026-04-03"
+    },
+    {
+      "decision": "AppState background auto-save in addition to explicit CAMP button",
+      "rationale": "Players may be interrupted unexpectedly (phone call, notification pull, home button). Auto-save on background ensures the most recent state is always captured without requiring the player to remember to camp. CAMP button still exists for intentional saves with UI feedback (toast).",
+      "alternativesConsidered": [
+        "CAMP button only — requires discipline, misses accidental closes",
+        "Auto-save every N steps — too frequent, unnecessary AsyncStorage writes"
+      ],
+      "recommendation": "Both: background auto-save (silent) + explicit CAMP (toasts confirmation). Same MidRunData format.",
+      "date": "2026-04-03"
+    }
+  ],
+  "successCriteria": "Player can tap CAMP on GridScreen → toast confirms save → close app → reopen → select same class → gold RESUME banner appears → tap RESUME → lands on grid at exact tile position with correct fog state, stamina, and potion count. Background close (home button) also auto-saves. Starting a new run or dying clears the mid-run save. TypeScript 0 errors.",
+  "knownLimitations": [
+    "Mid-run save does not persist bag non-potion items — items picked up mid-floor are lost on app kill (they're only in inventory bag, not in SaveData). Players should visit town or stash before closing.",
+    "Only one mid-run save slot per class — starting a new run with the same class overwrites/clears the previous save",
+    "RESUME always restores to the camped position; no way to discard the save except by starting a new run or dying",
+    "bossDefeated resets to false on restore (conservative default — boss cannot be re-spawned since bossDefeated is persisted in SaveData from the main save path)"
+  ],
+  "userGuide": "## Mid-Run Save (Camp)\n\nYou can save your progress mid-floor using the **CAMP** button on the dungeon grid screen. This records your exact position, explored tiles, stamina, and potions.\n\n### To save manually\nTap **CAMP** in the control panel (right side, below TOWN). A toast confirms the save.\n\n### Auto-save\nThe game automatically saves your position whenever you background the app (home button, incoming call, switching apps). No action required.\n\n### To resume\n1. Open the game — you'll see the class select screen\n2. Select the class you were playing\n3. A gold **⛺ RESUME SAVED RUN** banner appears above the DESCEND button\n4. Tap it — you'll land exactly where you left off, with the same fog state, stamina, and potions\n\n### When saves are cleared\n- Tapping **DESCEND** (new run) clears the mid-run save for that class\n- Dying clears the mid-run save\n- RESUME itself does not clear the save — you can close and resume again\n\n### Note on bag items\nNon-potion items picked up mid-floor are **not** included in the mid-run save. If you pick up loot and close the app without going to town, those items may be lost. Use CAMP before closing, and stash important drops in town.",
+  "componentFile": "src/services/persistence.ts (MidRunData, saveMidRun, loadMidRun, clearMidRun, getCachedMidRun), src/store/gridStore.ts (restoreMidRunState), src/store/gameStore.ts (resumeRun, clearMidRun calls in startRun+endRun), App.tsx (AppState background listener, bootstrap loadMidRun), src/screens/GridScreen.tsx (CAMP button, handleCamp), src/screens/ClassSelectScreen.tsx (RESUME banner, handleResume)",
+  "lastVerifiedDate": "2026-04-03",
+  "revisions": [
+    {
+      "date": "2026-04-03",
+      "author": "claude",
+      "fields_changed": [
+        "problem", "analysis", "implementation", "decisions", "successCriteria",
+        "knownLimitations", "userGuide", "componentFile"
+      ],
+      "reason": "Initial full feature definition — camp button, AppState auto-save, ClassSelectScreen resume banner implemented"
+    }
+  ],
+  "annotations": [],
+  "npmPackages": [],
+  "publicInterface": [
+    {
+      "name": "MidRunData",
+      "type": "interface",
+      "description": "{ absFloor, localFloor, seed, tier, classId, playerPos, fog: number[], encountered: boolean[], stamina, hpPotions, manaPotions, stPotions }"
+    },
+    {
+      "name": "saveMidRun",
+      "type": "function(data: MidRunData) => Promise<void>",
+      "description": "Writes mid-run snapshot to AsyncStorage + updates in-memory cache"
+    },
+    {
+      "name": "loadMidRun",
+      "type": "function() => Promise<MidRunData | null>",
+      "description": "Reads and caches mid-run snapshot from AsyncStorage. Called during bootstrap."
+    },
+    {
+      "name": "clearMidRun",
+      "type": "function() => Promise<void>",
+      "description": "Removes mid-run snapshot. Called on new run start and death."
+    },
+    {
+      "name": "getCachedMidRun",
+      "type": "function() => MidRunData | null",
+      "description": "Synchronous read of in-memory cache. Use after bootstrap; always reflects most recent saveMidRun/clearMidRun."
+    },
+    {
+      "name": "restoreMidRunState",
+      "type": "gridStore action(data: MidRunData) => void",
+      "description": "Regenerates base grid from seed, patches fog+encountered, restores playerPos and stamina"
+    },
+    {
+      "name": "resumeRun",
+      "type": "gameStore action() => void",
+      "description": "Sets runStarted=true, screen='grid'. Called after restoreMidRunState on RESUME."
+    }
+  ],
+  "externalDependencies": [],
+  "codeSnippets": [
+    {
+      "label": "Mid-run snapshot save (GridScreen handleCamp)",
+      "snippet": "saveMidRun({\n  absFloor: gs.floor, localFloor: grid.floor, seed: grid.seed,\n  tier: gs.tier, classId: gs.classId, playerPos: grid.playerPos,\n  fog: fogFlat, encountered: encFlat, stamina: grid.stamina,\n  hpPotions, manaPotions, stPotions,\n})"
+    },
+    {
+      "label": "Grid restore (gridStore restoreMidRunState)",
+      "snippet": "const { grid: baseGrid, rooms, roomTypes } = generateFloor(data.seed + data.localFloor, rng)\nconst freshGrid = baseGrid.map(row => row.map(t => ({ ...t })))\nfor (let y = 0; y < GRID_H; y++) {\n  for (let x = 0; x < GRID_W; x++) {\n    const idx = y * GRID_W + x\n    freshGrid[y][x].fog         = data.fog[idx] as FogState\n    freshGrid[y][x].encountered = data.encountered[idx]\n  }\n}\nset({ grid: freshGrid, playerPos: data.playerPos, stamina: data.stamina, ... })"
+    }
+  ],
+  "statusHistory": [
+    { "from": "draft", "to": "active",  "date": "2026-04-03" },
+    { "from": "active", "to": "frozen", "date": "2026-04-03" }
+  ]
+}
