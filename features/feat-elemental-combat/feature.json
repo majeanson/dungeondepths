@@ -1,0 +1,151 @@
+{
+  "featureKey": "feat-2026-039",
+  "title": "Elemental Damage & Resistance System",
+  "status": "frozen",
+  "problem": "Fire/cold/lightning damage and resistance stats exist on items but are ignored during combat resolution. The elemental system is decorative — no mechanical difference between a fire ring and any other ring.",
+  "schemaVersion": 1,
+  "analysis": "combat.ts applyCombatAction computes only physical damage: player damage range roll, monster defense subtraction, crit multiplier. fireDamage/coldDamage/lightningDamage stats exist on items. fireResist/coldResist/lightResist stats exist. Monster affixes fireEnchanted/coldEnchanted/lightningEnchanted exist with descriptions but add no combat effect. The engine needs elemental damage lanes added to both player and monster attack resolution.",
+  "implementation": "1. combat.ts: add resolvePlayerElemental(playerStats, rng): { fire, cold, lightning } — reads fireDamage/coldDamage/lightningDamage stats, applies resist cap of 75%. 2. Add resolveMonsterElemental(monster, playerStats, rng): checks monster affixes (fireEnchanted adds 50% of monster base damage as fire, etc.), applies player fireResist/coldResist/lightResist. 3. Status effects: cold hit applies 'chilled' for 1 round (attackSpeed -30%), fire applies 'burning' (+3 damage next round), lightning bypasses 25% of defense. 4. CombatState: add statusEffects: string[] field. 5. roundToText: append elemental hit lines 'Fire: +8', 'Resisted 4'. 6. Update PlayerCombatStats type to include elemental stat fields. 7. buildPlayerStats: read equipped elemental stats via equipped items passed in.",
+  "decisions": [
+    {
+      "decision": "Elemental damage is additive on top of physical, never replaces it",
+      "rationale": "A fire ring should always add value. If elemental replaced physical, low-physical builds would be punished for stacking resist gear.",
+      "alternativesConsidered": [
+        "Elemental damage replaces physical for that hit",
+        "Separate elemental attack action"
+      ],
+      "date": "2026-03-28"
+    },
+    {
+      "decision": "Resist cap at 75%, same as Diablo 2",
+      "rationale": "Prevents full immunity builds that trivialize enchanted monsters. 75% is a well-tested ceiling that still makes resist gear feel powerful.",
+      "alternativesConsidered": [
+        "100% resist cap (full immunity possible)",
+        "50% cap (resist gear less valuable)"
+      ],
+      "date": "2026-03-28"
+    },
+    {
+      "decision": "Status effects last exactly 1 round — chilled, burning, lightning bypass",
+      "rationale": "Simple and readable. Multi-round tracking adds complexity without meaningful strategic depth at this game's combat scale (3-6 rounds typical).",
+      "alternativesConsidered": [
+        "Multi-round DoT stacks",
+        "Permanent until cured with a potion"
+      ],
+      "date": "2026-03-28"
+    },
+    {
+      "decision": "Block (offhand) only stops physical damage, not elemental",
+      "rationale": "Gives enchanted monsters a distinct threat profile — a shield build is not invincible against a Fire Enchanted monster, creating target prioritization.",
+      "alternativesConsidered": [
+        "Block stops all damage types",
+        "Separate elemental resist equipment slot"
+      ],
+      "date": "2026-03-28"
+    }
+  ],
+  "successCriteria": "Player with fireDamage stat deals additional fire damage in combat log. Monster with fireEnchanted affix deals fire damage. Player fireResist reduces fire damage taken. Cold enchanted monster applies chilled status for 1 round. Resist cap enforced at 75%.",
+  "tags": [
+    "combat",
+    "elements",
+    "fire",
+    "cold",
+    "lightning",
+    "resistance",
+    "status-effects"
+  ],
+  "knownLimitations": [
+    "Poison damage/resistance not implemented in v1",
+    "No visual indicator for status effects beyond combat log text",
+    "Player elemental stats require passing equipped items into buildPlayerStats — needs refactor of that call site"
+  ],
+  "recommendations": "Elemental damage should appear in ItemDetailSheet stat descriptions (already partially in STAT_DESC). Add elemental section to CodexScreen AFFIXES tab explaining the mechanic.",
+  "lastVerifiedDate": "2026-03-28",
+  "revisions": [
+    {
+      "date": "2026-03-28",
+      "author": "claude",
+      "fields_changed": [
+        "analysis",
+        "implementation",
+        "decisions",
+        "successCriteria"
+      ],
+      "reason": "Initial fill from design session"
+    },
+    {
+      "date": "2026-03-28",
+      "author": "claude",
+      "fields_changed": [
+        "decisions"
+      ],
+      "reason": "Fix decisions schema"
+    }
+  ],
+  "annotations": [],
+  "domain": "combat",
+  "componentFile": "src/engine/combat.ts",
+  "npmPackages": [],
+  "publicInterface": [
+    {
+      "name": "resolveElementalDamage",
+      "type": "(playerStats, monster, rng) => ElementalResult",
+      "description": "Returns fire/cold/lightning damage after resist application for a player attack"
+    },
+    {
+      "name": "ElementalResult",
+      "type": "TypeScript interface",
+      "description": "{ fire: number, cold: number, lightning: number, statusEffect: 'chilled' | 'burning' | null }"
+    }
+  ],
+  "externalDependencies": [],
+  "codeSnippets": [
+    {
+      "label": "Resist formula",
+      "snippet": "function applyResist(damage: number, resist: number): number {\n  return Math.round(damage * (1 - Math.min(0.75, resist / 100)))\n}"
+    },
+    {
+      "label": "Player elemental damage contribution",
+      "snippet": "const fireDmg = applyResist(playerStats.fireDamage ?? 0, monster.fireResist ?? 0)\nconst coldDmg = applyResist(playerStats.coldDamage ?? 0, monster.coldResist ?? 0)\nconst lightDmg = Math.round(applyResist(playerStats.lightningDamage ?? 0, monster.lightResist ?? 0) * 1.25) // lightning bypasses 25% defense"
+    }
+  ],
+  "userGuide": "Fire, cold, and lightning damage on your gear now deal real damage in combat. Monster resistances reduce elemental damage up to a cap of 75%. Fire-enchanted monsters deal extra fire damage to you — equip fire resist gear to reduce it. Cold hits slow your attack speed for one round. Lightning bypasses some physical defense. Resisted damage is shown separately in the combat log.",
+  "codexEntry": {
+    "tab": "combat",
+    "title": "Elemental Damage",
+    "summary": "Fire, cold, and lightning damage stack on top of physical. Each element has a distinct status effect.",
+    "mechanics": [
+      "Elemental damage is always additive — it never replaces physical damage",
+      "Fire: you deal fire damage → enemy is Burning → -15% enemy physical retaliation that round",
+      "Cold: you deal cold damage → enemy is Chilled → enemy hit chance −20% on their retaliation",
+      "Lightning: ×1.25 damage multiplier (pierces defense), no status effect",
+      "Resist cap is 75% for all elements — you can never fully negate elemental damage",
+      "Block (offhand) does NOT stop elemental damage — only physical",
+      "Fire Enchanted monsters deal +40% base damage as fire. Cold/Lightning Enchanted similarly.",
+      "Your fire/cold/lightning resist reduces incoming monster elemental by that percentage"
+    ],
+    "tips": [
+      "Cold damage is the best defensive element — it reduces the monster's ability to hit you back.",
+      "Capping fire resist (75%) is a priority against Fire Enchanted monsters, which deal massive bonus fire damage.",
+      "Lightning gear has the highest raw damage output but offers no defensive effect."
+    ]
+  },
+  "toolingAnnotations": [],
+  "statusHistory": [
+    {
+      "from": "draft",
+      "to": "active",
+      "date": "2026-03-28"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-03-28"
+    }
+  ],
+  "lineage": {
+    "children": [
+      "feat-2026-063"
+    ]
+  }
+}

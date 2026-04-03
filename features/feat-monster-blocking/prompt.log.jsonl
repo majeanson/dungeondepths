@@ -1,0 +1,12 @@
+{"date":"2026-04-02T22:19:02.620Z","field":"analysis","source":"mcp","value_preview":"monsters.ts had no blockChance field on MonsterInstance. combat.ts had no block check in executePlayerAttack. CombatScre"}
+{"date":"2026-04-02T22:19:02.620Z","field":"implementation","source":"mcp","value_preview":"1. monsters.ts: added blockChance: number to MonsterInstance interface. Added TIER_BLOCK constant (normal:0, elite:12, r"}
+{"date":"2026-04-02T22:19:02.620Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"Crits and guaranteed-crit attacks bypass monster block\",\"rationale\":\"Rogue crit identity must be preserved"}
+{"date":"2026-04-02T22:19:02.620Z","field":"successCriteria","source":"mcp","value_preview":"Elite/rare/ancient monsters block player attacks at 12/20/28% chance. Crits bypass block. Combat log shows 'Blocked!' wh"}
+{"date":"2026-04-02T22:19:02.620Z","field":"knownLimitations","source":"mcp","value_preview":"[\"Block is binary — full block or no block (no partial damage reduction)\",\"No visual animation on block (text log only)\""}
+{"date":"2026-04-02T22:19:02.620Z","field":"componentFile","source":"mcp","value_preview":"src/engine/monsters.ts, src/engine/combat.ts, src/screens/CombatScreen.tsx, src/data/bosses.ts"}
+{"date":"2026-04-02T22:19:02.620Z","field":"userGuide","source":"mcp","value_preview":"Some enemies can block your physical attacks. Elite monsters block 12% of hits, rares 20%, ancients 28%. Crits always by"}
+{"date":"2026-04-02T22:19:02.620Z","field":"implementationNotes","source":"mcp","value_preview":"[\"TIER_BLOCK in monsters.ts mirrors TIER_HP/TIER_DMG pattern — easy to tune\",\"monsterBlocked only set on hitIndex 0 (the"}
+{"date":"2026-04-02T22:19:02.620Z","field":"npmPackages","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-02T22:19:02.620Z","field":"externalDependencies","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-02T22:19:02.620Z","field":"publicInterface","source":"mcp","value_preview":"[{\"name\":\"MonsterInstance.blockChance\",\"type\":\"number\",\"description\":\"0–100% chance to block player physical attacks. Se"}
+{"date":"2026-04-02T22:19:02.620Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"TIER_BLOCK constant in monsters.ts\",\"snippet\":\"const TIER_BLOCK: Record<EncounterTier, number> = {\\n  normal:"}

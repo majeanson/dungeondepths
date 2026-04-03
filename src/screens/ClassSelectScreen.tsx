@@ -11,6 +11,7 @@ import { useGridStore } from '../store/gridStore'
 import { useCombatStore } from '../store/combatStore'
 import { CLASSES, type ClassId } from '../data/classes'
 import { getSkillsForClass } from '../data/skills'
+import { difficultyLabel, difficultyColor } from '../utils/tierName'
 import { StatBar } from '../components/StatBar'
 import { DifficultyBadge } from '../components/DifficultyBadge'
 import { BonusChip } from '../components/BonusChip'
@@ -317,20 +318,31 @@ export function ClassSelectScreen() {
             <Text style={styles.waypointLabel}>ENTRY FLOOR</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.waypointRow}>
               {WAYPOINTS.map(absFloor => {
-                const unlocked = isWaypointUnlocked(absFloor)
-                const active   = startFloor === absFloor
+                const unlocked   = isWaypointUnlocked(absFloor)
+                const active     = startFloor === absFloor
+                const wpTier     = Math.floor((absFloor - 1) / 10) + 1
+                const wpDiffColor = difficultyColor(wpTier)
                 return (
                   <TouchableOpacity
                     key={absFloor}
                     style={[
                       styles.waypointChip,
                       active    && styles.waypointChipActive,
+                      !active && wpDiffColor != null && unlocked && {
+                        borderColor: wpDiffColor + '55',
+                        backgroundColor: wpDiffColor + '11',
+                      },
                       !unlocked && styles.waypointChipLocked,
                     ]}
                     onPress={() => unlocked && setStartFloor(absFloor)}
                     activeOpacity={unlocked ? 0.7 : 1}
                   >
-                    <Text style={[styles.waypointChipText, active && styles.waypointChipTextActive, !unlocked && styles.waypointChipTextLocked]}>
+                    <Text style={[
+                      styles.waypointChipText,
+                      !active && wpDiffColor != null && unlocked && { color: wpDiffColor },
+                      active  && styles.waypointChipTextActive,
+                      !unlocked && styles.waypointChipTextLocked,
+                    ]}>
                       {waypointLabel(absFloor)}
                     </Text>
                     {!unlocked && <Text style={styles.waypointLock}>🔒</Text>}
@@ -339,8 +351,14 @@ export function ClassSelectScreen() {
               })}
             </ScrollView>
             {startFloor > 1 && (
-              <Text style={styles.waypointHint}>
-                Starting at absolute floor {startFloor} · Tier {Math.floor((startFloor - 1) / 10) + 1} enemies
+              <Text style={[
+                styles.waypointHint,
+                difficultyColor(Math.floor((startFloor - 1) / 10) + 1) != null && {
+                  color: difficultyColor(Math.floor((startFloor - 1) / 10) + 1)!,
+                  opacity: 0.85,
+                },
+              ]}>
+                Starting at absolute floor {startFloor} · {difficultyLabel(Math.floor((startFloor - 1) / 10) + 1) ?? 'NORMAL'} difficulty
               </Text>
             )}
             {deepestForClass === 0 && (

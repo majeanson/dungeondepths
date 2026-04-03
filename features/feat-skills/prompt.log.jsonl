@@ -1,0 +1,32 @@
+{"date":"2026-03-29T01:29:12.156Z","field":"analysis","source":"mcp","value_preview":"CombatScreen has 3 actions: Attack, Potion, Flee. No skills exist. Mana stat exists on items (increases mana pool) but g"}
+{"date":"2026-03-29T01:29:12.156Z","field":"implementation","source":"mcp","value_preview":"1. gameStore: add mana: number, maxMana: number. maxMana = 40 + level * 8 + equippedManaBonus. Mana restores 15 at floor"}
+{"date":"2026-03-29T01:29:12.156Z","field":"decisions","source":"mcp","value_preview":"[\"4 skills, level-gated: Power Strike (1), Battle Cry (5), Whirlwind (10), Meditate (15) — natural milestone rewards\",\"M"}
+{"date":"2026-03-29T01:29:12.156Z","field":"successCriteria","source":"mcp","value_preview":"Power Strike at level 1 consistently deals 2× damage. BattleCry reduces incoming damage for exactly 2 rounds. Whirlwind "}
+{"date":"2026-03-29T01:29:12.156Z","field":"tags","source":"mcp","value_preview":"[\"combat\",\"skills\",\"mana\",\"progression\",\"level-gate\",\"combatscreen\"]"}
+{"date":"2026-03-29T01:29:12.156Z","field":"knownLimitations","source":"mcp","value_preview":"No passive skills in v1. Skill tree / branching not implemented. Skill unlock notification only in combat log — no dedic"}
+{"date":"2026-03-29T01:29:12.156Z","field":"recommendations","source":"mcp","value_preview":"Add skills section to CodexScreen showing each skill, level requirement, mana cost, and effect. Consider mana potions as"}
+{"date":"2026-03-29T01:30:47.391Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"4 skills level-gated at levels 1, 5, 10, 15 — not all available at start\",\"rationale\":\"Skills are mileston"}
+{"date":"2026-03-29T01:30:47.391Z","field":"knownLimitations","source":"mcp","value_preview":"[\"No passive skills in v1\",\"No dedicated skill unlock notification screen — level-up message in combat log only\",\"Mana p"}
+{"date":"2026-03-29T01:31:40.311Z","field":"domain","source":"mcp","value_preview":"combat"}
+{"date":"2026-03-29T01:31:40.311Z","field":"componentFile","source":"mcp","value_preview":"src/data/skills.ts"}
+{"date":"2026-03-29T01:31:40.311Z","field":"npmPackages","source":"mcp","value_preview":"[]"}
+{"date":"2026-03-29T01:31:40.311Z","field":"publicInterface","source":"mcp","value_preview":"[{\"name\":\"SKILLS\",\"type\":\"SkillDef[]\",\"description\":\"Array of 4 skill definitions: PowerStrike, BattleCry, Whirlwind, Me"}
+{"date":"2026-03-29T01:31:40.311Z","field":"externalDependencies","source":"mcp","value_preview":"[]"}
+{"date":"2026-03-29T01:31:40.311Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"Skill definitions\",\"snippet\":\"export const SKILLS: SkillDef[] = [\\n  { id: 'power_strike', name: 'Power Strik"}
+{"date":"2026-03-29T01:31:40.311Z","field":"userGuide","source":"mcp","value_preview":"Skills unlock as you level up. Power Strike is available from level 1 and doubles your damage for one round at the cost "}
+{"date":"2026-03-29T01:31:40.311Z","field":"toolingAnnotations","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-01T02:43:58.332Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"Class-specific skills — each class has exactly 4 skills (Sorcerer has 5) in unlock order\",\"rationale\":\"Gen"}
+{"date":"2026-04-01T02:43:58.332Z","field":"implementation","source":"mcp","value_preview":"1. gameStore: add mana/maxMana (class-specific scaling). 2. src/data/skills.ts: 13 SkillDefs tagged with classId, levelR"}
+{"date":"2026-04-01T02:43:58.332Z","field":"successCriteria","source":"mcp","value_preview":"Each class sees only its own skills in CombatScreen. Power Strike deals 2× damage; Backstab always crits at 3× multiplie"}
+{"date":"2026-04-01T02:43:58.332Z","field":"knownLimitations","source":"mcp","value_preview":"[\"No passive skills in v1\",\"Mana potions drop from encounters but are not craftable\",\"nextSkill preview in level-up over"}
+{"date":"2026-04-01T02:43:58.332Z","field":"userGuide","source":"mcp","value_preview":"Skills are class-specific and unlock as you level up. Only your class's skills appear in combat — arranged in a fixed gr"}
+{"date":"2026-04-01T02:43:58.332Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"Warrior skills\",\"snippet\":\"// power_strike (L1, 12mp): 2× dmg\\n// battle_cry   (L5, 15mp): -35% dmg taken 2 r"}
+{"date":"2026-04-01T02:43:58.332Z","field":"lastVerifiedDate","source":"mcp","value_preview":"2026-03-31"}
+{"date":"2026-04-01T17:51:38.026Z","field":"decisions","source":"mcp","value_preview":"[\"Skill system uses a union SkillId type for compile-time exhaustiveness\",\"Skills defined in src/data/skills.ts as Skill"}
+{"date":"2026-04-01T17:51:38.026Z","field":"knownLimitations","source":"mcp","value_preview":"[\"Shadow Step→Backstab combo is log-only — no actual damage amplification implemented yet\",\"Cooldown UI shows CD:N in sk"}
+{"date":"2026-04-01T17:53:50.044Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"Skill system uses a union SkillId type for compile-time exhaustiveness\",\"rationale\":\"TypeScript exhaustive"}
+{"date":"2026-04-03T01:37:24.807Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"Skill system uses a union SkillId type for compile-time exhaustiveness\",\"rationale\":\"TypeScript exhaustive"}
+{"date":"2026-04-03T01:37:24.807Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"Warrior skills — mana costs and levels\",\"snippet\":\"power_strike: L0, 8mp — 2× damage\\nbattle_cry:   L5, 12mp "}
+{"date":"2026-04-03T01:37:24.807Z","field":"userGuide","source":"mcp","value_preview":"Skills are class-specific and unlock as you level up. Only your class's skills appear in combat — arranged in a fixed gr"}
+{"date":"2026-04-03T01:37:24.807Z","field":"lastVerifiedDate","source":"mcp","value_preview":"2026-04-02"}
+{"date":"2026-04-03T01:37:44.731Z","field":"implementationNotes","source":"mcp","value_preview":"[\"fullRunSim.ts (3000 runs/class) is the canonical balance harness — any future skill cost or damage changes should be v"}

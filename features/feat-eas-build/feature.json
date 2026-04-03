@@ -1,0 +1,19 @@
+{
+  "featureKey": "feat-2026-074",
+  "title": "EAS build setup — icons, splash, and first TestFlight submission",
+  "status": "draft",
+  "problem": "App Store prep feature is frozen but actual build artifacts don't exist: no app icon (1024×1024), no splash screen asset, no EAS project configuration (eas.json), and no Apple Developer account enrollment. These are blocking items for any real device or TestFlight distribution.",
+  "schemaVersion": 1,
+  "domain": "ops/distribution",
+  "tags": [
+    "app-store",
+    "ios",
+    "build",
+    "distribution",
+    "ops"
+  ],
+  "lineage": {
+    "parent": "feat-2026-052",
+    "spawnReason": "deferred build work: EAS setup and asset creation were explicitly deferred pending Mac access and Apple Dev account"
+  }
+}

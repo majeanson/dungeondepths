@@ -1,0 +1,22 @@
+{"date":"2026-03-29T01:27:57.317Z","field":"analysis","source":"mcp","value_preview":"MonsterDef already has baseXp field. combatStore resolves kills but discards XP. buildPlayerStats in combatStore compute"}
+{"date":"2026-03-29T01:27:57.317Z","field":"implementation","source":"mcp","value_preview":"1. gameStore: add xp: number, level: number (both persist across deaths, reset only on startRun with resetProgress flag)"}
+{"date":"2026-03-29T01:27:57.317Z","field":"decisions","source":"mcp","value_preview":"[\"XP and level persist across deaths — this is the core design intent, a permanent progression layer\",\"Level curve: leve"}
+{"date":"2026-03-29T01:27:57.317Z","field":"successCriteria","source":"mcp","value_preview":"Killing a monster always grants XP visible in combat log. Level increments correctly at XP thresholds. buildPlayerStats "}
+{"date":"2026-03-29T01:27:57.317Z","field":"tags","source":"mcp","value_preview":"[\"combat\",\"progression\",\"xp\",\"leveling\",\"persistence\",\"hud\"]"}
+{"date":"2026-03-29T01:27:57.317Z","field":"knownLimitations","source":"mcp","value_preview":"No manual stat point allocation in v1. No XP from shrines/chests. Level cap is effectively infinite but untested above l"}
+{"date":"2026-03-29T01:27:57.317Z","field":"recommendations","source":"mcp","value_preview":"XP formula should be visible in CodexScreen under a new PROGRESSION tab. Consider adding level to GraveyardEntry so the "}
+{"date":"2026-03-29T01:29:59.201Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"XP and level persist across deaths, never reset\",\"rationale\":\"Level is the intended long-term power-creep "}
+{"date":"2026-03-29T01:29:59.201Z","field":"knownLimitations","source":"mcp","value_preview":"[\"No manual stat allocation in v1\",\"No XP from non-combat encounters (chests, shrines)\",\"Level cap is infinite but untes"}
+{"date":"2026-03-29T01:31:05.303Z","field":"domain","source":"mcp","value_preview":"progression"}
+{"date":"2026-03-29T01:31:05.303Z","field":"componentFile","source":"mcp","value_preview":"src/store/gameStore.ts"}
+{"date":"2026-03-29T01:31:05.303Z","field":"npmPackages","source":"mcp","value_preview":"[]"}
+{"date":"2026-03-29T01:31:05.303Z","field":"publicInterface","source":"mcp","value_preview":"[{\"name\":\"gainXp\",\"type\":\"(amount: number) => void\",\"description\":\"Add XP to persistent total; triggers level-up if thre"}
+{"date":"2026-03-29T01:31:05.303Z","field":"externalDependencies","source":"mcp","value_preview":"[]"}
+{"date":"2026-03-29T01:31:05.303Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"Level from total XP\",\"snippet\":\"function levelFromXp(xp: number): number {\\n  let level = 1\\n  while (xp >= l"}
+{"date":"2026-03-29T01:31:05.303Z","field":"userGuide","source":"mcp","value_preview":"Every monster you kill grants XP. As you accumulate XP your level increases permanently — even dying does not reset your"}
+{"date":"2026-03-29T01:31:05.303Z","field":"toolingAnnotations","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-01T02:51:46.804Z","field":"implementation","source":"mcp","value_preview":"1. gameStore: xp: number, level: number (both persist across deaths). 2. gainXp(amount) action: xp += amount, compute ne"}
+{"date":"2026-04-01T02:51:46.804Z","field":"successCriteria","source":"mcp","value_preview":"Killing a monster always grants XP visible in combat log. Level increments correctly at XP thresholds. buildPlayerStats "}
+{"date":"2026-04-01T02:51:46.804Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"Level from total XP\",\"snippet\":\"function levelFromXp(xp: number): number {\\n  let level = 0\\n  while (xpForLe"}
+{"date":"2026-04-01T02:51:46.804Z","field":"userGuide","source":"mcp","value_preview":"Every monster you kill grants XP. As you accumulate XP your level increases permanently — even dying does not reset your"}
+{"date":"2026-04-01T02:51:46.804Z","field":"lastVerifiedDate","source":"mcp","value_preview":"2026-03-31"}

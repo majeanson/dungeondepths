@@ -1,0 +1,14 @@
+{"date":"2026-04-02T22:54:13.276Z","field":"analysis","source":"mcp","value_preview":"First-time players of a new class started with a completely empty bag, no weapon, no potions. This made the early floors"}
+{"date":"2026-04-02T22:54:13.276Z","field":"implementation","source":"mcp","value_preview":"Added forceBaseId?: string to GenerateOptions in src/engine/loot.ts so generateItem() can pin a specific base item. Adde"}
+{"date":"2026-04-02T22:54:13.276Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"Per-class deterministic RNG seeds (0xca1101 etc.) instead of a runtime seed\",\"rationale\":\"Starting items m"}
+{"date":"2026-04-02T22:54:13.276Z","field":"successCriteria","source":"mcp","value_preview":"First warrior run starts with a magic sword and 2 hp potions. First rogue run starts with a magic dagger and 2 hp potion"}
+{"date":"2026-04-02T22:54:13.276Z","field":"knownLimitations","source":"mcp","value_preview":"[\"Starting item quality (magic) is fixed — could be randomized within magic tier in a future iteration\",\"Sorcerer gets a"}
+{"date":"2026-04-02T22:54:13.276Z","field":"tags","source":"mcp","value_preview":"[\"loot\",\"classes\",\"ux\",\"onboarding\"]"}
+{"date":"2026-04-02T22:54:13.276Z","field":"userGuide","source":"mcp","value_preview":"Each class begins their very first run with a class-themed starting kit: warriors get a magic sword, rogues get a magic "}
+{"date":"2026-04-02T22:54:13.276Z","field":"componentFile","source":"mcp","value_preview":"src/engine/loot.ts"}
+{"date":"2026-04-02T22:54:13.276Z","field":"npmPackages","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-02T22:54:13.276Z","field":"publicInterface","source":"mcp","value_preview":"[{\"name\":\"generateStartingItems\",\"type\":\"(classId: string) => Item[]\",\"description\":\"Returns a deterministic starting it"}
+{"date":"2026-04-02T22:54:13.276Z","field":"externalDependencies","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-02T22:54:13.276Z","field":"lastVerifiedDate","source":"mcp","value_preview":"2026-04-02"}
+{"date":"2026-04-02T22:54:13.276Z","field":"implementationNotes","source":"mcp","value_preview":"[\"CLASS_SEEDS map in loot.ts: warrior=0xca1101, rogue=0xca1102, sorcerer=0xca1103; fallback 0xca1100 for unknown classes"}
+{"date":"2026-04-02T22:54:13.276Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"generateStartingItems\",\"snippet\":\"const CLASS_SEEDS: Record<string, number> = { warrior: 0xca1101, rogue: 0xc"}

@@ -1,0 +1,70 @@
+{
+  "featureKey": "feat-2026-072",
+  "title": "Save schema migration — version-safe upgrades without wipe",
+  "status": "frozen",
+  "problem": "When the save schema changes, the current code wipes the entire save rather than migrating. Any schema evolution (new fields, renamed keys, restructured state) silently destroys player progress. A versioned migration system is required before public release.",
+  "schemaVersion": 1,
+  "domain": "game/persistence",
+  "tags": [
+    "persistence",
+    "save",
+    "migration",
+    "stability"
+  ],
+  "lineage": {
+    "parent": "feat-2026-050",
+    "spawnReason": "deferred critical feature: save migration was explicitly deferred from the initial save/load implementation as a pre-release requirement"
+  },
+  "analysis": "New careerStats fields (stakesCompleted, deepestFloor, dailyStreak, lastRunDate, floorDeaths, studiedBonuses) were added to the CareerStats interface but the v0→v1 migration in persistence.ts only included the original 6 fields. Players loading an old save would get undefined for all new fields, causing runtime errors wherever those fields are accessed.",
+  "implementation": "Updated the migrate() function in src/services/persistence.ts. In the versionless (v0) branch, added all missing careerStats fields with safe defaults: deepestFloor: 0, lastRunDate: null, dailyStreak: 0, floorDeaths: {}, studiedBonuses: {}, stakesCompleted: {}. Also added stakesCompleted to the endRun() CareerStats object in gameStore.ts where it was missing.",
+  "decisions": [
+    {
+      "decision": "All new careerStats fields default to zero/empty rather than being marked optional in the interface",
+      "rationale": "Keeping CareerStats as a fully required interface forces all write sites to provide values, catching gaps at compile time.",
+      "date": "2026-04-02"
+    },
+    {
+      "decision": "Migration is one-way (v0 → v1); no downgrade path",
+      "rationale": "Downgrading saves would require stripping fields, which is lossy and never needed in practice.",
+      "date": "2026-04-02"
+    }
+  ],
+  "successCriteria": "Loading a save that lacks stakesCompleted/deepestFloor/dailyStreak yields valid defaults, not undefined. TypeScript compilation passes with no errors on CareerStats usage. All 244 engine tests pass.",
+  "knownLimitations": [
+    "If new careerStats fields are added in future, the migration must be updated again — no automatic field defaulting"
+  ],
+  "userGuide": "Save migration is transparent. Old saves load cleanly and are upgraded in memory on first load. No data is lost.",
+  "componentFile": "src/services/persistence.ts",
+  "npmPackages": [],
+  "publicInterface": [
+    {
+      "name": "migrate",
+      "type": "(raw: any) => SaveData | null",
+      "description": "Internal migration function. Upgrades versionless saves to version 1. Returns null if the save is unrecoverable."
+    }
+  ],
+  "externalDependencies": [],
+  "lastVerifiedDate": "2026-04-02",
+  "implementationNotes": [
+    "Migration is applied in loadGame() before returning the SaveData to the store",
+    "CURRENT_VERSION = 1; future schema changes require bumping this constant and adding a new migration branch"
+  ],
+  "codeSnippets": [
+    {
+      "label": "Updated careerStats defaults in migration",
+      "snippet": "careerStats: {\n  totalRuns:       raw.careerStats?.totalRuns       ?? 0,\n  deepestTier:     raw.careerStats?.deepestTier     ?? 1,\n  totalKills:      raw.careerStats?.totalKills      ?? 0,\n  bestQuality:     raw.careerStats?.bestQuality     ?? null,\n  tiersCleared:    raw.careerStats?.tiersCleared    ?? [],\n  ascensions:      raw.careerStats?.ascensions      ?? 0,\n  deepestFloor:    raw.careerStats?.deepestFloor    ?? 0,\n  lastRunDate:     raw.careerStats?.lastRunDate     ?? null,\n  dailyStreak:     raw.careerStats?.dailyStreak     ?? 0,\n  floorDeaths:     raw.careerStats?.floorDeaths     ?? {},\n  studiedBonuses:  raw.careerStats?.studiedBonuses  ?? {},\n  stakesCompleted: raw.careerStats?.stakesCompleted ?? {},\n},"
+    }
+  ],
+  "statusHistory": [
+    {
+      "from": "draft",
+      "to": "active",
+      "date": "2026-04-02"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-04-02"
+    }
+  ]
+}

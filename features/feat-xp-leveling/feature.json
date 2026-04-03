@@ -1,0 +1,166 @@
+{
+  "featureKey": "feat-2026-037",
+  "title": "XP & Persistent Leveling",
+  "status": "frozen",
+  "problem": "Player power comes entirely from gear drops with no intrinsic growth. XP and levels would give a persistent power-creep layer that survives death — acting like an extra equipment slot that scales up indefinitely.",
+  "schemaVersion": 1,
+  "analysis": "MonsterDef already has baseXp field. combatStore resolves kills but discards XP. buildPlayerStats in combatStore computes stats from floor only — no player level input. gameStore has no xp/level fields. Level needs to persist across deaths (same as gear) to serve as the intended long-term power-creep layer. Level bonuses must feed into buildPlayerStats so the entire combat system respects them.",
+  "implementation": "1. gameStore: xp: number, level: number (both persist across deaths). 2. gainXp(amount) action: xp += amount, compute new level via levelFromXp() (level N requires N*(N+1)/2 * 100 XP), call set if level changed (+5 maxHp/level, +2 maxMana for level delta). 3. combatStore.handleVictory: xpReward = monster.baseXp * floor * tierMultiplier; calls useGameStore.getState().gainXp(xpReward). 4. buildPlayerStats: accepts playerLevel, applies +5 maxHp/level, +1 damage/level, +1 defense/level (Warrior +2), +2% critChance every 5 levels. 5. HUD: level badge + XP bar. 6. LevelUpOverlay: shown in CombatScreen on level-up. Displays the newly unlocked skill if one unlocks at this level. When no skill unlocks, shows a dimmed 'NEXT SKILL' preview card: the earliest skill for this class with levelRequired > current level, showing name, description, and 'unlocks at level N'. This helps players understand the skill unlock curve even when a level-up grants only stat bonuses. 7. CombatScreen: two useState values — levelUpSkill (the skill that just unlocked, or null) and levelUpNextSkill (the next upcoming skill). Level-up useEffect computes both: `setLevelUpSkill(unlocked); setLevelUpNextSkill(nextUpcoming)` where nextUpcoming = SKILLS filtered by classId with levelRequired > current level, sorted ascending, [0] ?? null.",
+  "decisions": [
+    {
+      "decision": "XP and level persist across deaths, never reset",
+      "rationale": "Level is the intended long-term power-creep layer that survives death. Resetting level on death would make it indistinguishable from a floor-based stat.",
+      "alternativesConsidered": [
+        "Level resets on death like floor progress",
+        "Partial XP loss on death (Dark Souls style)"
+      ],
+      "date": "2026-03-28"
+    },
+    {
+      "decision": "Level curve: total XP for level N = N*(N+1)/2 * 100",
+      "rationale": "Triangular number curve naturally slows progression without a hard cap. Level 10 costs 5500 XP total, level 20 costs 21000 — meaningful grind without being infinite.",
+      "alternativesConsidered": [
+        "Flat 500 XP per level",
+        "Exponential doubling curve"
+      ],
+      "date": "2026-03-28"
+    },
+    {
+      "decision": "Auto-distribute stat bonuses per level, no manual allocation in v1",
+      "rationale": "Keeps UI simple. Manual allocation is a future feature that can be layered on the same XP system without breaking changes.",
+      "alternativesConsidered": [
+        "Manual point allocation screen on level-up",
+        "Choose one of three random bonuses on level-up"
+      ],
+      "date": "2026-03-28"
+    },
+    {
+      "decision": "Bonuses: +5 maxHp/level, +1 damage/level, +1 defense/level, +2% critChance every 5 levels",
+      "rationale": "Roughly matches what a good Magic item gives per level. Player feels like they are always getting stronger but gear still matters more at any specific tier.",
+      "alternativesConsidered": [
+        "Only HP bonus to keep combat unchanged",
+        "Percentage bonuses that scale more aggressively"
+      ],
+      "date": "2026-03-28"
+    }
+  ],
+  "successCriteria": "Killing a monster always grants XP visible in combat log. Level increments correctly at XP thresholds. buildPlayerStats reflects level bonuses in actual combat damage/HP. HUD shows level and XP bar. Level survives death and floor reset. LevelUpOverlay shows unlocked skill (if any) or the next upcoming skill preview.",
+  "tags": [
+    "combat",
+    "progression",
+    "xp",
+    "leveling",
+    "persistence",
+    "hud"
+  ],
+  "knownLimitations": [
+    "No manual stat allocation in v1",
+    "No XP from non-combat encounters (chests, shrines)",
+    "Level cap is infinite but untested above level 50 for balance"
+  ],
+  "recommendations": "XP formula should be visible in CodexScreen under a new PROGRESSION tab. Consider adding level to GraveyardEntry so the graveyard shows player level at time of each death.",
+  "lastVerifiedDate": "2026-03-31",
+  "revisions": [
+    {
+      "date": "2026-03-28",
+      "author": "claude",
+      "fields_changed": [
+        "analysis",
+        "implementation",
+        "decisions",
+        "successCriteria"
+      ],
+      "reason": "Initial fill from design session"
+    },
+    {
+      "date": "2026-03-28",
+      "author": "claude",
+      "fields_changed": [
+        "decisions"
+      ],
+      "reason": "Fix decisions schema"
+    },
+    {
+      "date": "2026-03-31",
+      "author": "claude",
+      "fields_changed": [
+        "implementation",
+        "successCriteria"
+      ],
+      "reason": "BMAD session 2: add next-skill preview to LevelUpOverlay (levelUpNextSkill state, nextSkill prop, dimmed preview card when no skill unlocks at current level)"
+    }
+  ],
+  "annotations": [],
+  "domain": "progression",
+  "componentFile": "src/store/gameStore.ts",
+  "npmPackages": [],
+  "publicInterface": [
+    {
+      "name": "gainXp",
+      "type": "(amount: number) => void",
+      "description": "Add XP to persistent total; triggers level-up if threshold crossed"
+    },
+    {
+      "name": "level",
+      "type": "number (gameStore)",
+      "description": "Current player level, persists across deaths"
+    },
+    {
+      "name": "xp",
+      "type": "number (gameStore)",
+      "description": "Total accumulated XP, persists across deaths"
+    }
+  ],
+  "externalDependencies": [],
+  "codeSnippets": [
+    {
+      "label": "Level from total XP",
+      "snippet": "function levelFromXp(xp: number): number {\n  let level = 0\n  while (xpForLevel(level + 1) <= xp) level++\n  return level\n}\n// Level 0 is the starting level (no XP spent)"
+    },
+    {
+      "label": "buildPlayerStats with level",
+      "snippet": "const lvlBonus = { damage: level, defense: level, life: level * 5, critChance: Math.floor(level / 5) * 2 }"
+    },
+    {
+      "label": "LevelUpOverlay: next-skill preview when nothing unlocks",
+      "snippet": "// CombatScreen level-up useEffect\nconst unlocked = SKILLS.find(s => s.classId === classId && s.levelRequired === level) ?? null\nconst nextUpcoming = SKILLS\n  .filter(s => s.classId === classId && s.levelRequired > level)\n  .sort((a, b) => a.levelRequired - b.levelRequired)[0] ?? null\nsetLevelUpSkill(unlocked)\nsetLevelUpNextSkill(nextUpcoming)\n\n// LevelUpOverlay renders:\n// If newSkill is null but nextSkill exists:\n//   <View style={styles.skillCardNext}> (dimmed)\n//     <Text>NEXT SKILL</Text>\n//     <Text>{nextSkill.glyph}</Text>\n//     <Text>{nextSkill.name}</Text>\n//     <Text>unlocks at level {nextSkill.levelRequired}</Text>\n//   </View>"
+    }
+  ],
+  "userGuide": "Every monster you kill grants XP. As you accumulate XP your level increases permanently — even dying does not reset your level. Each level gives +5 max HP, +1 damage. Defense per level depends on your class (+2 for Warrior, +0 for Rogue/Sorcerer). Every 5 levels adds +2% crit chance. Your level is shown in the HUD.\n\nMax mana also scales with level, but the formula is class-specific:\n- Warrior: 20 + level×4\n- Rogue: 35 + level×6\n- Sorcerer: 60 + level×6\n\n**Level-up overlay:** When you gain a level mid-combat, a full-screen overlay pauses the fight. If a skill unlocks at this level, it is shown prominently. If no skill unlocks, the overlay previews your *next upcoming skill* (dimmed) so you always know what you're building toward.\n\nThink of level as a permanent gear slot that keeps improving the longer you play.",
+  "codexEntry": {
+    "tab": "progression",
+    "title": "XP & Leveling",
+    "summary": "Every monster you kill grants XP. Level up permanently — even death does not reset your level.",
+    "mechanics": [
+      "XP per kill scales with monster tier and floor depth",
+      "Level N requires N×(N+1)/2 × 100 total XP (Level 1 = 100, Level 5 = 1500, Level 10 = 5500)",
+      "Each level: +5 max HP, +1 damage, +1 defense",
+      "Every 5 levels: +2% crit chance (so Level 5, 10, 15, 20…)",
+      "Level persists across deaths and floor resets — it is a permanent stat",
+      "Max mana scales with level (class-specific): Warrior 20+4L, Rogue 35+6L, Sorcerer 60+6L"
+    ],
+    "tips": [
+      "Level is your safest power increase — it never goes away when you die.",
+      "The crit bonus at levels 5, 10, 15 is significant — push toward those thresholds.",
+      "Your level is shown as 'LVL N' in the top-right of the HUD at all times."
+    ]
+  },
+  "toolingAnnotations": [],
+  "statusHistory": [
+    {
+      "from": "draft",
+      "to": "active",
+      "date": "2026-03-28"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-03-28"
+    }
+  ],
+  "lineage": {
+    "children": [
+      "feat-2026-061"
+    ]
+  }
+}

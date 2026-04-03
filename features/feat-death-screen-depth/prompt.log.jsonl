@@ -1,0 +1,17 @@
+{"date":"2026-04-02T00:50:01.727Z","field":"analysis","source":"mcp","value_preview":"The death screen had three UX gaps identified via BMAD party analysis: (1) No narrative — the player knew what they lost"}
+{"date":"2026-04-02T00:50:01.727Z","field":"implementation","source":"mcp","value_preview":"App.tsx: generateEpitaph() pure function produces two lines from existing run data (className, absFloor, killedBy, runKi"}
+{"date":"2026-04-02T00:50:01.727Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"Epitaph generated from existing run data — no new tracked state\",\"rationale\":\"All inputs (killedBy, floor,"}
+{"date":"2026-04-02T00:50:01.727Z","field":"successCriteria","source":"mcp","value_preview":"Death screen shows epitaph on every death with a non-empty lastSacrifice. Echo gift button appears when no echo is activ"}
+{"date":"2026-04-02T00:50:01.727Z","field":"tags","source":"mcp","value_preview":"[\"ux\",\"death-screen\",\"epitaph\",\"ghost-echo\",\"progression\",\"retention\"]"}
+{"date":"2026-04-02T00:50:01.727Z","field":"knownLimitations","source":"mcp","value_preview":"[\"Epitaph uses gendered 'her' pronoun regardless of class — acceptable for v1, revisit if character customisation is add"}
+{"date":"2026-04-02T00:50:01.727Z","field":"userGuide","source":"mcp","value_preview":"## Death Screen\n\nWhen you die, the death screen now shows three layers of information:\n\n**Epitaph** — A two-line inscrip"}
+{"date":"2026-04-02T00:50:01.727Z","field":"componentFile","source":"mcp","value_preview":"App.tsx (EndScreen, generateEpitaph), src/store/gameStore.ts (deepestFloor in CareerStats)"}
+{"date":"2026-04-02T00:54:26.748Z","field":"npmPackages","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-02T00:54:26.748Z","field":"publicInterface","source":"mcp","value_preview":"[\"generateEpitaph(className, absFloor, killedBy, runKills, runItemsFound, item): [string, string]\",\"CareerStats.deepestF"}
+{"date":"2026-04-02T00:54:26.748Z","field":"externalDependencies","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-02T00:54:26.748Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"Epitaph generator (6-branch)\",\"lang\":\"typescript\",\"code\":\"function generateEpitaph(className, absFloor, kille"}
+{"date":"2026-04-02T00:54:26.748Z","field":"toolingAnnotations","source":"mcp","value_preview":"Transforms the death screen from a dead end into a narrative moment. generateEpitaph is a pure function — 6 prioritized "}
+{"date":"2026-04-02T00:55:33.915Z","field":"publicInterface","source":"mcp","value_preview":"[{\"name\":\"generateEpitaph\",\"type\":\"(className, absFloor, killedBy, runKills, runItemsFound, item) => [string, string]\",\""}
+{"date":"2026-04-02T00:55:33.915Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"Epitaph generator (6-branch)\",\"snippet\":\"function generateEpitaph(className, absFloor, killedBy, runKills, ru"}
+{"date":"2026-04-02T00:55:33.915Z","field":"toolingAnnotations","source":"mcp","value_preview":"[\"generateEpitaph is a pure function — 6 prioritized branches, no side effects. Lives in App.tsx for co-location with En"}
+{"date":"2026-04-02T00:56:28.016Z","field":"toolingAnnotations","source":"mcp","value_preview":"[]"}

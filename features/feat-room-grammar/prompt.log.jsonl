@@ -1,0 +1,17 @@
+{"date":"2026-04-02T00:49:34.387Z","field":"analysis","source":"mcp","value_preview":"BSP dungeon generation produces rooms of varied geometry but uniform encounter distribution. Three room archetypes emerg"}
+{"date":"2026-04-02T00:49:34.387Z","field":"implementation","source":"mcp","value_preview":"grid.ts: added RoomType enum (Standard/Charnel/Sanctum), exported Room interface, classifyRooms(rooms) assigns type by a"}
+{"date":"2026-04-02T00:49:34.387Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"Classify rooms by geometry (aspect ratio + area) rather than random assignment\",\"rationale\":\"Seeded genera"}
+{"date":"2026-04-02T00:49:34.387Z","field":"successCriteria","source":"mcp","value_preview":"Charnel rooms produce measurably higher elite/ancient encounter rates than Standard rooms at the same floor depth (verif"}
+{"date":"2026-04-02T00:49:34.387Z","field":"tags","source":"mcp","value_preview":"[\"grid\",\"dungeon\",\"bsp\",\"encounter\",\"procedural\",\"room-grammar\"]"}
+{"date":"2026-04-02T00:49:34.387Z","field":"knownLimitations","source":"mcp","value_preview":"[\"Corridor tiles between rooms always resolve as Standard (no room boundary lookup for non-room floor tiles)\",\"Room clas"}
+{"date":"2026-04-02T00:49:34.387Z","field":"userGuide","source":"mcp","value_preview":"The dungeon's room shapes are not decorative — they signal what's inside.\n\n- **Charnel halls** (long, narrow rooms): hig"}
+{"date":"2026-04-02T00:49:34.387Z","field":"componentFile","source":"mcp","value_preview":"src/engine/grid.ts, src/store/gridStore.ts"}
+{"date":"2026-04-02T00:54:15.233Z","field":"npmPackages","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-02T00:54:15.233Z","field":"publicInterface","source":"mcp","value_preview":"[\"RoomType (enum: Standard | Charnel | Sanctum)\",\"classifyRooms(rooms: Room[]): RoomType[]\",\"getRoomTypeAt(rooms, roomTy"}
+{"date":"2026-04-02T00:54:15.233Z","field":"externalDependencies","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-02T00:54:15.233Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"Room classification logic\",\"lang\":\"typescript\",\"code\":\"export function classifyRooms(rooms: Room[]): RoomType"}
+{"date":"2026-04-02T00:54:15.233Z","field":"toolingAnnotations","source":"mcp","value_preview":"Room grammar adds semantic identity to procedurally generated BSP dungeons with zero art assets. classifyRooms() is pure"}
+{"date":"2026-04-02T00:55:20.294Z","field":"publicInterface","source":"mcp","value_preview":"[{\"name\":\"RoomType\",\"type\":\"enum\",\"description\":\"Standard | Charnel | Sanctum — semantic identity of a BSP room\"},{\"name"}
+{"date":"2026-04-02T00:55:20.294Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"Room classification logic\",\"snippet\":\"export function classifyRooms(rooms: Room[]): RoomType[] {\\n  return ro"}
+{"date":"2026-04-02T00:55:20.294Z","field":"toolingAnnotations","source":"mcp","value_preview":"[\"classifyRooms() is pure and deterministic given rooms[]. Encounter weight biasing lives in gridStore movePlayer — no c"}
+{"date":"2026-04-02T00:56:27.180Z","field":"toolingAnnotations","source":"mcp","value_preview":"[]"}

@@ -1,0 +1,135 @@
+{
+  "featureKey": "feat-2026-040",
+  "title": "Attack Accuracy & Miss Chance",
+  "status": "frozen",
+  "problem": "Every attack lands — combat has no uncertainty beyond damage rolls. Missing attacks (and having monsters miss) would make dexterity a meaningful defensive stat and give Extra Fast monsters a real evasion advantage.",
+  "schemaVersion": 1,
+  "analysis": "applyCombatAction in combat.ts always resolves a hit — there is no accuracy roll. PlayerCombatStats has no dexterity or accuracy field. MonsterDef has a speed field (0.5–1.5) that is currently unused in combat. Hit/miss adds meaningful variance and makes dexterity a real stat with a defensive dimension (monster evasion) and offensive dimension (player accuracy).",
+  "implementation": "1. Add hitChance calculation to applyCombatAction: playerHitChance = clamp(60 + dexterity * 0.8, 20, 95) where dexterity comes from playerStats. 2. Monster evasion: monsterEvasion = monster.speed * 15 (range 7–22). 3. Net player hit chance: clamp(playerHitChance - monsterEvasion, 20, 95). 4. Roll against hit chance — on miss: newMonsterHp unchanged, result includes isMiss: true. 5. Monster hit chance: 65 + monster.speed * 10, capped 30–95. 6. Player dodge from dexterity: dex * 0.3% (separate from block). 7. roundToText: show 'Miss!' when isMiss, 'Dodged!' when player dodges. 8. Extra Fast affix: +20 to monster evasion, +10 to monster hit. 9. PlayerCombatStats: add dexterity field, buildPlayerStats reads from equipped items.",
+  "decisions": [
+    {
+      "decision": "Hit chance range clamped 20%-95% for both player and monsters",
+      "rationale": "Never feels completely impossible (20% floor) and always has some uncertainty (95% ceiling). Removing all misses or all hits breaks tension.",
+      "alternativesConsidered": [
+        "Uncapped (0-100% possible)",
+        "Fixed 85% base with no dexterity modifier"
+      ],
+      "date": "2026-03-28"
+    },
+    {
+      "decision": "Dexterity drives both offensive accuracy and defensive dodge",
+      "rationale": "Makes dexterity a dual-purpose stat — relevant for fast/evasive builds AND precision/critical builds. One stat, two payoffs.",
+      "alternativesConsidered": [
+        "Separate accuracy and dodge stats",
+        "Dexterity only affects crit chance (current behavior)"
+      ],
+      "date": "2026-03-28"
+    },
+    {
+      "decision": "Monster speed drives evasion — fast monsters are harder to hit",
+      "rationale": "speed is already a MonsterDef field and affects turn order. Reusing it for evasion gives it combat meaning without new monster data.",
+      "alternativesConsidered": [
+        "Separate monster evasion stat in MonsterDef",
+        "All monsters have same evasion regardless of type"
+      ],
+      "date": "2026-03-28"
+    }
+  ],
+  "successCriteria": "Low-dexterity player occasionally misses attacks shown in combat log. Fast monsters (speed > 1.0) are harder to hit. Extra Fast monsters have noticeably higher evasion. Attacks never have 0% or 100% hit rate. buildPlayerStats dexterity from equipped items affects hit calculations.",
+  "tags": [
+    "combat",
+    "accuracy",
+    "miss",
+    "dexterity",
+    "evasion",
+    "extra-fast"
+  ],
+  "knownLimitations": [
+    "No dodge animation or indicator beyond combat log text",
+    "Dexterity starting values need tuning — very low dex build could feel broken at 20% floor",
+    "Hit chance not displayed in CombatScreen in v1"
+  ],
+  "recommendations": "Add dexterity to STAT_DESC in ItemDetailSheet. Show hit chance in CodexScreen. Consider showing current hit% vs current monster in CombatScreen as a small label.",
+  "lastVerifiedDate": "2026-03-28",
+  "revisions": [
+    {
+      "date": "2026-03-28",
+      "author": "claude",
+      "fields_changed": [
+        "analysis",
+        "implementation",
+        "decisions",
+        "successCriteria"
+      ],
+      "reason": "Initial fill from design session"
+    },
+    {
+      "date": "2026-03-28",
+      "author": "claude",
+      "fields_changed": [
+        "decisions"
+      ],
+      "reason": "Fix decisions schema"
+    }
+  ],
+  "annotations": [],
+  "domain": "combat",
+  "componentFile": "src/engine/combat.ts",
+  "npmPackages": [],
+  "publicInterface": [
+    {
+      "name": "calcHitChance",
+      "type": "(attackerDex: number, defenderEvasion: number) => number",
+      "description": "Returns 0-1 hit probability clamped between 0.20 and 0.95"
+    },
+    {
+      "name": "isMiss",
+      "type": "boolean (CombatRoundResult)",
+      "description": "True when attacker's roll exceeded hit chance — damage is 0"
+    }
+  ],
+  "externalDependencies": [],
+  "codeSnippets": [
+    {
+      "label": "Hit chance calculation",
+      "snippet": "function calcHitChance(dex: number, evasion: number): number {\n  const base = 0.60 + dex * 0.008\n  return Math.min(0.95, Math.max(0.20, base - evasion))\n}"
+    },
+    {
+      "label": "Monster evasion from speed",
+      "snippet": "const monsterEvasion = monster.speed * 0.15 // Skeleton (0.8) → 0.12, Blood Hawk (1.5) → 0.225"
+    }
+  ],
+  "userGuide": "Attacks can miss. Your chance to hit depends on your Dexterity stat versus the monster's speed — fast monsters are harder to hit. The Extra Fast affix makes a monster significantly harder to hit and dodge. When you miss, the combat log shows 'Miss!' and no damage is dealt. Stacking Dexterity on your gear improves both your hit rate and your chance to dodge incoming attacks.",
+  "codexEntry": {
+    "tab": "combat",
+    "title": "Hit & Miss",
+    "summary": "Attacks can miss. Your chance to hit depends on your Dexterity versus the monster's speed.",
+    "mechanics": [
+      "Player hit chance: clamp(80% + dex×0.6% − monster_speed×8%, 35%, 95%)",
+      "Monster hit chance: clamp(65% + monster_speed×6% − dex×0.4%, 30%, 90%)",
+      "At 0 dexterity, base hit chance vs a speed-1 monster is ~72%",
+      "Extra Fast affix: monster speed increases — harder to hit, hits you more reliably",
+      "Dexterity from items improves both your accuracy and reduces enemy accuracy",
+      "A miss deals 0 damage and shows 'Miss!' in the combat log",
+      "Hit chance is never 0% or 100% — there is always uncertainty"
+    ],
+    "tips": [
+      "Stack Dexterity to fight Extra Fast monsters more reliably.",
+      "Even a slow monster can hit you ~65% of the time without any dex investment.",
+      "Dex gear is the best counter to Extra Fast affixes — it's a defensive stat, not just offensive."
+    ]
+  },
+  "toolingAnnotations": [],
+  "statusHistory": [
+    {
+      "from": "draft",
+      "to": "active",
+      "date": "2026-03-28"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-03-28"
+    }
+  ]
+}

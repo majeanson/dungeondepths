@@ -1,0 +1,24 @@
+{"date":"2026-03-29T01:28:12.668Z","field":"analysis","source":"mcp","value_preview":"gameStore has floor (1–10) with no tier concept. maxHpForFloor and buildPlayerStats scale linearly with floor only. Mons"}
+{"date":"2026-03-29T01:28:12.668Z","field":"implementation","source":"mcp","value_preview":"1. gameStore: add tier: number (starts 1, persists across deaths like level). 2. On floor 10 clear (reachedExit when flo"}
+{"date":"2026-03-29T01:28:12.668Z","field":"decisions","source":"mcp","value_preview":"[\"Infinite tiers with no hard cap — designer adds harder gear as content, tiers are the difficulty runway\",\"Tier persist"}
+{"date":"2026-03-29T01:28:12.668Z","field":"successCriteria","source":"mcp","value_preview":"Clearing floor 10 increments tier and resets to floor 1. Monster HP and damage scale correctly per tier formula. HUD sho"}
+{"date":"2026-03-29T01:28:12.668Z","field":"tags","source":"mcp","value_preview":"[\"progression\",\"difficulty\",\"tiers\",\"scaling\",\"endgame\",\"gamestore\"]"}
+{"date":"2026-03-29T01:28:12.668Z","field":"knownLimitations","source":"mcp","value_preview":"No tier-specific monster pool yet — same monsters appear at all tiers, just scaled. No visual theme change per tier. Ver"}
+{"date":"2026-03-29T01:28:12.668Z","field":"recommendations","source":"mcp","value_preview":"Add tier to GraveyardEntry — dying on Tier 7 should be noted. Tier number could eventually unlock themed monster sets or"}
+{"date":"2026-03-29T01:30:09.706Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"Infinite numeric tiers instead of named Normal/Nightmare/Hell\",\"rationale\":\"No hard ceiling means the desi"}
+{"date":"2026-03-29T01:30:09.706Z","field":"knownLimitations","source":"mcp","value_preview":"[\"No tier-specific monster pool — same monsters appear at all tiers, just scaled\",\"No visual theme change per tier in v1"}
+{"date":"2026-03-29T01:31:10.932Z","field":"domain","source":"mcp","value_preview":"progression"}
+{"date":"2026-03-29T01:31:10.932Z","field":"componentFile","source":"mcp","value_preview":"src/store/gameStore.ts"}
+{"date":"2026-03-29T01:31:10.932Z","field":"npmPackages","source":"mcp","value_preview":"[]"}
+{"date":"2026-03-29T01:31:10.932Z","field":"publicInterface","source":"mcp","value_preview":"[{\"name\":\"tier\",\"type\":\"number (gameStore)\",\"description\":\"Current difficulty tier, starts at 1, increments on floor-10 "}
+{"date":"2026-03-29T01:31:10.932Z","field":"externalDependencies","source":"mcp","value_preview":"[]"}
+{"date":"2026-03-29T01:31:10.932Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"Tier monster multipliers\",\"snippet\":\"function tierMult(tier: number) {\\n  return {\\n    hp:     1 + (tier - 1"}
+{"date":"2026-03-29T01:31:10.932Z","field":"userGuide","source":"mcp","value_preview":"When you clear floor 10, you ascend to the next tier. Tier 2 monsters are 50% tougher, tier 3 tougher still — with no ce"}
+{"date":"2026-03-29T01:31:10.932Z","field":"toolingAnnotations","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-01T02:47:54.681Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"Infinite numeric tiers instead of named Normal/Nightmare/Hell\",\"rationale\":\"No hard ceiling means the desi"}
+{"date":"2026-04-01T02:47:54.681Z","field":"implementation","source":"mcp","value_preview":"1. gameStore: `tier: number` (starts 1, persists across deaths). `careerStats.tiersCleared: number[]` tracks first-time "}
+{"date":"2026-04-01T02:47:54.681Z","field":"successCriteria","source":"mcp","value_preview":"Clearing floor 10 increments tier and resets to floor 1. Monster HP and damage scale correctly per tier formula. HUD sho"}
+{"date":"2026-04-01T02:47:54.681Z","field":"publicInterface","source":"mcp","value_preview":"[{\"name\":\"tier\",\"type\":\"number (gameStore)\",\"description\":\"Current difficulty tier, starts at 1, increments on floor-10 "}
+{"date":"2026-04-01T02:47:54.681Z","field":"userGuide","source":"mcp","value_preview":"**Tiers** are the infinite difficulty ladder of this game. When you clear floor 10, you ascend to the next tier — the HU"}
+{"date":"2026-04-01T02:47:54.681Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"Tier monster multipliers (combatStore)\",\"snippet\":\"// hpMult = 1 + (tier-1)*0.5,  damageMult = 1 + (tier-1)*0"}
+{"date":"2026-04-01T02:47:54.681Z","field":"lastVerifiedDate","source":"mcp","value_preview":"2026-03-31"}

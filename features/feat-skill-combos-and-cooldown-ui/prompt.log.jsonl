@@ -1,0 +1,12 @@
+{"date":"2026-04-02T22:25:03.080Z","field":"analysis","source":"mcp","value_preview":"Shadow Step → Backstab combo was tracked in combatStore via lastSkillUsed. When backstab fires after shadow_step, a 'SHA"}
+{"date":"2026-04-02T22:25:03.080Z","field":"implementation","source":"mcp","value_preview":"combatStore.ts lines 305-308: if (skillId === 'backstab' && lastSkillUsed === 'shadow_step') push le('SHADOW CRIT — shad"}
+{"date":"2026-04-02T22:25:03.080Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"Combo shown as a typed 'crit' log entry (gold), not a popup or overlay\",\"rationale\":\"The combat log is the"}
+{"date":"2026-04-02T22:25:03.080Z","field":"successCriteria","source":"mcp","value_preview":"Shadow Step → Backstab shows a gold 'SHADOW CRIT' log entry. Skill buttons with active cooldowns show 'CD:{n}' and are n"}
+{"date":"2026-04-02T22:25:03.080Z","field":"knownLimitations","source":"mcp","value_preview":"[\"Only one combo exists (Shadow Step → Backstab) — no combo system generalization\",\"No combo window timeout — lastSkillU"}
+{"date":"2026-04-02T22:25:03.080Z","field":"componentFile","source":"mcp","value_preview":"src/store/combatStore.ts, src/screens/CombatScreen.tsx"}
+{"date":"2026-04-02T22:25:03.080Z","field":"userGuide","source":"mcp","value_preview":"Use Shadow Step then immediately Backstab for a guaranteed bonus crit entry in the log. Skill cooldowns show as 'CD:2' e"}
+{"date":"2026-04-02T22:25:03.080Z","field":"implementationNotes","source":"mcp","value_preview":"[\"lastSkillUsed resets to null on clearCombat (line 431)\",\"cooldownRounds computed in CombatScreen from statusCounters u"}
+{"date":"2026-04-02T22:25:03.080Z","field":"npmPackages","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-02T22:25:03.080Z","field":"externalDependencies","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-02T22:25:03.080Z","field":"publicInterface","source":"mcp","value_preview":"[{\"name\":\"CombatState.lastSkillUsed\",\"type\":\"SkillId | null\",\"description\":\"Tracks last skill for combo detection. Shado"}
+{"date":"2026-04-02T22:25:03.080Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"Shadow Step → Backstab combo log entry\",\"snippet\":\"if (skillId === 'backstab' && lastSkillUsed === 'shadow_st"}

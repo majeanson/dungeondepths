@@ -1,0 +1,121 @@
+{
+  "featureKey": "feat-2026-078",
+  "title": "Floor Waypoints & Run Entry Selection",
+  "status": "frozen",
+  "problem": "High-level players starting a new run always begin at floor 1, making early floors trivially easy and boring. There is no way to skip to harder content commensurate with their progression. Need class-specific waypoints so players can start runs at deeper floors they have already cleared.",
+  "schemaVersion": 1,
+  "domain": "game/mobile",
+  "tags": [
+    "game",
+    "ios",
+    "expo",
+    "react-native",
+    "roguelite",
+    "loot-system",
+    "grid-exploration"
+  ],
+  "lineage": {
+    "parent": "feat-2026-034",
+    "spawnReason": "new feature: floor/waypoint selection on class select screen, class-specific deepest floor tracking"
+  },
+  "analysis": "The floor waypoints feature extends the class select screen with a horizontal chip row of predefined floor entry points (F1, F5, F10, F15, F20, F25, F30). Unlock state is class-specific — each class tracks its own deepestFloor independently via a new careerStats.deepestFloorByClass Record field. This per-class tracking is stored in gameStore.careerStats and persisted via persistence.ts hydration. The startRun() action accepts an optional startFloor parameter; it decomposes the absolute floor into tier and localFloor using the floor = (tier-1)*10 + localFloor identity before initialising grid and HP. ClassSelectScreen reads deepestFloorByClass for the selected class and drives chip locked/active visual states. The waypoint list is hardcoded (WAYPOINTS = [1,5,10,15,20,25,30]) because these coincide with boss-floor thresholds, giving each waypoint narrative weight. F10 is marked with a skull glyph to signal tier completion.",
+  "decisions": [
+    {
+      "decision": "Per-class deepestFloor tracked as Partial<Record<ClassId, number>> in careerStats",
+      "rationale": "Each class has an independent progression; a player clearing F10 as Rogue should not unlock F10 entry for Warrior. A partial record avoids initialising every class at run start.",
+      "date": "2026-04-02"
+    },
+    {
+      "decision": "startRun() extended with optional startFloor parameter; decomposes via tier=floor((absFloor-1)/10)+1, localFloor=((absFloor-1)%10)+1",
+      "rationale": "This decomposition mirrors the existing tier/localFloor model throughout the codebase. The alternative of storing absolute floor everywhere would require touching every floor-dependent stat formula.",
+      "date": "2026-04-02"
+    },
+    {
+      "decision": "Waypoints hardcoded to [1,5,10,15,20,25,30] — every 5 floors, coinciding with boss floors",
+      "rationale": "Boss floors are the natural narrative gates. Allowing arbitrary waypoints would let players skip boss challenges they haven't earned. Hardcoding the list keeps unlock logic trivial.",
+      "date": "2026-04-02"
+    },
+    {
+      "decision": "Floor 1 waypoint is always unlocked regardless of deepestFloor",
+      "rationale": "New players must always have a valid starting point. Locking F1 would make the feature break on first run.",
+      "date": "2026-04-02"
+    }
+  ],
+  "implementation": "gameStore.careerStats gains deepestFloorByClass: Partial<Record<ClassId, number>>. nextFloor() updates it whenever the player descends past their previous deepest absolute floor. endRun() serialises it into the career snapshot. persistence.ts hydrates deepestFloorByClass with a null-safe default of {}. startRun() accepts startFloor (default 1), computes startTier and localFloor, then sets floor/tier and calls initFloor(localFloor, seed). ClassSelectScreen adds a startFloor state and a horizontal ScrollView of waypoint chips. Each chip shows a T/F label (T2·F5), a skull for the final floor of a tier, and a lock icon when not unlocked. isWaypointUnlocked returns true for F1 always, and for others requires deepestFloorByClass[selected] >= absFloor. The descend handler passes startFloor to both startRun() and initFloor().",
+  "knownLimitations": [
+    "Waypoints only show tier·floor labels (T2·F5) — no difficulty preview or monster level info to help players pick the right entry point.",
+    "deepestFloorByClass is not migrated from older saves that only tracked the global deepestFloor — existing players lose waypoint history on first update.",
+    "No waypoint animation or unlock celebration when a new waypoint becomes available."
+  ],
+  "successCriteria": "Players can select any previously-cleared floor entry point per class from the class select screen. Floor 1 is always available. Waypoints at F5/F10/F15/F20/F25/F30 unlock only after that class has cleared that floor. Starting from a waypoint correctly initialises the correct tier and local floor, monster difficulty, and HP scaling.",
+  "userGuide": "After you've cleared deeper floors, you don't have to start from floor 1 every run. On the class select screen, scroll the waypoint chips to pick a starting floor — each chip shows the tier and floor (T2·F5 means Tier 2, Floor 5). Locked chips are greyed out until you've cleared that floor with that class. The skull (☠) marks the end of each tier. Your waypoints are tracked separately for each class, so clearing floor 10 as a Rogue won't unlock it for your Warrior.",
+  "componentFile": "src/screens/ClassSelectScreen.tsx",
+  "npmPackages": [],
+  "publicInterface": [
+    {
+      "name": "startRun(seed?, startFloor?)",
+      "type": "gameStore action",
+      "description": "Starts a new run, optionally at a specific absolute floor. Decomposes into tier and localFloor before initialising."
+    },
+    {
+      "name": "deepestFloorByClass",
+      "type": "Partial<Record<ClassId, number>>",
+      "description": "Per-class record of the highest absolute floor reached. Lives in careerStats."
+    }
+  ],
+  "externalDependencies": [
+    "feat-2026-043",
+    "feat-2026-034"
+  ],
+  "lastVerifiedDate": "2026-04-02",
+  "codeSnippets": [
+    {
+      "label": "Absolute floor decomposition",
+      "snippet": "const startTier  = Math.floor((startFloor - 1) / 10) + 1\nconst localFloor = ((startFloor - 1) % 10) + 1"
+    },
+    {
+      "label": "deepestFloorByClass update in nextFloor",
+      "snippet": "if (s.classId) {\n  const absFloor = (s.tier - 1) * 10 + s.floor\n  const prev = s.careerStats.deepestFloorByClass?.[s.classId] ?? 0\n  if (absFloor > prev) {\n    set({ careerStats: { ...s.careerStats, deepestFloorByClass: { ...s.careerStats.deepestFloorByClass, [s.classId]: absFloor } } })\n  }\n}"
+    },
+    {
+      "label": "Waypoint unlock check",
+      "snippet": "const WAYPOINTS = [1, 5, 10, 15, 20, 25, 30]\nconst isUnlocked = (absFloor: number) =>\n  absFloor === 1 || (deepestFloorByClass[selected] ?? 0) >= absFloor"
+    },
+    {
+      "label": "Waypoint label formatting",
+      "snippet": "const t = Math.floor((w - 1) / 10) + 1\nconst f = ((w - 1) % 10) + 1\nconst label = `T${t}·F${f}${f === 10 ? ' ☠' : ''}`"
+    }
+  ],
+  "implementationNotes": [
+    "The per-class deepest floor is stored as an absolute floor (e.g. 15 = tier 2, floor 5) so comparison is a simple integer >= check regardless of tier boundaries.",
+    "startRun now accepts startFloor and recomputes maxHp using localFloor (not the absolute floor), since HP scaling is relative to the local floor within a tier.",
+    "playerJourneySim.ts validates waypoint meta-progression: the 'waypoint' mode tracks wpFloor (every 5 floors via bestWaypoint()), wpGear, wpXp, wpStash (gem stash), and wpDiff (1=Normal, 2=Nightmare, 3=Hell). On each clear, wpDiff advances to the next tier and wpFloor resets to 1. The sim-confirmed formula for waypoint calculation is: bestWaypoint(floorReached) = Math.max(1, Math.floor((floorReached-1)/5)*5+1). 400-player/30-attempt journey sim shows: baseline median 9-10 attempts to first F10 clear; waypoint mode median 3-4 attempts. By R8, all classes have 100% F10 clear rate in waypoint mode.",
+    "Difficulty distribution in waypoint mode (400 players, 30 attempts): by R5, ~75% of players are in Nightmare; by R8, 20-31% are in Hell; by R15, 92-99% are in Hell. Sorcerer progresses to Hell slightly slower (glass cannon slower Normal clear) but catches up by R15."
+  ],
+  "revisions": [
+    {
+      "date": "2026-04-02",
+      "author": "claude+marc",
+      "fields_changed": [
+        "analysis",
+        "decisions",
+        "implementation",
+        "successCriteria"
+      ],
+      "reason": "Initial fill from implementation — floor waypoints fully implemented in ClassSelectScreen, gameStore, and persistence"
+    }
+  ],
+  "annotations": [],
+  "statusHistory": [
+    {
+      "from": "draft",
+      "to": "active",
+      "date": "2026-04-02"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-04-02"
+    }
+  ]
+}

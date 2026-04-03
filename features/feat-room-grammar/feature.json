@@ -1,0 +1,126 @@
+{
+  "featureKey": "feat-2026-055",
+  "title": "Room Grammar — Charnel & Sanctum Encounter Bias",
+  "status": "frozen",
+  "problem": "BSP-generated rooms are geometrically varied but semantically identical — every room has the same encounter distribution regardless of shape. Long corridor rooms and wide open chambers roll the same odds. Players cannot read the dungeon before engaging it, removing a layer of spatial decision-making.",
+  "schemaVersion": 1,
+  "domain": "game/combat",
+  "tags": [
+    "grid",
+    "dungeon",
+    "bsp",
+    "encounter",
+    "procedural",
+    "room-grammar"
+  ],
+  "lineage": {
+    "parent": "feat-2026-045",
+    "spawnReason": "scope split: new dungeon intelligence layer not covered by boss-encounters — room shape now controls encounter bias",
+    "children": [
+      "feat-2026-075"
+    ]
+  },
+  "analysis": "BSP dungeon generation produces rooms of varied geometry but uniform encounter distribution. Three room archetypes emerge naturally from shape metrics: Charnel (aspect ratio ≥ 2.5 — narrow corridors) biased toward elites and ancients; Sanctum (area ≥ 30 and ratio < 1.8 — wide squares) biased toward shrines and chests; Standard (everything else) unchanged. Classified at floor generation time, stored alongside rooms in gridStore, and applied as a weight multiplier before every encounter roll. Players learn the grammar in ~3 floors without a tutorial — narrow red-tinged passages signal danger, wide chambers signal reward.",
+  "implementation": "grid.ts: added RoomType enum (Standard/Charnel/Sanctum), exported Room interface, classifyRooms(rooms) assigns type by aspect ratio and area, getRoomTypeAt(rooms, roomTypes, pos) looks up the type for any grid position. generateFloor() now returns roomTypes[] alongside rooms[]. gridStore: added rooms: Room[] and roomTypes: RoomType[] to GridState; initFloor populates both from generateFloor; movePlayer calls getRoomTypeAt(rooms, roomTypes, next) before rollEncounter and applies inline weight bias — Charnel: elite×3, ancient×2, shrine/chest≈0; Sanctum: shrine×5, chest×4, elite×0.3; Standard: unmodified floorPacingWeights.",
+  "decisions": [
+    {
+      "decision": "Classify rooms by geometry (aspect ratio + area) rather than random assignment",
+      "rationale": "Seeded generation means room shapes are deterministic — classifying by geometry makes the grammar consistent and learnable. A Charnel room is always narrow; the player's visual read of the corridor predicts the encounter type.",
+      "alternativesConsidered": [
+        "Random per-room type tag — breaks the visual grammar and makes the dungeon unreadable",
+        "Hand-placed special rooms — requires non-BSP generation and loses the procedural seed guarantee"
+      ],
+      "recommendation": "Geometry-based classification. Stack-agnostic: the same classifyRooms() function works on any rectangular room set regardless of rendering engine.",
+      "date": "2026-04-01"
+    },
+    {
+      "decision": "Bias encounter weights, not override them — room type adjusts probabilities, not outcomes",
+      "rationale": "A Charnel room that guarantees an elite every step would feel oppressive and exploit-prone. Biasing weights preserves variance and the seeded PRNG's run-reproducibility while still making the room type meaningful.",
+      "alternativesConsidered": [
+        "Hard override (Charnel always spawns elite) — predictable to the point of feeling scripted"
+      ],
+      "recommendation": "Multiplicative weight adjustment inline in movePlayer. No new engine function needed.",
+      "date": "2026-04-01"
+    }
+  ],
+  "successCriteria": "Charnel rooms produce measurably higher elite/ancient encounter rates than Standard rooms at the same floor depth (verifiable via sim:floors). Sanctum rooms produce measurably higher shrine/chest rates. TypeScript 0 errors. Existing grid.test.ts and encounter.test.ts pass unchanged.",
+  "knownLimitations": [
+    "Corridor tiles between rooms always resolve as Standard (no room boundary lookup for non-room floor tiles)",
+    "Room classification is purely geometric — no hand-authored control over special rooms",
+    "Visual distinction between room types not yet implemented (no floor tint difference)"
+  ],
+  "userGuide": "The dungeon's room shapes are not decorative — they signal what's inside.\n\n- **Charnel halls** (long, narrow rooms): high concentration of Elite and Ancient monsters. Move carefully, ensure potions are stocked before entering.\n- **Sanctums** (wide, roughly square rooms): favour Shrines and Chests. Good rooms to detour toward when gear or buffs are needed.\n- **Standard rooms**: normal encounter distribution — the baseline.\n\nThe grammar is deterministic per seed. If you die in a Charnel hall, the same hall will be dangerous on a repeated run with the same seed.",
+  "componentFile": "src/engine/grid.ts, src/store/gridStore.ts",
+  "lastVerifiedDate": "2026-04-01",
+  "revisions": [
+    {
+      "date": "2026-04-01",
+      "author": "claude",
+      "fields_changed": [
+        "analysis",
+        "implementation",
+        "decisions",
+        "successCriteria"
+      ],
+      "reason": "Initial full feature definition — Room Grammar implemented and verified"
+    }
+  ],
+  "annotations": [],
+  "npmPackages": [],
+  "publicInterface": [
+    {
+      "name": "RoomType",
+      "type": "enum",
+      "description": "Standard | Charnel | Sanctum — semantic identity of a BSP room"
+    },
+    {
+      "name": "classifyRooms",
+      "type": "(rooms: Room[]) => RoomType[]",
+      "description": "Pure function: classifies each room by aspect ratio and area"
+    },
+    {
+      "name": "getRoomTypeAt",
+      "type": "(rooms, roomTypes, pos) => RoomType",
+      "description": "Returns the room type at a grid position, or Standard if no match"
+    },
+    {
+      "name": "GridState.rooms",
+      "type": "Room[]",
+      "description": "BSP room list stored in gridStore, set on initFloor"
+    },
+    {
+      "name": "GridState.roomTypes",
+      "type": "RoomType[]",
+      "description": "Parallel array to rooms[], set on initFloor via classifyRooms"
+    }
+  ],
+  "externalDependencies": [],
+  "codeSnippets": [
+    {
+      "label": "Room classification logic",
+      "snippet": "export function classifyRooms(rooms: Room[]): RoomType[] {\n  return rooms.map(r => {\n    const ratio = Math.max(r.w / r.h, r.h / r.w)\n    if (ratio >= 2.5) return RoomType.Charnel\n    if (r.w * r.h >= 30 && ratio < 1.8) return RoomType.Sanctum\n    return RoomType.Standard\n  })\n}"
+    },
+    {
+      "label": "Encounter weight biasing by room type",
+      "snippet": "const biasedWeights = roomType === RoomType.Charnel\n  ? { ...baseWeights, elite: baseWeights.elite * 3, ancient: baseWeights.ancient * 2, shrine: 1, chest: 1 }\n  : roomType === RoomType.Sanctum\n  ? { ...baseWeights, shrine: baseWeights.shrine * 5, chest: baseWeights.chest * 4, elite: Math.floor(baseWeights.elite * 0.3) }\n  : baseWeights"
+    }
+  ],
+  "implementationNotes": [
+    "classifyRooms() is pure and deterministic given rooms[] — same floor seed always produces the same room types.",
+    "Encounter weight biasing lives entirely in gridStore.movePlayer, not in rollEncounter() — rollEncounter() signature is unchanged and remains unaware of room semantics.",
+    "Charnel threshold (ratio >= 2.5) was chosen to match BSP rooms that are clearly corridor-like vs. just slightly rectangular. Sanctum requires both large area AND squarish shape to avoid tagging large corridors as shrines.",
+    "roomTypes[] is a parallel array to rooms[] — indices must stay in sync. classifyRooms() is always called immediately after generateFloor() in initFloor."
+  ],
+  "statusHistory": [
+    {
+      "from": "draft",
+      "to": "active",
+      "date": "2026-04-01"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-04-01"
+    }
+  ]
+}

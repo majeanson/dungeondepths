@@ -1,0 +1,14 @@
+{"date":"2026-04-02T22:55:56.220Z","field":"analysis","source":"mcp","value_preview":"CareerStats tracked only 6 fields from session 1. New mechanics (stakes, floor deaths, daily streak, deepest floor, stud"}
+{"date":"2026-04-02T22:55:56.220Z","field":"implementation","source":"mcp","value_preview":"1. Extended CareerStats interface in gameStore.ts with: deepestFloor, lastRunDate, dailyStreak (streak of consecutive-da"}
+{"date":"2026-04-02T22:55:56.220Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"MAX_GRAVEYARD=15, trimming oldest entries when exceeded\",\"rationale\":\"Most recent deaths are most relevant"}
+{"date":"2026-04-02T22:55:56.220Z","field":"successCriteria","source":"mcp","value_preview":"Graveyard never exceeds 15 entries. Stash deposit returns false when at 30 items. stakesCompleted increments per stake c"}
+{"date":"2026-04-02T22:55:56.220Z","field":"knownLimitations","source":"mcp","value_preview":"[\"floorDeaths is a Record keyed by absolute floor index — sparse arrays are JSON-serialized as objects, which is fine bu"}
+{"date":"2026-04-02T22:55:56.220Z","field":"tags","source":"mcp","value_preview":"[\"persistence\",\"career-stats\",\"graveyard\",\"stash\",\"stakes\"]"}
+{"date":"2026-04-02T22:55:56.220Z","field":"userGuide","source":"mcp","value_preview":"Career stats now track your longest floor reached, daily streak, deaths per floor, and stakes completed per run type. Th"}
+{"date":"2026-04-02T22:55:56.220Z","field":"componentFile","source":"mcp","value_preview":"src/store/gameStore.ts"}
+{"date":"2026-04-02T22:55:56.220Z","field":"npmPackages","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-02T22:55:56.220Z","field":"publicInterface","source":"mcp","value_preview":"[{\"name\":\"MAX_STASH_SIZE\",\"type\":\"number\",\"description\":\"Exported constant (30) — used by StashScreen to display stash c"}
+{"date":"2026-04-02T22:55:56.220Z","field":"externalDependencies","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-02T22:55:56.220Z","field":"lastVerifiedDate","source":"mcp","value_preview":"2026-04-02"}
+{"date":"2026-04-02T22:55:56.220Z","field":"implementationNotes","source":"mcp","value_preview":"[\"Graveyard trim: slice(newGraveyard.length - MAX_GRAVEYARD) keeps the most recent entries\",\"stakesCompleted increment: "}
+{"date":"2026-04-02T22:55:56.220Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"Graveyard cap in endRun()\",\"snippet\":\"const MAX_GRAVEYARD = 15\\nset(s => {\\n  const newGraveyard = [...s.grav"}

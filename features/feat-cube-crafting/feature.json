@@ -1,0 +1,154 @@
+{
+  "featureKey": "feat-2026-047",
+  "title": "Cube Crafting System",
+  "status": "frozen",
+  "problem": "Junk loot accumulates with no use — normal and magic items that don't make the cut go to the void. There is no transmutation system (D2's Horadric Cube equivalent) for upgrading, rerolling, or combining items into better ones. Runes are underused because there's no cube to upgrade low runes into higher ones. Players have no crafting agency between dungeon runs.",
+  "schemaVersion": 1,
+  "domain": "game/crafting",
+  "analysis": "No crafting system exists. TownScreen has EQUIPPED and STASH tabs — a CUBE tab can be added as a third tab with zero routing changes. gameStore/inventoryStore already manages items. Need: recipe definitions (src/data/recipes.ts), transmutation engine (engine/loot.ts transmute function), ingredient slot state (local to CraftingScreen — no new store needed for v1 since it's a UI-driven operation), and result generation.",
+  "implementation": "1. src/data/recipes.ts — RecipeDef: { id, name, hint, match: (items: Item[]) => boolean, build: (items: Item[], rng: Rng) => Item }. 7 recipes: (a) 3x normal same-slot → 1x magic; (b) 3x magic same-slot → 1x rare; (c) 1x magic item + Eld rune → reroll magic affixes; (d) 1x normal weapon/armor + El+El → add 1 socket; (e) 3x same rune → next rune in ladder; (f) 5x small_charm → 1x large_charm; (g) 1x rare item + Nef rune → reroll rare affixes. Export `getRecipeById(id: string): RecipeDef | undefined` for use by loot.ts. 2. engine/loot.ts — `import { getRecipeById } from '../data/recipes'` (static import at file top — replaces any dynamic require()). transmute(ingredients: Item[], rng: Rng): Item | null — matches against RECIPES, returns generated result or null on no match. 3. src/screens/CraftingScreen.tsx — integrated as 3rd tab in TownScreen. UI: 4 ingredient slots (tap to select from stash/bag), recipe hint panel, TRANSMUTE button. On transmute: remove ingredients from stash/bag, add result to stash. 4. TownScreen.tsx — adds 'cube' tab. 5. No new store — ingredient slots are local useState in CraftingScreen.",
+  "decisions": [
+    {
+      "decision": "Crafting uses a Horadric Cube metaphor — select recipe then select items from bag",
+      "rationale": "Recipe-first flow prevents players from randomly selecting items hoping for a match; they choose intent then gather ingredients.",
+      "date": "2026-03-29"
+    },
+    {
+      "decision": "matchesRecipeInputs validates exact ingredient requirements before enabling transmute button",
+      "rationale": "Hard gate on the button prevents wasted transmutes; the function validates both count and type constraints in one pass.",
+      "date": "2026-03-29"
+    },
+    {
+      "decision": "Atomic operation — result item added first, inputs consumed only if bag has space",
+      "rationale": "Prevents a full-bag scenario from eating inputs without producing output; player never loses items to a space error.",
+      "date": "2026-03-29"
+    },
+    {
+      "decision": "BMAD S3: countMatchedInputs added alongside matchesRecipeInputs — shows N/M partial progress hint during ingredient selection",
+      "rationale": "Without partial feedback, players had no signal whether they were on the right track while selecting ingredients; N/M shows progress without revealing the full recipe.",
+      "date": "2026-04-01"
+    }
+  ],
+  "successCriteria": "7 transmutation recipes functional. 3 normal same-slot items produce a magic item. Rune upgrades work (3x El → Eld). Recipe hint shows when partial match detected. Results land in stash.",
+  "tags": [
+    "crafting",
+    "cube",
+    "recipes",
+    "items",
+    "town"
+  ],
+  "knownLimitations": [
+    "No recipe book/codex UI — players must discover recipes or read the user guide",
+    "Only 7 recipes in v1 — full D2 cube parity deferred",
+    "Rare reroll (recipe g) can produce worse stats than the input — same as D2, intentional"
+  ],
+  "componentFile": "src/data/recipes.ts, src/engine/loot.ts, src/screens/CraftingScreen.tsx, src/screens/TownScreen.tsx",
+  "userGuide": "## The Cube\n\nThe Cube transmutes items and runes into new things. Access it via the CUBE tab in Town.\n\n**How it works:** Place up to 4 items in the ingredient slots, then press TRANSMUTE. If your ingredients match a recipe, you get the result. If not, nothing happens and your items are returned.\n\n**Recipes:**\n- 3x normal items (same slot) → 1x magic item of the same slot\n- 3x magic items (same slot) → 1x rare item of the same slot\n- 1x magic item + Eld Rune → reroll the magic item's affixes\n- 1x normal weapon/armor + El + El → add 1 socket to it\n- 3x same rune → next rune up the ladder (El→Eld→Tir→...)\n- 5x Small Charm → 1x Large Charm\n- 1x rare item + Nef Rune → reroll the rare item's affixes",
+  "lineage": {
+    "parent": "feat-2026-034",
+    "children": [
+      "feat-2026-070"
+    ]
+  },
+  "lastVerifiedDate": "2026-04-01",
+  "revisions": [
+    {
+      "date": "2026-03-29",
+      "author": "claude",
+      "fields_changed": [
+        "analysis",
+        "implementation",
+        "decisions",
+        "successCriteria"
+      ],
+      "reason": "Initial full feature definition for cube crafting"
+    },
+    {
+      "date": "2026-03-31",
+      "author": "claude",
+      "fields_changed": [
+        "implementation"
+      ],
+      "reason": "BMAD session 2: add getRecipeById export + static import in loot.ts (removes dynamic require); clarify RecipeDef interface shape"
+    },
+    {
+      "date": "2026-04-01",
+      "author": "claude+marc",
+      "fields_changed": [
+        "decisions"
+      ],
+      "reason": "BMAD session 3 — partial match hint for ingredient selection UX"
+    }
+  ],
+  "annotations": [
+    {
+      "id": "reopen-1775065878036",
+      "author": "lac advance",
+      "date": "2026-04-01",
+      "type": "reopen",
+      "body": "BMAD session 3: added partial match hint (N/M inputs matched) during ingredient selection in CraftingScreen"
+    }
+  ],
+  "npmPackages": [],
+  "externalDependencies": [],
+  "publicInterface": [
+    {
+      "name": "RecipeDef",
+      "type": "interface",
+      "description": "Defines ingredient matchers and result builder for a transmutation recipe"
+    },
+    {
+      "name": "transmute",
+      "type": "(ingredients: Item[], rng: Rng) => Item | null",
+      "description": "Core recipe engine — matches ingredients against RECIPES, returns result or null"
+    },
+    {
+      "name": "CraftingScreen",
+      "type": "React.FC",
+      "description": "Cube UI rendered as 3rd tab in TownScreen — 4 ingredient slots + TRANSMUTE button"
+    },
+    {
+      "name": "RECIPES",
+      "type": "RecipeDef[]",
+      "description": "All 7 transmutation recipe definitions"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "label": "RecipeDef interface and rune upgrade recipe",
+      "snippet": "interface RecipeDef {\n  id: string\n  name: string\n  hint: string\n  match: (items: Item[]) => boolean\n  build: (items: Item[], rng: Rng) => Item\n}\n\n// 3x same rune → next rune\n{\n  id: 'rune_upgrade',\n  name: 'Rune Upgrade',\n  hint: '3 of the same rune',\n  match: (items) => items.length === 3 && items.every(i => i.baseId === items[0].baseId && i.slot === 'rune'),\n  build: (items, rng) => generateRune(RUNE_LADDER[items[0].baseId])\n}"
+    },
+    {
+      "label": "Static import of getRecipeById in loot.ts",
+      "snippet": "import { getRecipeById } from '../data/recipes'\n// replaces: const { getRecipeById } = require('../data/recipes') inside transmute()"
+    },
+    {
+      "label": "CraftingScreen ingredient slots (local state)",
+      "snippet": "const [slots, setSlots] = useState<(Item | null)[]>([null, null, null, null])\nconst result = useMemo(() => {\n  const filled = slots.filter(Boolean) as Item[]\n  if (filled.length === 0) return null\n  return transmute(filled, makeRng(Date.now()))\n}, [slots])"
+    }
+  ],
+  "toolingAnnotations": [],
+  "statusHistory": [
+    {
+      "from": "draft",
+      "to": "active",
+      "date": "2026-03-29"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-03-29"
+    },
+    {
+      "from": "frozen",
+      "to": "active",
+      "date": "2026-04-01",
+      "reason": "BMAD session 3: added partial match hint (N/M inputs matched) during ingredient selection in CraftingScreen"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-04-01"
+    }
+  ]
+}

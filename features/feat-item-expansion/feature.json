@@ -1,0 +1,137 @@
+{
+  "featureKey": "feat-2026-046",
+  "title": "Item Expansion — New Bases, Uniques & Runewords",
+  "status": "frozen",
+  "problem": "The item pool is thin — 8 weapon types, 3 shields, 3 helms, 3 chests, no two-handed weapons, no bows, no belts. Unique items (fixed-stat legendaries) don't exist at all. The runeword list covers only 3 words. Players have no aspirational gear targets and loot excitement fades quickly after the first few floors.",
+  "schemaVersion": 1,
+  "domain": "game/items",
+  "analysis": "BASE_ITEMS in items.ts has 25 entries covering 8 weapon types, 3 shields, 3 helms, 3 chests, 2 gloves, 2 legs, 2 boots, ring, amulet, 3 charms, potions, 10 runes. No two-handed weapons, no bows, no belts. UNIQUE_ITEMS in loot.ts has a handful of entries. RUNEWORDS in runewords.ts covers only the basic set. No set item system. Expanding items.ts, loot.ts UNIQUE_ITEMS, and runewords.ts covers all three gaps with no new engine work required.",
+  "implementation": "1. src/data/items.ts — new base items: two_handed_sword, battle_axe, war_axe, hand_axe, short_bow, long_bow, belt (new 'belt' slot), circlet (helmet variant), throwing_knife. Add 'belt' to ItemSlot type. EquipmentPanel gains belt slot. 2. engine/loot.ts UNIQUE_ITEMS array — 15 new uniques across weapons, armor, rings, amulets, belts, circlets. Static imports at file top: `import { matchRuneword, getRunewordById } from '../data/runewords'` and `import { getRecipeById } from '../data/recipes'` (replaces previous dynamic require() calls in computeEffectiveStats and transmute). 3. nextUid() is a stateless function (no module-level counter): `function nextUid(): string { return \\`item_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 11)}\\` }`. Removes the old `let _uid = 0` mutable module-level counter. 4. computeEffectiveStats: uses getRunewordById(runewordId) (static import) instead of require('../data/runewords'). 5. transmute(): uses getRecipeById from static import instead of require('../data/recipes'). 6. src/data/runewords.ts — 8 new runewords: Stealth, Leaf, Strength, Zephyr, Lore, Smoke, Malice, Spirit. 7. EquipmentPanel.tsx — adds belt slot visually. 8. inventoryStore.ts — belt added to EquipSlot type.",
+  "decisions": [
+    {
+      "decision": "Belt is a new equipment slot, not stored in bag",
+      "rationale": "Belts in D2 provided utility and are a meaningful equip slot. Adding it as an equip slot (not a bag-only item) gives players another progression axis.",
+      "alternativesConsidered": [
+        "Belt as charm-like passive in bag — doesn't feel like gear",
+        "Skip belts entirely — misses a natural slot"
+      ],
+      "date": "2026-03-29"
+    },
+    {
+      "decision": "15 new uniques, all with 2–3 distinctive stats rather than many small bonuses",
+      "rationale": "D2's best uniques are remembered for 1-2 defining properties. Goldwrap = MF. Stone of Jordan = mana/spellPower. Each unique should have an identity that creates a build around it.",
+      "alternativesConsidered": [
+        "Many stats at low values — forgettable, hard to build around"
+      ],
+      "date": "2026-03-29"
+    },
+    {
+      "decision": "Runewords target specific slots (e.g. Leaf→staff only)",
+      "rationale": "Slot restrictions create meaningful crafting decisions. 'Save my Tal rune for a staff' is interesting. Unrestricted runewords reduce choice.",
+      "alternativesConsidered": [
+        "Any runeword in any socketed base — trivializes socket planning"
+      ],
+      "date": "2026-03-29"
+    }
+  ],
+  "successCriteria": "35+ base item types. 20+ unique items defined. 11+ runewords. Belt slot functional in equipment panel. At least one aspirational unique per equipment category.",
+  "tags": [
+    "items",
+    "loot",
+    "runewords",
+    "uniques",
+    "content"
+  ],
+  "knownLimitations": [
+    "No set item system in v1 — set bonuses deferred to future phase",
+    "Two-handed weapons share the weapon slot only (no offhand restriction enforced)",
+    "Bows have no ranged mechanics — they deal damage same as melee in v1",
+    "nextUid() uses Math.random() — not seeded, so uid generation is non-deterministic by design (uids are identifiers, not game logic)"
+  ],
+  "componentFile": "src/data/items.ts, src/engine/loot.ts, src/data/runewords.ts, src/store/inventoryStore.ts, src/components/EquipmentPanel.tsx",
+  "userGuide": "## New Items\n\nThe item pool now includes two-handed weapons, bows, belts, and circlets. Unique items drop with fixed stats and a golden name — these are the items you build characters around.\n\n**Unique highlights:**\n- Stone of Jordan (ring): +60 mana, +10 spell power — the Sorcerer's best-in-slot ring\n- Goldwrap (belt): +40% magic find — the loot hunter's dream\n- Harlequin Crest (circlet): balanced across all stats, the rarest drop\n- Shadowweave Robe: the Rogue's signature armor\n\n**New Runewords (highlight):**\n- Stealth [Tal+Eth] → chest: fast, crit-focused light armor\n- Spirit [Tal+Thul+Ort+Amn] → weapon: end-game caster runeword\n- Lore [Ort+Sol] → helmet: budget all-resist + spell power",
+  "lineage": {
+    "parent": "feat-2026-034",
+    "children": [
+      "feat-2026-069"
+    ]
+  },
+  "lastVerifiedDate": "2026-03-31",
+  "revisions": [
+    {
+      "date": "2026-03-29",
+      "author": "claude",
+      "fields_changed": [
+        "analysis",
+        "implementation",
+        "decisions",
+        "successCriteria"
+      ],
+      "reason": "Initial full feature definition for item expansion"
+    },
+    {
+      "date": "2026-03-31",
+      "author": "claude",
+      "fields_changed": [
+        "implementation"
+      ],
+      "reason": "BMAD session 2: stateless nextUid() (removes let _uid counter), static imports of getRunewordById and getRecipeById (removes dynamic require in hot paths)"
+    }
+  ],
+  "annotations": [],
+  "npmPackages": [],
+  "externalDependencies": [],
+  "publicInterface": [
+    {
+      "name": "ItemSlot (belt)",
+      "type": "type extension",
+      "description": "New 'belt' slot added to ItemSlot union"
+    },
+    {
+      "name": "EquipSlot (belt)",
+      "type": "type extension",
+      "description": "New 'belt' slot added to EquipSlot union in inventoryStore"
+    },
+    {
+      "name": "UNIQUE_ITEMS (expanded)",
+      "type": "UniqueItemDef[]",
+      "description": "15 new unique item definitions added to loot.ts"
+    },
+    {
+      "name": "RUNEWORDS (expanded)",
+      "type": "RunewordDef[]",
+      "description": "8 new runeword definitions added to runewords.ts"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "label": "nextUid — stateless, no shared counter",
+      "snippet": "function nextUid(): string {\n  return `item_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 11)}`\n}\n// replaces: let _uid = 0; function nextUid() { return `item_${++_uid}` }"
+    },
+    {
+      "label": "Static imports at loot.ts top (no dynamic require)",
+      "snippet": "import { matchRuneword, getRunewordById } from '../data/runewords'\nimport { getRecipeById } from '../data/recipes'\n\n// These replace:\n// const { getRunewordById } = require('../data/runewords')  // inside computeEffectiveStats\n// const { getRecipeById } = require('../data/recipes')      // inside transmute()"
+    },
+    {
+      "label": "Stone of Jordan unique definition",
+      "snippet": "{ id: 'stone_of_jordan', name: 'Stone of Jordan', baseId: 'ring',\n  stats: { mana: 60, spellPower: 10 },\n  description: 'The power of the Jordan Stone.' },"
+    },
+    {
+      "label": "Spirit runeword definition",
+      "snippet": "{ id: 'spirit', name: 'Spirit',\n  runes: ['rune_tal', 'rune_thul', 'rune_ort', 'rune_amn'],\n  allowedSlots: ['weapon', 'offhand'],\n  stats: { spellPower: 22, mana: 89, defense: 35, life: 20 } },"
+    }
+  ],
+  "toolingAnnotations": [],
+  "statusHistory": [
+    {
+      "from": "draft",
+      "to": "active",
+      "date": "2026-03-29"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-03-29"
+    }
+  ]
+}

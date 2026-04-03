@@ -1,0 +1,15 @@
+{"date":"2026-04-02T22:18:16.134Z","field":"title","source":"mcp","value_preview":"DPad Wait / Rest Mechanic"}
+{"date":"2026-04-02T22:18:16.134Z","field":"problem","source":"mcp","value_preview":"The DPad center button (wait) was wired up in DPad.tsx but the GridScreen handler only triggered haptics — no actual gam"}
+{"date":"2026-04-02T22:18:16.134Z","field":"analysis","source":"mcp","value_preview":"DPad.tsx exposes onWait via onLongPress on the center button. GridScreen passed an onWait stub that did only haptics. gr"}
+{"date":"2026-04-02T22:18:16.134Z","field":"implementation","source":"mcp","value_preview":"GridScreen.tsx: replaced the onWait stub with a full handler. Reads gridStore.stamina — if < 2, fires a warning toast an"}
+{"date":"2026-04-02T22:18:16.134Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"Cost 2 stamina per rest — blocks resting when exhausted\",\"rationale\":\"Without a cost, players would spam w"}
+{"date":"2026-04-02T22:18:16.134Z","field":"successCriteria","source":"mcp","value_preview":"Pressing wait on the DPad costs 2 stamina, heals 4% max HP, restores 3 MP, and shows a toast. When stamina < 2, a warnin"}
+{"date":"2026-04-02T22:18:16.134Z","field":"tags","source":"mcp","value_preview":"[\"grid\",\"rest\",\"stamina\",\"ux\",\"recovery\"]"}
+{"date":"2026-04-02T22:18:16.134Z","field":"knownLimitations","source":"mcp","value_preview":"[\"No animation — recovery is shown as a text toast only\",\"Cannot rest during encounters — the DPad is not rendered in Co"}
+{"date":"2026-04-02T22:18:16.134Z","field":"componentFile","source":"mcp","value_preview":"src/screens/GridScreen.tsx"}
+{"date":"2026-04-02T22:18:16.134Z","field":"userGuide","source":"mcp","value_preview":"Long-press the center DPad button to rest. Costs 2 stamina. Heals ~4% of your max HP and restores 3 mana. If stamina < 2"}
+{"date":"2026-04-02T22:18:16.134Z","field":"implementationNotes","source":"mcp","value_preview":"[\"restToast state + restToastTimer ref in GridScreen — same pattern as stakeToast\",\"healPlayer and restoreMana are gameS"}
+{"date":"2026-04-02T22:18:16.134Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"Rest handler in GridScreen onWait\",\"snippet\":\"onWait={() => {\\n  const gridSt = useGridStore.getState()\\n  co"}
+{"date":"2026-04-02T22:18:18.932Z","field":"npmPackages","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-02T22:18:18.932Z","field":"externalDependencies","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-02T22:18:18.932Z","field":"publicInterface","source":"mcp","value_preview":"[]"}

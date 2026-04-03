@@ -1,0 +1,91 @@
+{
+  "featureKey": "feat-2026-065",
+  "title": "Skill combos + cooldown animation",
+  "status": "frozen",
+  "problem": "Shadow Step → Backstab combo triggers correctly in the engine but only logs to console — no visual pop, damage number, or combo text appears in the UI. Skill cooldowns have no animation or countdown indicator, making abilities feel unresponsive.",
+  "schemaVersion": 1,
+  "domain": "combat",
+  "tags": [
+    "combat",
+    "skills",
+    "mana",
+    "progression",
+    "level-gate",
+    "combatscreen"
+  ],
+  "lineage": {
+    "parent": "feat-2026-042",
+    "spawnReason": "deferred polish: combo feedback and cooldown visuals were explicitly out of scope in the initial skills implementation"
+  },
+  "analysis": "Shadow Step → Backstab combo was tracked in combatStore via lastSkillUsed. When backstab fires after shadow_step, a 'SHADOW CRIT' log entry with type 'crit' (gold color) is added. Cooldown tracking: statusCounters in combatStore includes per-skill remaining cooldown rounds. CombatScreen computes cooldownRounds from statusCounters and displays 'CD:{n}' on the skill button when n > 0. Active buff rounds shown as '×{n}'. No missing implementation — combo log and cooldown UI were both already in place.",
+  "implementation": "combatStore.ts lines 305-308: if (skillId === 'backstab' && lastSkillUsed === 'shadow_step') push le('SHADOW CRIT — shadow setup amplifies the strike!', 'crit'). CombatScreen.tsx lines 521-549: const cdLeft = cooldownRounds[skill.id] ?? 0; isOnCooldown = cdLeft > 0; renders 'CD:{cdLeft}' in dim text when on cooldown, '×{roundsActive}' in class color when active buff is running. Skill button disabled when isOnCooldown.",
+  "decisions": [
+    {
+      "decision": "Combo shown as a typed 'crit' log entry (gold), not a popup or overlay",
+      "rationale": "The combat log is the player's primary feedback surface. A gold log line is visually distinct without requiring a separate animation system.",
+      "date": "2026-04-02"
+    },
+    {
+      "decision": "Cooldown shown inline on skill button as 'CD:n' rather than a progress ring",
+      "rationale": "Progress rings require Animated.Value and arc math for minimal UX gain. The CD:n text is instantly readable and consistent with the existing stat display style.",
+      "date": "2026-04-02"
+    }
+  ],
+  "successCriteria": "Shadow Step → Backstab shows a gold 'SHADOW CRIT' log entry. Skill buttons with active cooldowns show 'CD:{n}' and are non-interactive until resolved. Active buff skills show '×{n}' remaining rounds.",
+  "knownLimitations": [
+    "Only one combo exists (Shadow Step → Backstab) — no combo system generalization",
+    "No combo window timeout — lastSkillUsed persists until next skill use so you can wait indefinitely between Shadow Step and Backstab"
+  ],
+  "componentFile": "src/store/combatStore.ts, src/screens/CombatScreen.tsx",
+  "userGuide": "Use Shadow Step then immediately Backstab for a guaranteed bonus crit entry in the log. Skill cooldowns show as 'CD:2' etc. on the skill button — the button is greyed out until the cooldown expires.",
+  "implementationNotes": [
+    "lastSkillUsed resets to null on clearCombat (line 431)",
+    "cooldownRounds computed in CombatScreen from statusCounters using SKILL_CD map (line 275)"
+  ],
+  "npmPackages": [],
+  "externalDependencies": [],
+  "publicInterface": [
+    {
+      "name": "CombatState.lastSkillUsed",
+      "type": "SkillId | null",
+      "description": "Tracks last skill for combo detection. Shadow Step → Backstab is the only combo currently."
+    }
+  ],
+  "codeSnippets": [
+    {
+      "label": "Shadow Step → Backstab combo log entry",
+      "snippet": "if (skillId === 'backstab' && lastSkillUsed === 'shadow_step') {\n  newLog.push(le('☠ SHADOW CRIT — shadow setup amplifies the strike!', 'crit'))\n}"
+    },
+    {
+      "label": "Cooldown display on skill button (CombatScreen)",
+      "snippet": "const cdLeft       = cooldownRounds[skill.id] ?? 0\nconst isOnCooldown = cdLeft > 0\n// ...\nisOnCooldown ? (\n  <Text style={[styles.skillMeta, { color: COLORS.textDim }]}>CD:{cdLeft}</Text>\n)"
+    }
+  ],
+  "lastVerifiedDate": "2026-04-02",
+  "revisions": [
+    {
+      "date": "2026-04-02",
+      "author": "claude",
+      "fields_changed": [
+        "analysis",
+        "implementation",
+        "decisions",
+        "successCriteria"
+      ],
+      "reason": "Feature was already fully implemented — documenting existing state"
+    }
+  ],
+  "annotations": [],
+  "statusHistory": [
+    {
+      "from": "draft",
+      "to": "active",
+      "date": "2026-04-02"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-04-02"
+    }
+  ]
+}

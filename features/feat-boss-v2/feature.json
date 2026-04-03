@@ -1,0 +1,121 @@
+{
+  "featureKey": "feat-2026-068",
+  "title": "Boss phase mechanics — double strike and ignition",
+  "status": "frozen",
+  "problem": "Bosses had only three mechanics (enrage, regen, immune_round) and all six bosses in the pool shared variations of the same patterns. The Warden and Iron Colossus were mechanically identical. The Inferno Witch had immune_round but no thematic fire consequence. Boss fights lacked identity beyond HP/damage numbers.",
+  "schemaVersion": 1,
+  "domain": "game/combat",
+  "tags": [
+    "combat",
+    "bosses",
+    "encounter",
+    "progression",
+    "balance"
+  ],
+  "lineage": {
+    "parent": "feat-2026-045",
+    "spawnReason": "scope split: boss identity and phase mechanics are independent of the boss-pool expansion and crash recovery concerns — cleaner to track separately"
+  },
+  "analysis": "Two new boss mechanics were designed to give each boss a distinct combat identity: (1) double_strike — when enraged (post-round-5), the boss attacks twice per round. Deadly against high-defense low-dodge players; countered by block and rogue evasion skills. Assigned to melee-identity bosses: Warden, Iron Colossus, Shadow Stalker. (2) ignition — on immune rounds (every 7th), the boss deals unavoidable fire damage based on its maxHp, reduced only by fireResist. This punishes players who wait out immune rounds doing nothing. Assigned to fire-identity bosses: Inferno Witch, Abyssal One. The Abyssal One (final boss, floor 30) has all mechanics: enrage + regen + immune_round + double_strike + ignition — the capstone fight requires managing all systems simultaneously.",
+  "implementation": "data/bosses.ts: BossMechanic union extended with 'double_strike' and 'ignition'. Boss assignments: Warden ['enrage','double_strike','no_flee'], Bonekeeper ['enrage','regen','no_flee'], Inferno Witch ['enrage','immune_round','ignition','no_flee'], Shadow Stalker ['enrage','regen','immune_round','double_strike','no_flee'], Iron Colossus ['enrage','double_strike','no_flee'], Abyssal One ['enrage','regen','immune_round','ignition','double_strike','no_flee']. engine/combat.ts: RoundResult extended with bossIgnitionDmg: number and isDoubleStrikeRound: boolean (flee early return initializes both to 0/false). double_strike block: after regen, if isEnraged && bossMechanics.includes('double_strike') && player alive && monster alive → executeMonsterAttack() a second time, sets isDoubleStrikeRound=true. ignition block: if isImmuneRound && bossMechanics.includes('ignition') && player alive → bossIgnitionDmg = max(10, round(maxHp * 0.025)) - (fireResist * 0.4), applied to newPlayerHp. roundToText: bossIgnitionDmg renders '🔥 IGNITION — fire aura burns for N'; isDoubleStrikeRound renders '⚡ DOUBLE STRIKE!'.",
+  "decisions": [
+    {
+      "decision": "double_strike uses a second executeMonsterAttack() call, not a damage multiplier",
+      "rationale": "A second attack call means the hit-chance formula, block chance, smoke screen, and chilled/frozen penalties all apply independently to the second attack. A flat ×2 multiplier would bypass all these player-defense interactions, making block and evasion builds worthless against double_strike bosses. Using two real attacks preserves the entire defensive system.",
+      "alternativesConsidered": [
+        "rawDmg * 2 multiplier — simpler but removes all player mitigation from the second hit",
+        "Separate damage formula for the phase — arbitrary, harder to balance"
+      ],
+      "recommendation": "Two executeMonsterAttack() calls. Stack-agnostic: pure engine logic, no UI dependency.",
+      "date": "2026-04-01"
+    },
+    {
+      "decision": "Ignition damage is max(10, maxHp * 0.025) reduced only by fireResist * 0.4",
+      "rationale": "Scaling from maxHp means ignition threatens harder at higher floors (bigger bosses = more fire). The 0.4 multiplier on fireResist (not the full 0–75 cap) means even maxed fire resistance only partially mitigates ignition — it should always be dangerous. min of 10 ensures it is never trivial at floor 1.",
+      "alternativesConsidered": [
+        "Flat 20 fire damage — doesn't scale, trivial at floor 15+",
+        "Full fireResist reduction — players with 75% resist become immune, removing the threat entirely"
+      ],
+      "recommendation": "maxHp * 0.025 with fireResist * 0.4 partial mitigation. Stack-agnostic: pure math, no React dependency.",
+      "date": "2026-04-01"
+    },
+    {
+      "decision": "isDoubleStrikeRound flag in RoundResult instead of deriving from isEnragedRound",
+      "rationale": "The original log check was `r.isEnragedRound && r.monsterDamageDealt > 0` which would fire '⚡ DOUBLE STRIKE!' for ALL enraged bosses on any round where they dealt damage — including Bonekeeper and Inferno Witch which don't have double_strike. Adding a dedicated flag means only bosses that actually double-struck show the log entry.",
+      "alternativesConsidered": [
+        "Check bossMechanics at log time — would require threading monster data into roundToText()",
+        "Keep isEnragedRound check — false positives on every boss"
+      ],
+      "recommendation": "Explicit isDoubleStrikeRound: boolean on RoundResult. Set only when second attack fires.",
+      "date": "2026-04-01"
+    }
+  ],
+  "successCriteria": "double_strike: after round 5, Warden/Iron Colossus/Shadow Stalker execute two monster attacks per round; second attack respects all mitigation (block, smoke, freeze). ignition: Inferno Witch/Abyssal One deal fire damage on every round 7, 14, 21... even when player skips attacking. Log shows '⚡ DOUBLE STRIKE!' only when double_strike mechanic actually fires. Log shows '🔥 IGNITION' with correct reduced damage value. isDoubleStrikeRound = false for bosses without mechanic. TypeScript 0 errors.",
+  "knownLimitations": [
+    "double_strike does not visually separate the two hits in the log — both attacks combine into a single monsterDamageDealt total (the second call overwrites the variable)",
+    "ignition damage is not shown as a separate HP loss event in CombatScreen HP bar animation — bar jumps to post-ignition value as one update",
+    "No audio or visual flash to distinguish double_strike from a single heavy hit — relies on log text only"
+  ],
+  "userGuide": "## Boss Phase Mechanics\n\nEach boss has unique mechanics that activate during the fight. After round 5, **ENRAGED** appears in the log — bosses deal 1.5× damage from that point.\n\n### Double Strike (Warden, Iron Colossus, Shadow Stalker)\nWhen enraged, these bosses attack **twice per round**. Each hit is resolved independently — your block chance, evasion skills, and freeze/smoke penalties all apply to each attack separately. High-block Warrior builds can theoretically block both. Rogue Shadow Step (skip monster attack) negates both.\n\n### Ignition (Inferno Witch, Abyssal One)\nEvery 7th round is an **IMMUNE round** — your attacks deal 0. During this round, an ignition aura deals fire damage to you regardless of what you do. Damage is `~2.5% of boss max HP`, reduced by your fire resistance (at 40% efficiency — even 75% fire resist won't block it entirely). Sorcerer's fire resist gear matters most here.\n\n### The Abyssal One (Floor 30)\nThe final boss has all four mechanics active: enrage, regeneration, immune+ignition, and double strike. You must manage burst damage (double strike), sustain pressure (regen), and survive immune rounds (ignition) simultaneously. Use HP potions on immune rounds to offset ignition. If you have smoke bomb or battle cry, activate them before round 5.",
+  "componentFile": "src/engine/combat.ts, src/data/bosses.ts",
+  "lastVerifiedDate": "2026-04-01",
+  "revisions": [
+    {
+      "date": "2026-04-01",
+      "author": "claude",
+      "fields_changed": [
+        "status",
+        "analysis",
+        "implementation",
+        "decisions",
+        "successCriteria",
+        "knownLimitations",
+        "userGuide",
+        "componentFile"
+      ],
+      "reason": "Full implementation of double_strike and ignition mechanics with correct RoundResult tracking"
+    }
+  ],
+  "annotations": [],
+  "npmPackages": [],
+  "publicInterface": [
+    {
+      "name": "RoundResult.isDoubleStrikeRound",
+      "type": "boolean",
+      "description": "True only when double_strike mechanic fired a second monster attack this round"
+    },
+    {
+      "name": "RoundResult.bossIgnitionDmg",
+      "type": "number",
+      "description": "Fire damage dealt by ignition on immune rounds (0 if not an ignition round)"
+    },
+    {
+      "name": "BossMechanic",
+      "type": "type alias",
+      "description": "'enrage' | 'regen' | 'immune_round' | 'double_strike' | 'ignition' | 'no_flee'"
+    }
+  ],
+  "externalDependencies": [],
+  "codeSnippets": [
+    {
+      "label": "double_strike block in resolveRound (combat.ts)",
+      "snippet": "let isDoubleStrikeRound = false\nif (isEnraged && monster.bossMechanics?.includes('double_strike') && newPlayerHp > 0 && newMonsterHp > 0) {\n  executeMonsterAttack()\n  isDoubleStrikeRound = true\n}"
+    },
+    {
+      "label": "ignition block in resolveRound (combat.ts)",
+      "snippet": "let bossIgnitionDmg = 0\nif (isImmuneRound && monster.bossMechanics?.includes('ignition') && newPlayerHp > 0) {\n  bossIgnitionDmg = Math.max(10, Math.round(monster.maxHp * 0.025))\n  const reduced   = Math.max(1, bossIgnitionDmg - Math.round((playerStats.fireResist ?? 0) * 0.4))\n  newPlayerHp     = Math.max(0, newPlayerHp - reduced)\n  bossIgnitionDmg = reduced\n}"
+    }
+  ],
+  "statusHistory": [
+    {
+      "from": "draft",
+      "to": "active",
+      "date": "2026-04-01"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-04-01"
+    }
+  ]
+}

@@ -5,7 +5,7 @@
 import React from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import { getHpColor, COLORS } from '../theme'
-import { tierName } from '../utils/tierName'
+import { tierName, difficultyLabel, difficultyColor } from '../utils/tierName'
 import { PlayerPortrait } from './PlayerPortrait'
 
 interface HUDProps {
@@ -112,6 +112,9 @@ export function HUD({
   const hpColor = getHpColor(hpPct)
   const hasMana = maxMana > 0
 
+  const diffLabel = difficultyLabel(tier)
+  const diffColor = difficultyColor(tier)
+
   return (
     <View style={styles.panel}>
       {/* Inset stone frame line */}
@@ -119,12 +122,23 @@ export function HUD({
 
         {/* ── Info row ─────────────────────────────────────────────────── */}
         <View style={styles.infoRow}>
-          <View style={[styles.badge, isBossFloor && styles.badgeBoss]}>
-            <Text style={[styles.badgeText, isBossFloor && styles.badgeTextBoss]}>
-              {isBossFloor ? '☠ ' : ''}T{tier}·F{floor}
+          <View style={[
+            styles.badge,
+            isBossFloor && styles.badgeBoss,
+            !isBossFloor && diffLabel === 'NIGHTMARE' && styles.badgeNightmare,
+            !isBossFloor && diffLabel === 'HELL' && styles.badgeHell,
+          ]}>
+            <Text style={[
+              styles.badgeText,
+              isBossFloor && styles.badgeTextBoss,
+              !isBossFloor && diffColor != null && { color: diffColor },
+            ]}>
+              {isBossFloor ? '☠ ' : ''}{diffLabel && !isBossFloor ? `${diffLabel} · ` : ''}T{tier}·F{floor}
             </Text>
             {!isBossFloor && (
-              <Text style={styles.tierNameText}>{tierName(tier)}</Text>
+              <Text style={[styles.tierNameText, diffColor ? { color: diffColor, opacity: 0.6 } : {}]}>
+                {tierName(tier)}
+              </Text>
             )}
           </View>
 
@@ -209,6 +223,14 @@ const styles = StyleSheet.create({
   badgeBoss: {
     backgroundColor: COLORS.redDim,
     borderColor:     COLORS.red,
+  },
+  badgeNightmare: {
+    backgroundColor: COLORS.blueDim,
+    borderColor:     COLORS.blue + '66',
+  },
+  badgeHell: {
+    backgroundColor: COLORS.redDim,
+    borderColor:     COLORS.red + '66',
   },
   badgeText: {
     color:        COLORS.textSecondary,

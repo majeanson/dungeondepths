@@ -1,0 +1,161 @@
+{
+  "featureKey": "feat-2026-051",
+  "title": "Settings Screen",
+  "status": "frozen",
+  "problem": "There is no settings screen — players cannot toggle haptics, mute future audio, reset their save, or view app version. This is a hard requirement for App Store submission (Apple requires a data/reset option) and for player preference.",
+  "schemaVersion": 1,
+  "domain": "game/ui",
+  "analysis": "No settings system exists. useHaptics.ts (feat-048) needs a hapticsEnabled flag. save/load (feat-050) needs a clearSave() entry point exposed to the user. Apple App Store requires apps to provide a way to reset/delete user data. App version is in app.json and accessible via expo-constants. The settings screen is a lightweight screen with 4 concerns: haptics toggle, audio toggle (placeholder), reset progress, about.",
+  "implementation": "1. src/store/settingsStore.ts — SettingsState: { hapticsEnabled: boolean, audioEnabled: boolean, onboardingDone: boolean, hasSeenFirstBoss: boolean, zoomLevel: 0|1|2, hasSeenGhostEchoHint: boolean, loaded: boolean }. Actions: setHaptics, setAudio, setOnboardingDone, markFirstBossSeen, setZoomLevel(z: 0|1|2), markGhostEchoHintSeen(), loadFromDisk(): Promise<void>. Each mutating action calls saveSettings() with the full SettingsData object (all 6 fields). loadFromDisk() calls loadSettings() and applies defaults for optional fields (zoomLevel ?? 1, hasSeenGhostEchoHint ?? false). 2. src/screens/SettingsScreen.tsx — sections: AUDIO/HAPTICS (toggle rows with Switch), DANGER ZONE (RESET PROGRESS button → Alert.alert confirmation), ABOUT (version from expo-constants). 3. App.tsx — 'settings' in GameScreen type. ⚙ icon on main menu header. 4. SettingsScreen RESET PROGRESS: clearSave() + reset stores to initial state + setScreen('grid'). 5. GridScreen: reads savedZoom = useSettingsStore(s => s.zoomLevel) to initialize zoom state. Calls persistZoom (setZoomLevel) on every zoom change (buttons + pinch). 6. useHaptics.ts reads hapticsEnabled before every haptic call.",
+  "decisions": [
+    {
+      "decision": "Settings persisted via AsyncStorage in persistence.ts (SettingsData interface)",
+      "rationale": "Settings are user preferences that must survive app restarts; AsyncStorage is the correct persistence layer for this game.",
+      "date": "2026-03-29"
+    },
+    {
+      "decision": "settingsStore exposes individual toggles and markX actions",
+      "rationale": "Granular actions are easier to call from UI components than a generic setField action; each action also triggers saveSettings automatically.",
+      "date": "2026-03-29"
+    },
+    {
+      "decision": "BMAD S3: hasSeenCodexHint boolean added — tracks whether player dismissed the Codex first-open hint; markCodexHintSeen action; persisted in SettingsData",
+      "rationale": "One-time hints should be persisted so they never re-appear after dismissal even across app restarts.",
+      "date": "2026-04-01"
+    }
+  ],
+  "successCriteria": "Haptics toggle disables/enables haptic feedback immediately. Reset progress wipes save and returns to fresh game. App version number visible. Settings survive a save reset. Zoom level persists across app restarts. Ghost Echo hint shows exactly once when graveyard is non-empty.",
+  "tags": [
+    "settings",
+    "haptics",
+    "persistence",
+    "ui",
+    "app-store"
+  ],
+  "knownLimitations": [
+    "No per-haptics-event granularity (e.g. can't disable only crit haptics)",
+    "Audio toggle has no effect in v1"
+  ],
+  "componentFile": "src/store/settingsStore.ts, src/screens/SettingsScreen.tsx, App.tsx, src/hooks/useHaptics.ts",
+  "npmPackages": [
+    "expo-constants"
+  ],
+  "lineage": {
+    "parent": "feat-2026-034",
+    "children": [
+      "feat-2026-073"
+    ]
+  },
+  "lastVerifiedDate": "2026-04-01",
+  "revisions": [
+    {
+      "date": "2026-03-29",
+      "author": "claude",
+      "fields_changed": [
+        "analysis",
+        "implementation",
+        "decisions",
+        "successCriteria"
+      ],
+      "reason": "Initial full feature definition for settings screen"
+    },
+    {
+      "date": "2026-03-31",
+      "author": "claude",
+      "fields_changed": [
+        "decisions",
+        "implementation",
+        "successCriteria"
+      ],
+      "reason": "BMAD session 2: add zoomLevel persistence, hasSeenGhostEchoHint one-time hint flag, loadFromDisk(), full SettingsState shape, updated decisions and codeSnippets"
+    },
+    {
+      "date": "2026-04-01",
+      "author": "claude+marc",
+      "fields_changed": [
+        "decisions"
+      ],
+      "reason": "BMAD session 3 — hasSeenCodexHint one-time hint persistence"
+    }
+  ],
+  "annotations": [
+    {
+      "id": "reopen-1775065879724",
+      "author": "lac advance",
+      "date": "2026-04-01",
+      "type": "reopen",
+      "body": "BMAD session 3: added hasSeenCodexHint boolean to settingsStore with markCodexHintSeen() action, persisted to disk via persistence.ts"
+    }
+  ],
+  "userGuide": "Access Settings from the ⚙ button on the main menu.\n\n**Haptics:** Toggle vibration feedback on/off. Takes effect immediately.\n\n**Zoom:** Your preferred grid zoom (small/medium/large) is saved automatically — the dungeon grid opens at your last zoom level after every restart.\n\n**Reset Progress:** Permanently deletes all saved run data (XP, level, stash, graveyard). Your settings (haptics, zoom, tutorial flags) are preserved. Requires confirmation before executing.\n\n**App version** is displayed in the About section.",
+  "externalDependencies": [],
+  "publicInterface": [
+    {
+      "name": "useSettingsStore",
+      "type": "Zustand store",
+      "description": "{ hapticsEnabled, audioEnabled, onboardingDone, hasSeenFirstBoss, zoomLevel: 0|1|2, hasSeenGhostEchoHint, loaded } — persisted to @d2game_settings_v1"
+    },
+    {
+      "name": "setZoomLevel",
+      "type": "(z: 0|1|2) => void",
+      "description": "Updates and persists the player's preferred grid zoom level"
+    },
+    {
+      "name": "markGhostEchoHintSeen",
+      "type": "() => void",
+      "description": "Marks the one-time Ghost Echo ambient hint as seen; prevents it from showing again"
+    },
+    {
+      "name": "loadFromDisk",
+      "type": "() => Promise<void>",
+      "description": "Loads SettingsData from AsyncStorage and hydrates all fields with safe defaults"
+    },
+    {
+      "name": "SettingsScreen",
+      "type": "React.FC",
+      "description": "Haptics toggle, audio toggle, reset progress, about section with version number"
+    }
+  ],
+  "codeSnippets": [
+    {
+      "label": "settingsStore — full state shape",
+      "snippet": "export interface SettingsState {\n  hapticsEnabled:       boolean\n  audioEnabled:         boolean\n  onboardingDone:       boolean\n  hasSeenFirstBoss:     boolean\n  zoomLevel:            0 | 1 | 2\n  hasSeenGhostEchoHint: boolean\n  loaded:               boolean\n  // actions...\n  setZoomLevel:          (z: 0 | 1 | 2) => void\n  markGhostEchoHintSeen: () => void\n  loadFromDisk:          () => Promise<void>\n}"
+    },
+    {
+      "label": "setZoomLevel — mutate + persist",
+      "snippet": "setZoomLevel: (z) => {\n  set({ zoomLevel: z })\n  const s = get()\n  saveSettings({ hapticsEnabled: s.hapticsEnabled, audioEnabled: s.audioEnabled,\n    onboardingDone: s.onboardingDone, hasSeenFirstBoss: s.hasSeenFirstBoss,\n    zoomLevel: z, hasSeenGhostEchoHint: s.hasSeenGhostEchoHint })\n},"
+    },
+    {
+      "label": "loadFromDisk — with optional field defaults",
+      "snippet": "loadFromDisk: async () => {\n  const data = await loadSettings()\n  if (data) {\n    set({\n      hapticsEnabled:       data.hapticsEnabled,\n      audioEnabled:         data.audioEnabled,\n      onboardingDone:       data.onboardingDone       ?? false,\n      hasSeenFirstBoss:     data.hasSeenFirstBoss     ?? false,\n      zoomLevel:            data.zoomLevel             ?? 1,\n      hasSeenGhostEchoHint: data.hasSeenGhostEchoHint ?? false,\n    })\n  }\n  set({ loaded: true })\n},"
+    },
+    {
+      "label": "GridScreen — zoom initialized from settingsStore",
+      "snippet": "const savedZoom = useSettingsStore(s => s.zoomLevel)\nconst persistZoom = useSettingsStore(s => s.setZoomLevel)\nconst [zoom, setZoom] = useState<ZoomLevel>(savedZoom)\n\nfunction zoomIn()  { const z = Math.min(2, zoom + 1) as ZoomLevel; setZoom(z); persistZoom(z) }\nfunction zoomOut() { const z = Math.max(0, zoom - 1) as ZoomLevel; setZoom(z); persistZoom(z) }"
+    }
+  ],
+  "toolingAnnotations": [],
+  "statusHistory": [
+    {
+      "from": "draft",
+      "to": "active",
+      "date": "2026-03-29"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-03-29"
+    },
+    {
+      "from": "frozen",
+      "to": "active",
+      "date": "2026-04-01",
+      "reason": "BMAD session 3: added hasSeenCodexHint boolean to settingsStore with markCodexHintSeen() action, persisted to disk via persistence.ts"
+    },
+    {
+      "from": "active",
+      "to": "frozen",
+      "date": "2026-04-01"
+    }
+  ]
+}

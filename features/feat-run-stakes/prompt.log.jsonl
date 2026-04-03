@@ -1,0 +1,17 @@
+{"date":"2026-04-02T00:51:10.337Z","field":"analysis","source":"mcp","value_preview":"The session-length problem: a player with 12 minutes has no declared win condition smaller than 'survive to floor 30'. W"}
+{"date":"2026-04-02T00:51:10.337Z","field":"implementation","source":"mcp","value_preview":"gameStore.ts: StakeId type ('slayer'|'scavenger'|'deepdiver'), STAKE_DEFS array (exported), activeStake/stakeClaimed/sta"}
+{"date":"2026-04-02T00:51:10.337Z","field":"decisions","source":"mcp","value_preview":"[{\"decision\":\"activeStake persists across runs — not reset by startRun\",\"rationale\":\"The stake represents the player's d"}
+{"date":"2026-04-02T00:51:10.337Z","field":"successCriteria","source":"mcp","value_preview":"Stake picker visible on ClassSelectScreen footer. Progress badge updates in real-time in GridScreen. claimStake fires ex"}
+{"date":"2026-04-02T00:51:10.337Z","field":"tags","source":"mcp","value_preview":"[\"meta\",\"progression\",\"class-select\",\"loot\",\"retention\",\"session-design\"]"}
+{"date":"2026-04-02T00:51:10.337Z","field":"knownLimitations","source":"mcp","value_preview":"[\"DEEPDIVER progress counter shows absoluteFloor (e.g. tier 2 floor 1 = floor 11) rather than a simple 'reached floor 5 "}
+{"date":"2026-04-02T00:51:10.337Z","field":"userGuide","source":"mcp","value_preview":"## Run Stakes\n\nBefore descending, pick a **Hunt** in the footer below the class cards:\n\n- **⚔ SLAYER** — Kill 25 monster"}
+{"date":"2026-04-02T00:51:10.337Z","field":"componentFile","source":"mcp","value_preview":"src/store/gameStore.ts (StakeId, STAKE_DEFS, claimStake, activeStake, stakeBonusItem), src/screens/ClassSelectScreen.tsx"}
+{"date":"2026-04-02T00:54:47.656Z","field":"npmPackages","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-02T00:54:47.656Z","field":"publicInterface","source":"mcp","value_preview":"[\"StakeId = 'slayer' | 'scavenger' | 'deepdiver'\",\"STAKE_DEFS: { id, label, desc, icon, target }[]\",\"GameState.activeSta"}
+{"date":"2026-04-02T00:54:47.656Z","field":"externalDependencies","source":"mcp","value_preview":"[]"}
+{"date":"2026-04-02T00:54:47.656Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"Stake definitions\",\"lang\":\"typescript\",\"code\":\"export const STAKE_DEFS = [\\n  { id: 'slayer',    label: 'SLAY"}
+{"date":"2026-04-02T00:54:47.656Z","field":"toolingAnnotations","source":"mcp","value_preview":"Run Stakes are a pre-run micro-goal system. activeStake persists across startRun (intentional — player sets goal once). "}
+{"date":"2026-04-02T00:56:01.269Z","field":"publicInterface","source":"mcp","value_preview":"[{\"name\":\"StakeId\",\"type\":\"type alias\",\"description\":\"'slayer' | 'scavenger' | 'deepdiver'\"},{\"name\":\"STAKE_DEFS\",\"type\""}
+{"date":"2026-04-02T00:56:01.269Z","field":"codeSnippets","source":"mcp","value_preview":"[{\"label\":\"35% bonus drop on stake claim\",\"snippet\":\"claimStake: () => {\\n  const { activeStake, floor, seed } = get()\\n"}
+{"date":"2026-04-02T00:56:01.269Z","field":"toolingAnnotations","source":"mcp","value_preview":"[\"activeStake intentionally persists across startRun — player sets a season-long goal, not a per-run one. stakeClaimed/s"}
+{"date":"2026-04-02T00:56:29.215Z","field":"toolingAnnotations","source":"mcp","value_preview":"[]"}
